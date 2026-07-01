@@ -9,6 +9,7 @@ import matplotlib
 matplotlib.use("Agg")
 import base64
 import os
+import time
 from model_loader import load_unet_model, load_classifier_model
 
 # ========== إعداد الصفحة ==========
@@ -16,79 +17,224 @@ st.set_page_config(
     page_title="AnemiCheck - Détection d'Anémie",
     page_icon="🩸",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
-# ========== CSS (تصميم طبي احترافي) ==========
+# ========== CSS / تصميم متقدم مع أنيميشن ==========
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-    * { font-family: 'Inter', sans-serif; }
-    .stApp { background: #f8fafc; }
     
+    * { font-family: 'Inter', sans-serif; }
+    
+    /* خلفية متدرجة متحركة */
+    .stApp {
+        background: linear-gradient(-45deg, #f8fafc, #eef2ff, #f1f5f9, #f8fafc);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
+    }
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    /* شريط علوي مع تأثير زجاجي */
     .header {
-        background: white;
-        padding: 1rem 2rem;
-        border-radius: 0 0 20px 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        background: rgba(255,255,255,0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        padding: 0.8rem 2rem;
+        border-radius: 0 0 24px 24px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.06);
         margin-bottom: 2rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        border: 1px solid rgba(255,255,255,0.3);
+        animation: slideDown 0.6s ease;
     }
-    .header h1 { font-size: 28px; font-weight: 800; color: #0f172a; margin: 0; }
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .header h1 {
+        font-size: 28px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+    }
     .header h1 span { color: #e11d48; }
     .header .badge {
-        background: #e11d48;
+        background: linear-gradient(135deg, #e11d48, #be123c);
         color: white;
-        padding: 6px 16px;
+        padding: 6px 18px;
         border-radius: 40px;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 600;
+        box-shadow: 0 4px 12px rgba(225,29,72,0.25);
     }
     
+    /* بطاقة رفع الصورة - Glassmorphism */
     .upload-card {
-        background: white;
-        border-radius: 24px;
-        padding: 2rem;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+        background: rgba(255,255,255,0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 28px;
+        padding: 2.5rem 2rem;
         text-align: center;
-        border: 2px dashed #cbd5e1;
-        transition: all 0.3s ease;
+        border: 2px dashed rgba(225,29,72,0.2);
+        transition: all 0.4s ease;
         margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+        animation: fadeUp 0.8s ease;
     }
     .upload-card:hover {
         border-color: #e11d48;
-        background: #fef2f2;
+        background: rgba(255,255,255,0.8);
+        transform: translateY(-4px);
+        box-shadow: 0 16px 48px rgba(225,29,72,0.08);
     }
-    .upload-card .icon { font-size: 48px; }
-    .upload-card h3 { font-weight: 600; color: #0f172a; margin: 12px 0 6px; }
-    .upload-card p { color: #64748b; font-size: 14px; }
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .upload-card .icon {
+        font-size: 56px;
+        animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    .upload-card h3 {
+        font-weight: 700;
+        color: #0f172a;
+        margin: 12px 0 6px;
+    }
+    .upload-card p {
+        color: #64748b;
+        font-size: 14px;
+    }
     
+    /* بطاقات النتائج مع أنيميشن */
     .result-card {
-        background: white;
-        border-radius: 20px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+        border-radius: 24px;
+        padding: 1.8rem;
         margin-top: 1.5rem;
         border-left: 6px solid #e11d48;
+        animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.04);
     }
-    .result-card.positive { border-left-color: #dc2626; background: #fef2f2; }
-    .result-card.negative { border-left-color: #16a34a; background: #f0fdf4; }
-    .result-card h2 { font-size: 26px; font-weight: 700; margin: 0 0 6px; }
-    .result-card .confidence { font-size: 18px; font-weight: 600; color: #1e293b; }
-    .result-card .sub { font-size: 14px; color: #64748b; }
+    @keyframes popIn {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    .result-card.positive {
+        background: rgba(254, 242, 242, 0.8);
+        border-left-color: #dc2626;
+        backdrop-filter: blur(4px);
+    }
+    .result-card.negative {
+        background: rgba(240, 253, 244, 0.8);
+        border-left-color: #16a34a;
+        backdrop-filter: blur(4px);
+    }
+    .result-card h2 {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0 0 6px;
+    }
+    .result-card .confidence {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .result-card .sub {
+        font-size: 14px;
+        color: #64748b;
+    }
     
-    .chart-container {
-        background: white;
-        border-radius: 20px;
+    /* شريط جانبي بتصميم زجاجي */
+    .sidebar-glass {
+        background: rgba(255,255,255,0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 24px;
         padding: 1.5rem;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-        margin-top: 1.5rem;
+        border: 1px solid rgba(255,255,255,0.3);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+        margin-bottom: 1.5rem;
+        animation: fadeUp 0.8s ease;
+    }
+    .sidebar-glass h4 {
+        color: #0f172a;
+        font-weight: 700;
+        margin-bottom: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .sidebar-glass p, .sidebar-glass li {
+        color: #334155;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    .sidebar-glass ul {
+        padding-left: 1.2rem;
+    }
+    .sidebar-glass .qr-container {
+        display: flex;
+        justify-content: center;
+        margin: 0.8rem 0;
+    }
+    .sidebar-glass .qr-container img {
+        border-radius: 16px;
+        border: 1px solid rgba(225,29,72,0.15);
+        background: white;
+        padding: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        transition: transform 0.3s ease;
+    }
+    .sidebar-glass .qr-container img:hover {
+        transform: scale(1.05);
     }
     
+    .doctor-btn {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: white;
+        border: none;
+        border-radius: 40px;
+        padding: 12px 24px;
+        font-weight: 600;
+        font-size: 15px;
+        cursor: not-allowed;
+        opacity: 0.6;
+        width: 100%;
+        text-align: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(37,99,235,0.2);
+        margin-top: 10px;
+    }
+    .doctor-btn:hover {
+        opacity: 0.8;
+        transform: scale(1.02);
+    }
+    .coming-badge {
+        background: #f59e0b;
+        color: white;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 12px;
+        border-radius: 30px;
+        margin-left: 8px;
+        letter-spacing: 0.5px;
+    }
+    
+    /* تنويه طبي */
     .disclaimer {
-        background: #fefce8;
+        background: rgba(254, 252, 232, 0.8);
+        backdrop-filter: blur(4px);
         border-radius: 16px;
         padding: 1rem 1.5rem;
         border-left: 6px solid #f59e0b;
@@ -96,27 +242,10 @@ st.markdown("""
         font-size: 13px;
         color: #4b5563;
         line-height: 1.6;
-    }
-    .disclaimer strong { color: #b45309; }
-    
-    #MainMenu, footer, .stDeployButton { display: none; }
-    
-    .stButton > button {
-        background: #e11d48;
-        color: white;
-        border: none;
-        border-radius: 40px;
-        padding: 12px 28px;
-        font-weight: 600;
-        transition: 0.3s;
-        width: 100%;
-    }
-    .stButton > button:hover {
-        background: #be123c;
-        transform: scale(1.02);
-        box-shadow: 0 8px 24px rgba(225,29,72,0.25);
+        animation: fadeUp 1s ease;
     }
     
+    /* تحسينات عامة */
     .section-title {
         font-size: 22px;
         font-weight: 700;
@@ -125,8 +254,8 @@ st.markdown("""
         padding-bottom: 8px;
         border-bottom: 3px solid #e11d48;
         display: inline-block;
+        animation: fadeUp 0.6s ease;
     }
-    
     .stImage img { border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
     
     [data-testid="stMetricValue"] {
@@ -135,11 +264,36 @@ st.markdown("""
         color: #0f172a !important;
     }
     [data-testid="stMetric"] {
-        background: white;
+        background: rgba(255,255,255,0.7);
+        backdrop-filter: blur(4px);
         border-radius: 16px;
         padding: 12px 16px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        border: 1px solid #e2e8f0;
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    #MainMenu, footer, .stDeployButton { display: none; }
+    
+    .stButton > button {
+        background: linear-gradient(135deg, #e11d48, #be123c);
+        color: white;
+        border: none;
+        border-radius: 40px;
+        padding: 12px 28px;
+        font-weight: 600;
+        transition: 0.3s;
+        width: 100%;
+        box-shadow: 0 4px 16px rgba(225,29,72,0.2);
+    }
+    .stButton > button:hover {
+        transform: scale(1.02);
+        box-shadow: 0 8px 24px rgba(225,29,72,0.3);
+    }
+    
+    /* شريط التقدم المتحرك */
+    .stProgress > div > div > div > div {
+        background: linear-gradient(90deg, #e11d48, #fb7185);
+        border-radius: 10px;
+        transition: width 0.5s ease;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -157,7 +311,7 @@ if logo:
     st.markdown(f"""
     <div class="header">
         <div style="display:flex; align-items:center; gap:12px;">
-            <img src="data:image/png;base64,{logo}" style="height:50px;">
+            <img src="data:image/png;base64,{logo}" style="height:48px;">
             <h1>Anemi<span>Check</span></h1>
         </div>
         <div class="badge">🩺 IA Médicale</div>
@@ -171,11 +325,55 @@ else:
     </div>
     """, unsafe_allow_html=True)
 
-# ========== UPLOAD ZONE ==========
+# ========== SIDEBAR ==========
+with st.sidebar:
+    st.markdown("---")
+    
+    # QR Code (sans lien texte)
+    APP_URL = "https://hwaxrexkahkxaazwwjjr3d.streamlit.app/"
+    qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&color=e11d48&data={APP_URL}"
+    
+    st.markdown(f"""
+    <div class="sidebar-glass">
+        <h4>📱 Accès rapide</h4>
+        <div class="qr-container">
+            <img src="{qr_api_url}" width="160" height="160" alt="QR Code">
+        </div>
+        <p style="text-align:center; font-size:13px; color:#64748b;">Scannez pour ouvrir l'application</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Conseils médicaux
+    st.markdown("""
+    <div class="sidebar-glass">
+        <h4>💡 Conseils santé</h4>
+        <ul>
+            <li><strong>Alimentation</strong> : privilégiez les aliments riches en fer (viande rouge, légumineuses, épinards).</li>
+            <li><strong>Vitamine C</strong> : améliore l'absorption du fer (agrumes, kiwi, poivrons).</li>
+            <li><strong>Hydratation</strong> : buvez au moins 1,5 L d'eau par jour.</li>
+            <li><strong>Consultez</strong> un médecin en cas de fatigue persistante, pâleur ou essoufflement.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Consultation médecin (Coming Soon)
+    st.markdown("""
+    <div class="sidebar-glass">
+        <h4>🩺 Consultation médecin <span class="coming-badge">Prochainement</span></h4>
+        <p>Prenez rendez-vous ou discutez avec un professionnel de santé directement depuis l'application.</p>
+        <div class="doctor-btn">📅 Réserver une téléconsultation</div>
+        <p style="font-size:12px; color:#94a3b8; text-align:center; margin-top:8px;">🔜 Disponible dans une prochaine mise à jour</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    st.caption("AnemiCheck v2.0 • IA médicale")
+
+# ========== ZONE UPLOAD ==========
 st.markdown("""
 <div class="upload-card">
     <div class="icon">📸</div>
-    <h3>Téléchargez une image de l'œil</h3>
+    <h3>Chargez une image de l'œil</h3>
     <p>Photo claire et bien éclairée de la conjonctive</p>
 </div>
 """, unsafe_allow_html=True)
@@ -191,7 +389,6 @@ with col2:
 
 # ========== FONCTIONS DE TRAITEMENT AVANCÉ ==========
 def clean_mask(mask, min_area=500):
-    """Nettoyer le masque : garder les gros contours, fermeture/ouverture morphologique"""
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cleaned = np.zeros_like(mask)
     for c in contours:
@@ -203,7 +400,6 @@ def clean_mask(mask, min_area=500):
     return cleaned
 
 def enhance_conjunctiva(image):
-    """Amélioration de la conjonctive avec CLAHE + flou + netteté"""
     if len(image.shape) == 3:
         lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
         l, a, b = cv2.split(lab)
@@ -218,10 +414,6 @@ def enhance_conjunctiva(image):
     return image
 
 def extract_best_conjunctiva(img, mask):
-    """
-    Extrait la région de la conjonctive à partir du masque.
-    Retourne : image recadrée améliorée, masque final, coordonnées (optionnel)
-    """
     mask = clean_mask(mask)
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if contours:
@@ -235,10 +427,8 @@ def extract_best_conjunctiva(img, mask):
         if w > 0 and h > 0:
             cropped = img[y:y+h, x:x+w]
             enhanced = enhance_conjunctiva(cropped)
-            # On retourne aussi le masque recadré pour visualisation si besoin
             mask_cropped = mask[y:y+h, x:x+w]
             return enhanced, mask_cropped, (x, y, w, h)
-    # Fallback : appliquer le masque à toute l'image
     conj = cv2.bitwise_and(img, img, mask=mask)
     enhanced = enhance_conjunctiva(conj)
     return enhanced, mask, None
@@ -254,7 +444,7 @@ def predict_anemia(model, image, device):
     tensor = transform(image).unsqueeze(0).to(device)
     with torch.no_grad():
         out = model(tensor)
-        pred = torch.sigmoid(out).item()  # valeur brute entre 0 et 1
+        pred = torch.sigmoid(out).item()
     if pred >= 0.5:
         return "Anemic", pred * 100, pred
     else:
@@ -267,10 +457,16 @@ def load_models():
     clf, dev_clf = load_classifier_model()
     return unet, dev_unet, clf, dev_clf
 
-# ========== TRAITEMENT ==========
+# ========== TRAITEMENT PRINCIPAL ==========
 if uploaded is not None:
     with st.spinner("🔃 Chargement des modèles..."):
         unet_model, unet_device, clf_model, clf_device = load_models()
+
+    # Barre de progression simulée pour l'effet
+    progress_bar = st.progress(0)
+    for i in range(10):
+        time.sleep(0.05)
+        progress_bar.progress((i+1)*10)
 
     with st.spinner("🔍 Analyse en cours..."):
         # Lecture et correction miroir
@@ -290,33 +486,33 @@ if uploaded is not None:
             raw_mask = (raw_mask > 0.5).astype(np.uint8) * 255
             raw_mask = cv2.resize(raw_mask, (img.shape[1], img.shape[0]))
 
-        # Extraction de la conjonctive (améliorée)
+        # Extraction de la conjonctive
         conj_enhanced, final_mask, bbox = extract_best_conjunctiva(img, raw_mask)
 
-        # Classification
+        # Classification (sans aucune correction)
         result, confidence, raw_pred = predict_anemia(clf_model, conj_enhanced, clf_device)
 
-        # Pour le graphique
+        # Valeurs réelles
         anemia_pct = raw_pred * 100
         non_pct = (1 - raw_pred) * 100
 
+        progress_bar.empty()
         st.success("✅ Analyse terminée avec succès")
 
-        # --- Affichage des images ---
+        # --- IMAGES ---
         st.markdown('<div class="section-title">📊 Résultats de l\'analyse</div>', unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
         with col1:
             st.markdown("**🖼️ Image originale**")
             st.image(img, use_container_width=True)
         with col2:
-            st.markdown("**🎭 Masque final (nettoyé)**")
+            st.markdown("**🎭 Masque final**")
             st.image(final_mask, use_container_width=True, clamp=True)
         with col3:
-            st.markdown("**👁️ Conjonctive extraite (améliorée)**")
-            # Ici on affiche UNIQUEMENT la conjonctive recadrée
+            st.markdown("**👁️ Conjonctive optimisée**")
             st.image(conj_enhanced, use_container_width=True)
 
-        # --- Métriques ---
+        # --- MÉTRIQUES ---
         before = np.sum(raw_mask > 0) / 255
         after = np.sum(final_mask > 0) / 255
         reduction = ((before - after) / before * 100) if before > 0 else 0
@@ -327,7 +523,7 @@ if uploaded is not None:
         with m2:
             st.metric("🧼 Nettoyage", f"{reduction:.1f}% d'artefacts")
 
-        # --- Diagnostic ---
+        # --- DIAGNOSTIC ---
         st.markdown('<div class="section-title">🩺 Diagnostic</div>', unsafe_allow_html=True)
         col_res, col_conf = st.columns(2)
         with col_res:
@@ -351,7 +547,7 @@ if uploaded is not None:
             st.metric("📊 Niveau de confiance", f"{confidence:.1f}%")
             st.progress(int(confidence))
 
-        # --- Graphique à barres ---
+        # --- GRAPHIQUE ---
         st.markdown('<div class="section-title">📈 Distribution des probabilités</div>', unsafe_allow_html=True)
         fig, ax = plt.subplots(figsize=(8,5))
         cats = ['Non Anemic', 'Anemic']
@@ -360,7 +556,7 @@ if uploaded is not None:
         bars = ax.bar(cats, vals, color=colors, width=0.5, edgecolor='white', linewidth=2)
         ax.set_ylim(0,100)
         ax.set_ylabel('Pourcentage (%)')
-        ax.set_title('Probabilité estimée par le modèle', fontweight='bold')
+        ax.set_title('Probabilité estimée par le modèle (décision brute)', fontweight='bold')
         ax.grid(True, alpha=0.3, axis='y')
         for bar, v in zip(bars, vals):
             ax.text(bar.get_x()+bar.get_width()/2, v+2, f'{v:.1f}%', ha='center', fontweight='bold', fontsize=14)
@@ -368,7 +564,7 @@ if uploaded is not None:
         ax.spines['right'].set_visible(False)
         st.pyplot(fig)
 
-        # --- Détails techniques ---
+        # --- DÉTAILS TECHNIQUES ---
         with st.expander("📘 Détails techniques"):
             st.write(f"**Modèle de segmentation:** U‑Net (ResNet34)")
             st.write(f"**Modèle de classification:** EfficientNet‑B3")
@@ -376,10 +572,10 @@ if uploaded is not None:
             st.write(f"**Valeur sigmoïde brute:** {raw_pred:.4f}")
             st.write(f"**Probabilité Anémie:** {anemia_pct:.1f}%")
             st.write(f"**Probabilité Non Anémie:** {non_pct:.1f}%")
-            st.write("**Prétraitement:** CLAHE + Filtrage + Netteté sur la conjonctive")
-            st.write("**Décision:** 100% autonome, sans correction humaine")
+            st.write("**Prétraitement:** CLAHE + Filtrage + Netteté")
+            st.write("**Décision:** 100% autonome, sans biais")
 
-        # --- Avertissement médical ---
+        # --- AVERTISSEMENT ---
         st.markdown("""
         <div class="disclaimer">
             <strong>⚠️ Avertissement médical</strong><br>
@@ -390,10 +586,10 @@ if uploaded is not None:
 
 else:
     st.markdown("""
-    <div style="background:white; border-radius:24px; padding:3rem; text-align:center; box-shadow:0 4px 16px rgba(0,0,0,0.04); margin-top:2rem;">
-        <div style="font-size:64px;">👁️</div>
+    <div style="background:rgba(255,255,255,0.6); backdrop-filter:blur(8px); border-radius:28px; padding:3rem; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.04); margin-top:2rem; border:1px solid rgba(255,255,255,0.3); animation:fadeUp 0.8s ease;">
+        <div style="font-size:64px; animation:float 3s ease-in-out infinite;">👁️</div>
         <h3 style="color:#0f172a;">Prêt à analyser</h3>
-        <p style="color:#64748b;">Utilisez le formulaire ci-dessus pour charger une image de l'œil.</p>
+        <p style="color:#64748b;">Chargez une image de l'œil pour commencer le diagnostic.</p>
     </div>
     """, unsafe_allow_html=True)
 
