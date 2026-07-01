@@ -120,6 +120,12 @@ LANGUAGES = {
         "sidebar_doctor_btn": "📅 حجز استشارة",
         "sidebar_doctor_soon": "🔜 متاح في التحديث القادم",
         "sidebar_version": "AnemiCheck v2.0 • الذكاء الاصطناعي الطبي",
+        "nav_home": "🏠 الرئيسية",
+        "nav_analyze": "🔬 تحليل صورة الدم",
+        "nav_history": "📊 النتائج السابقة",
+        "nav_info": "ℹ️ معلومات المرض",
+        "nav_health": "💡 نصائح صحية",
+        "nav_about": "📱 حول التطبيق",
     },
     "fr": {
         "app_title": "AnemiCheck AI",
@@ -217,6 +223,12 @@ LANGUAGES = {
         "sidebar_doctor_btn": "📅 Réserver",
         "sidebar_doctor_soon": "🔜 Bientôt disponible",
         "sidebar_version": "AnemiCheck v2.0 • IA médicale",
+        "nav_home": "🏠 Accueil",
+        "nav_analyze": "🔬 Analyser l'image",
+        "nav_history": "📊 Historique",
+        "nav_info": "ℹ️ Infos maladie",
+        "nav_health": "💡 Conseils santé",
+        "nav_about": "📱 À propos",
     },
     "en": {
         "app_title": "AnemiCheck AI",
@@ -314,6 +326,12 @@ LANGUAGES = {
         "sidebar_doctor_btn": "📅 Book Appointment",
         "sidebar_doctor_soon": "🔜 Coming soon",
         "sidebar_version": "AnemiCheck v2.0 • Medical AI",
+        "nav_home": "🏠 Home",
+        "nav_analyze": "🔬 Analyze Image",
+        "nav_history": "📊 History",
+        "nav_info": "ℹ️ Disease Info",
+        "nav_health": "💡 Health Tips",
+        "nav_about": "📱 About",
     }
 }
 
@@ -417,6 +435,28 @@ st.markdown("""
         align-items: center;
         gap: 8px;
         font-size: 15px;
+    }
+    .sidebar-glass .nav-item {
+        padding: 10px 14px;
+        border-radius: 12px;
+        margin: 4px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 500;
+        color: #334155;
+        background: rgba(255,255,255,0.5);
+        cursor: default;
+        transition: all 0.3s ease;
+    }
+    .sidebar-glass .nav-item.active {
+        background: rgba(225,29,72,0.12);
+        color: #e11d48;
+        font-weight: 600;
+        border: 1px solid rgba(225,29,72,0.15);
+    }
+    .sidebar-glass .nav-item:hover {
+        background: rgba(225,29,72,0.04);
     }
     .sidebar-glass p, .sidebar-glass li {
         color: #334155;
@@ -842,6 +882,19 @@ with st.sidebar:
         st.rerun()
     
     st.markdown("---")
+    
+    # ===== قائمة ثابتة (غير قابلة للنقر) =====
+    st.markdown(f"""
+    <div class="sidebar-glass">
+        <h4>📋 القائمة / Menu</h4>
+        <div class="nav-item active">🏠 {t('nav_home')}</div>
+        <div class="nav-item">🔬 {t('nav_analyze')}</div>
+        <div class="nav-item">📊 {t('nav_history')}</div>
+        <div class="nav-item">ℹ️ {t('nav_info')}</div>
+        <div class="nav-item">💡 {t('nav_health')}</div>
+        <div class="nav-item">📱 {t('nav_about')}</div>
+    </div>
+    """, unsafe_allow_html=True)
     
     # QR Code
     APP_URL = "https://hwaxrexkahkxaazwwjjr3d.streamlit.app/"
