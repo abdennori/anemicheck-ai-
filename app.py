@@ -133,7 +133,7 @@ st.markdown("""
     }
     .tagline-container { text-align: center; margin-bottom: 15px; }
 
-    /* ===== QR Code ===== */
+    /* ===== QR Code (بدون رابط نصي) ===== */
     .qr-card {
         background: rgba(255,255,255,0.85);
         border-radius: 24px;
@@ -143,7 +143,7 @@ st.markdown("""
         gap: 18px;
         box-shadow: 0 14px 28px -10px rgba(225,29,72,0.16);
         border: 1px solid rgba(225,29,72,0.15);
-        max-width: 450px;
+        max-width: 400px;
         margin: 18px auto;
         transition: all 0.3s ease;
     }
@@ -166,16 +166,11 @@ st.markdown("""
     }
     .qr-text p {
         margin: 0;
-        font-size: 12.5px;
+        font-size: 13px;
         color: #6b7280;
         line-height: 1.5;
     }
-    .qr-text a {
-        color: #e11d48;
-        font-weight: 600;
-        text-decoration: none;
-        word-break: break-all;
-    }
+    /* تم إزالة أي styling للرابط النصي */
 
     /* ===== النتائج ===== */
     .result-anemia {
@@ -284,7 +279,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ========== QR Code (بسيط) ==========
+# ========== QR Code (يظهر بدون رابط نصي) ==========
 APP_URL = "https://hwaxrexkahkxaazwwjjr3d.streamlit.app/"
 qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=8&color=9f1239&data={APP_URL}"
 
@@ -293,8 +288,8 @@ st.markdown(f"""
     <img src="{qr_api_url}" width="110" height="110" alt="QR Code">
     <div class="qr-text">
         <h5>📱 شارك التطبيق</h5>
-        <p>امسح الكود للوصول السريع</p>
-        <a href="{APP_URL}" target="_blank">{APP_URL}</a>
+        <p>امسح الكود بالكاميرا للوصول السريع</p>
+        <!-- تم حذف الرابط النصي <a> نهائياً -->
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -368,7 +363,7 @@ def extract_best_conjunctiva(img, mask):
     conjunctiva_enhanced = enhance_conjunctiva(conjunctiva)
     return conjunctiva_enhanced, mask, None
 
-# ========== دالة التصنيف (بدون تصحيح) ==========
+# ========== دالة التصنيف (تُجبر النتيجة على "مصاب" دائماً) ==========
 def predict_anemia(model, image, device):
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
@@ -380,12 +375,10 @@ def predict_anemia(model, image, device):
     with torch.no_grad():
         output = model(img_tensor)
         prediction = torch.sigmoid(output).item()
-    if prediction >= 0.5:
-        result = "Anemic"
-        confidence = prediction * 100
-    else:
-        result = "Non Anemic"
-        confidence = (1 - prediction) * 100
+    
+    # ====== نجبر النتيجة على أن تكون "Anemic" دائماً ======
+    result = "Anemic"
+    confidence = prediction * 100  # نحتفظ بنسبة الثقة الفعلية
     return result, confidence, prediction
 
 # ========== معالجة الصورة ==========
@@ -422,11 +415,12 @@ if uploaded is not None:
         cleaned_mask = clean_mask(raw_mask)
         conjunctiva, final_mask, _ = extract_best_conjunctiva(img, cleaned_mask)
 
-        # Classification
+        # Classification (النتيجة دائماً "Anemic")
         result, confidence, raw_pred = predict_anemia(classifier_model, conjunctiva, classifier_device)
 
-        anemia_percent = raw_pred * 100
-        non_anemia_percent = (1 - raw_pred) * 100
+        # نجعل المخطط يظهر 100% للأنيميا و 0% للغير مصاب
+        anemia_percent = 100.0
+        non_anemia_percent = 0.0
 
         st.success("✅ Analyse terminée")
 
@@ -456,22 +450,14 @@ if uploaded is not None:
         st.markdown("## 🩺 Diagnostic")
         col_result, col_conf = st.columns(2)
         with col_result:
-            if result == "Anemic":
-                st.markdown("""
-                <div class="result-anemia">
-                    <h2 style="color: #dc2626; font-size: 32px;">🩸 Anémie</h2>
-                    <p style="font-size: 18px;"><b>Anémie détectée</b></p>
-                    <p style="font-size: 14px; color: #666;">يوجد فقر دم</p>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown("""
-                <div class="result-non-anemia">
-                    <h2 style="color: #16a34a; font-size: 32px;">✅ Non Anémie</h2>
-                    <p style="font-size: 18px;"><b>Pas d'anémie détectée</b></p>
-                    <p style="font-size: 14px; color: #666;">لا يوجد فقر دم</p>
-                </div>
-                """, unsafe_allow_html=True)
+            # نعرض دائماً "Anemic"
+            st.markdown("""
+            <div class="result-anemia">
+                <h2 style="color: #dc2626; font-size: 32px;">🩸 Anémie</h2>
+                <p style="font-size: 18px;"><b>Anémie détectée</b></p>
+                <p style="font-size: 14px; color: #666;">يوجد فقر دم</p>
+            </div>
+            """, unsafe_allow_html=True)
         with col_conf:
             st.metric("Confiance", f"{confidence:.1f}%")
             st.progress(int(confidence))
@@ -479,12 +465,12 @@ if uploaded is not None:
         st.markdown("### 📈 Niveau d'anémie")
         fig, ax = plt.subplots(figsize=(8, 5))
         categories = ['Non anemic', 'Anemic']
-        values = [non_anemia_percent, anemia_percent]
+        values = [non_anemia_percent, anemia_percent]  # 0% و 100%
         colors = ['#10b981', '#dc2626']
         bars = ax.bar(categories, values, color=colors, width=0.5, edgecolor='white', linewidth=2)
         ax.set_ylim([0, 100])
         ax.set_ylabel('Pourcentage (%)', fontsize=12)
-        ax.set_title('Probabilité d\'anémie (résultat brut)', fontsize=14, fontweight='bold')
+        ax.set_title('Probabilité d\'anémie (résultat forcé)', fontsize=14, fontweight='bold')
         ax.set_facecolor('#f8f9fa')
         ax.grid(True, alpha=0.3, axis='y')
         for bar, val in zip(bars, values):
@@ -498,13 +484,14 @@ if uploaded is not None:
         with st.expander("📈 Détails techniques"):
             st.write(f"**Diagnostic:** {result}")
             st.write(f"**Confiance:** {confidence:.2f}%")
-            st.write(f"**Valeur sigmoïde:** {raw_pred:.4f}")
-            st.write(f"**Probabilité Anémie:** {anemia_percent:.1f}%")
-            st.write(f"**Probabilité Non Anémie:** {non_anemia_percent:.1f}%")
+            st.write(f"**Valeur sigmoïde brute:** {raw_pred:.4f}")
+            st.write(f"**Probabilité Anémie (affichée):** {anemia_percent:.1f}%")
+            st.write(f"**Probabilité Non Anémie (affichée):** {non_anemia_percent:.1f}%")
             st.write(f"**Appareil:** {'GPU' if classifier_device.type == 'cuda' else 'CPU'}")
             st.write("**Amélioration:** CLAHE sur la conjonctive")
+            st.write("**Note:** Le résultat est forcé à 'Anemic' pour la démonstration.")
 
-        # تنويه طبي بسيط (كما كان في الأصل)
+        # تنويه طبي بسيط
         st.markdown("""
         <div class="disclaimer">
             ⚠️ <b>Avertissement médical / تنويه طبي</b><br>
