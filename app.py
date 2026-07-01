@@ -1,5 +1,10 @@
 import streamlit as st
 import torch
+import cv2
+from PIL import Image
+import qrcode
+import streamlit as st
+import torch
 import torch.nn as nn
 import cv2
 import numpy as np
@@ -14,7 +19,7 @@ from model_loader import load_unet_model, load_classifier_model
 
 # ========== إعداد الصفحة ==========
 st.set_page_config(
-    page_title="AnemicCheck - Détection d'Anémie",
+    page_title="AnemiCheck - Détection d'Anémie",
     page_icon="🩸",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -336,6 +341,15 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+st.subheader("📱 Scan QR Code")
+
+url = "https://hwaxrexkahkxaazwwjjr3d.streamlit.app/"
+
+qr = qrcode.make(url)
+
+st.image(qr, width=200)
+
+st.write(url)
 
 # ========== JavaScript لطلب الكاميرا ==========
 st.markdown("""
