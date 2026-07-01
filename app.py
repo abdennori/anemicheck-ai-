@@ -463,7 +463,7 @@ def load_unet_model():
     import segmentation_models_pytorch as smp
     
     unet = smp.Unet(encoder_name="resnet34", encoder_weights=None, in_channels=3, classes=1)
-    unet.load_state_dict(torch.load("Unet_model_.pth", map_location=device, weights_only=True))
+    unet.load_state_dict(torch.load("unet_model.pth", map_location=device, weights_only=True))
     unet.to(device)
     unet.eval()
     
