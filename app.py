@@ -439,6 +439,24 @@ st.markdown("""
         padding: 6px 16px;
         border-radius: 30px;
     }
+    .header-logo-badge {
+        width: 56px;
+        height: 56px;
+        min-width: 56px;
+        border-radius: 16px;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+        overflow: hidden;
+    }
+    .header-logo-badge img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 4px;
+    }
     .header-icon-btn {
         width: 38px;
         height: 38px;
@@ -1030,17 +1048,24 @@ if 'history' not in st.session_state:
     st.session_state.history = []
 
 # ========== HEADER ==========
-def get_logo_base64():
-    for name in ["logo.png", "logo.jpg", "logo.jpeg", "LOGO.png"]:
+def get_file_base64(names):
+    for name in names:
         if os.path.exists(name):
             with open(name, "rb") as f:
                 return base64.b64encode(f.read()).decode()
     return None
 
-logo = get_logo_base64()
-
+logo = get_file_base64(["logo.png", "logo.jpg", "logo.jpeg", "LOGO.png"])
+logo_icon = get_file_base64(["logo_icon.png", "logo-icon.png"]) or logo
 # ========== SIDEBAR ==========
 with st.sidebar:
+    if logo:
+        st.markdown(f"""
+        <div style="text-align:center; margin-bottom:1rem;">
+            <img src="data:image/png;base64,{logo}" style="max-width:170px; width:100%;">
+        </div>
+        """, unsafe_allow_html=True)
+
     # Sélecteur de langue
     lang_map = {
         "ar": "🇸🇦 العربية",
@@ -1114,7 +1139,7 @@ with st.sidebar:
 
 # ========== PAGE PRINCIPALE ==========
 # Header avec badges
-logo_html = f'<img src="data:image/png;base64,{logo}" style="height:38px;">' if logo else '<div style="font-size:30px;">🧬</div>'
+logo_html = f'<div class="header-logo-badge"><img src="data:image/png;base64,{logo_icon}"></div>' if logo_icon else '<div class="header-logo-badge" style="font-size:26px;">🧬</div>'
 
 st.markdown(f"""
 <div class="header">
