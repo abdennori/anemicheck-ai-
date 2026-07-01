@@ -10,6 +10,8 @@ matplotlib.use("Agg")
 import base64
 import os
 import time
+import pandas as pd
+from datetime import datetime
 from model_loader import load_unet_model, load_classifier_model
 
 # ========== إعداد الصفحة ==========
@@ -27,7 +29,6 @@ st.markdown("""
     
     * { font-family: 'Inter', sans-serif; }
     
-    /* خلفية متدرجة متحركة */
     .stApp {
         background: linear-gradient(-45deg, #f8fafc, #eef2ff, #f1f5f9, #f8fafc);
         background-size: 400% 400%;
@@ -39,7 +40,7 @@ st.markdown("""
         100% { background-position: 0% 50%; }
     }
     
-    /* شريط علوي مع تأثير زجاجي */
+    /* ===== HEADER ===== */
     .header {
         background: rgba(255,255,255,0.7);
         backdrop-filter: blur(12px);
@@ -75,7 +76,7 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(225,29,72,0.25);
     }
     
-    /* بطاقة رفع الصورة - Glassmorphism */
+    /* ===== ZONE UPLOAD ===== */
     .upload-card {
         background: rgba(255,255,255,0.6);
         backdrop-filter: blur(12px);
@@ -117,7 +118,25 @@ st.markdown("""
         font-size: 14px;
     }
     
-    /* بطاقات النتائج مع أنيميشن */
+    /* ===== PREVIEW ===== */
+    .preview-container {
+        background: rgba(255,255,255,0.6);
+        backdrop-filter: blur(8px);
+        border-radius: 24px;
+        padding: 1.5rem;
+        border: 1px solid rgba(255,255,255,0.3);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+        margin: 1.5rem 0;
+        animation: fadeUp 0.6s ease;
+    }
+    .preview-container img {
+        border-radius: 16px;
+        max-height: 300px;
+        object-fit: contain;
+        width: 100%;
+    }
+    
+    /* ===== RESULT CARDS ===== */
     .result-card {
         border-radius: 24px;
         padding: 1.8rem;
@@ -125,6 +144,7 @@ st.markdown("""
         border-left: 6px solid #e11d48;
         animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+        transition: all 0.3s ease;
     }
     @keyframes popIn {
         from { opacity: 0; transform: scale(0.9); }
@@ -155,7 +175,7 @@ st.markdown("""
         color: #64748b;
     }
     
-    /* شريط جانبي بتصميم زجاجي */
+    /* ===== SIDEBAR ===== */
     .sidebar-glass {
         background: rgba(255,255,255,0.6);
         backdrop-filter: blur(12px);
@@ -231,7 +251,7 @@ st.markdown("""
         letter-spacing: 0.5px;
     }
     
-    /* تنويه طبي */
+    /* ===== DISCLAIMER ===== */
     .disclaimer {
         background: rgba(254, 252, 232, 0.8);
         backdrop-filter: blur(4px);
@@ -245,7 +265,7 @@ st.markdown("""
         animation: fadeUp 1s ease;
     }
     
-    /* تحسينات عامة */
+    /* ===== GENERAL ===== */
     .section-title {
         font-size: 22px;
         font-weight: 700;
@@ -289,11 +309,58 @@ st.markdown("""
         box-shadow: 0 8px 24px rgba(225,29,72,0.3);
     }
     
-    /* شريط التقدم المتحرك */
     .stProgress > div > div > div > div {
         background: linear-gradient(90deg, #e11d48, #fb7185);
         border-radius: 10px;
         transition: width 0.5s ease;
+    }
+    
+    /* ===== HISTORY TABLE ===== */
+    .history-container {
+        background: rgba(255,255,255,0.6);
+        backdrop-filter: blur(8px);
+        border-radius: 20px;
+        padding: 1.5rem;
+        border: 1px solid rgba(255,255,255,0.3);
+        margin-top: 2rem;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .history-container table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    .history-container th {
+        background: #f1f5f9;
+        padding: 8px 12px;
+        text-align: left;
+        font-weight: 600;
+        color: #0f172a;
+    }
+    .history-container td {
+        padding: 8px 12px;
+        border-bottom: 1px solid #e2e8f0;
+        color: #334155;
+    }
+    .history-container tr:hover {
+        background: rgba(225,29,72,0.04);
+    }
+    .history-badge-anemic {
+        background: #fee2e2;
+        color: #dc2626;
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 12px;
+    }
+    .history-badge-non {
+        background: #dcfce7;
+        color: #16a34a;
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 12px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -383,11 +450,11 @@ with col1:
     option = st.radio("Méthode", ["📁 Fichier", "📷 Caméra"], horizontal=True, label_visibility="collapsed")
 with col2:
     if option == "📁 Fichier":
-        uploaded = st.file_uploader("", type=["jpg","png","jpeg"], label_visibility="collapsed")
+        uploaded = st.file_uploader("", type=["jpg","png","jpeg"], label_visibility="collapsed", key="file_uploader")
     else:
-        uploaded = st.camera_input("", label_visibility="collapsed")
+        uploaded = st.camera_input("", label_visibility="collapsed", key="camera_input")
 
-# ========== FONCTIONS DE TRAITEMENT AVANCÉ ==========
+# ========== FONCTIONS ==========
 def clean_mask(mask, min_area=500):
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cleaned = np.zeros_like(mask)
@@ -433,7 +500,6 @@ def extract_best_conjunctiva(img, mask):
     enhanced = enhance_conjunctiva(conj)
     return enhanced, mask, None
 
-# ========== CLASSIFICATION (SANS BIAIS) ==========
 def predict_anemia(model, image, device):
     transform = transforms.Compose([
         transforms.Resize((224,224)),
@@ -450,139 +516,167 @@ def predict_anemia(model, image, device):
     else:
         return "Non Anemic", (1 - pred) * 100, pred
 
-# ========== CHARGEMENT LAZY ==========
 @st.cache_resource
 def load_models():
     unet, dev_unet = load_unet_model()
     clf, dev_clf = load_classifier_model()
     return unet, dev_unet, clf, dev_clf
 
-# ========== TRAITEMENT PRINCIPAL ==========
+# ========== SESSION STATE POUR L'HISTORIQUE ==========
+if 'history' not in st.session_state:
+    st.session_state.history = []
+
+# ========== TRAITEMENT ==========
 if uploaded is not None:
-    with st.spinner("🔃 Chargement des modèles..."):
-        unet_model, unet_device, clf_model, clf_device = load_models()
+    # Affichage de la prévisualisation
+    st.markdown("""
+    <div class="preview-container">
+        <h4 style="margin-top:0;">📷 Aperçu de l'image</h4>
+    """, unsafe_allow_html=True)
+    col_preview, _ = st.columns([1, 1])
+    with col_preview:
+        st.image(uploaded, use_container_width=True, caption="Image chargée")
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Bouton Analyse
+    if st.button("🔍 Lancer l'analyse", use_container_width=True):
+        with st.spinner("🔃 Chargement des modèles..."):
+            unet_model, unet_device, clf_model, clf_device = load_models()
 
-    # Barre de progression simulée pour l'effet
-    progress_bar = st.progress(0)
-    for i in range(10):
-        time.sleep(0.05)
-        progress_bar.progress((i+1)*10)
+        progress_bar = st.progress(0)
+        for i in range(10):
+            time.sleep(0.05)
+            progress_bar.progress((i+1)*10)
 
-    with st.spinner("🔍 Analyse en cours..."):
-        # Lecture et correction miroir
-        img = np.array(Image.open(uploaded).convert('RGB'))
-        img = cv2.flip(img, 1)
+        with st.spinner("🔍 Analyse en cours..."):
+            # Lecture et correction miroir
+            img = np.array(Image.open(uploaded).convert('RGB'))
+            img = cv2.flip(img, 1)
 
-        # Segmentation U‑Net
-        transform_unet = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.Resize((256,256)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225])
-        ])
-        tensor = transform_unet(img).unsqueeze(0).to(unet_device)
-        with torch.no_grad():
-            raw_mask = torch.sigmoid(unet_model(tensor)).squeeze().cpu().numpy()
-            raw_mask = (raw_mask > 0.5).astype(np.uint8) * 255
-            raw_mask = cv2.resize(raw_mask, (img.shape[1], img.shape[0]))
+            # Segmentation U‑Net
+            transform_unet = transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.Resize((256,256)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225])
+            ])
+            tensor = transform_unet(img).unsqueeze(0).to(unet_device)
+            with torch.no_grad():
+                raw_mask = torch.sigmoid(unet_model(tensor)).squeeze().cpu().numpy()
+                raw_mask = (raw_mask > 0.5).astype(np.uint8) * 255
+                raw_mask = cv2.resize(raw_mask, (img.shape[1], img.shape[0]))
 
-        # Extraction de la conjonctive
-        conj_enhanced, final_mask, bbox = extract_best_conjunctiva(img, raw_mask)
+            conj_enhanced, final_mask, bbox = extract_best_conjunctiva(img, raw_mask)
 
-        # Classification (sans aucune correction)
-        result, confidence, raw_pred = predict_anemia(clf_model, conj_enhanced, clf_device)
+            result, confidence, raw_pred = predict_anemia(clf_model, conj_enhanced, clf_device)
 
-        # Valeurs réelles
-        anemia_pct = raw_pred * 100
-        non_pct = (1 - raw_pred) * 100
+            anemia_pct = raw_pred * 100
+            non_pct = (1 - raw_pred) * 100
 
-        progress_bar.empty()
-        st.success("✅ Analyse terminée avec succès")
+            progress_bar.empty()
+            st.success("✅ Analyse terminée avec succès")
 
-        # --- IMAGES ---
-        st.markdown('<div class="section-title">📊 Résultats de l\'analyse</div>', unsafe_allow_html=True)
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.markdown("**🖼️ Image originale**")
-            st.image(img, use_container_width=True)
-        with col2:
-            st.markdown("**🎭 Masque final**")
-            st.image(final_mask, use_container_width=True, clamp=True)
-        with col3:
-            st.markdown("**👁️ Conjonctive optimisée**")
-            st.image(conj_enhanced, use_container_width=True)
+            # --- IMAGES ---
+            st.markdown('<div class="section-title">📊 Résultats de l\'analyse</div>', unsafe_allow_html=True)
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.markdown("**🖼️ Originale**")
+                st.image(img, use_container_width=True)
+            with col2:
+                st.markdown("**🎭 Masque**")
+                st.image(final_mask, use_container_width=True, clamp=True)
+            with col3:
+                st.markdown("**👁️ Conjonctive optimisée**")
+                st.image(conj_enhanced, use_container_width=True)
 
-        # --- MÉTRIQUES ---
-        before = np.sum(raw_mask > 0) / 255
-        after = np.sum(final_mask > 0) / 255
-        reduction = ((before - after) / before * 100) if before > 0 else 0
+            # --- MÉTRIQUES ---
+            before = np.sum(raw_mask > 0) / 255
+            after = np.sum(final_mask > 0) / 255
+            reduction = ((before - after) / before * 100) if before > 0 else 0
 
-        m1, m2 = st.columns(2)
-        with m1:
-            st.metric("📐 Surface segmentée", f"{after:.0f} px²")
-        with m2:
-            st.metric("🧼 Nettoyage", f"{reduction:.1f}% d'artefacts")
+            m1, m2 = st.columns(2)
+            with m1:
+                st.metric("📐 Surface segmentée", f"{after:.0f} px²")
+            with m2:
+                st.metric("🧼 Nettoyage", f"{reduction:.1f}% d'artefacts")
 
-        # --- DIAGNOSTIC ---
-        st.markdown('<div class="section-title">🩺 Diagnostic</div>', unsafe_allow_html=True)
-        col_res, col_conf = st.columns(2)
-        with col_res:
-            if result == "Anemic":
-                st.markdown(f"""
-                <div class="result-card positive">
-                    <h2>🩸 Anémie</h2>
-                    <div class="confidence">Probabilité : <strong>{anemia_pct:.1f}%</strong></div>
-                    <div class="sub">Le modèle détecte une anémie probable.</div>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown(f"""
-                <div class="result-card negative">
-                    <h2>✅ Non Anémie</h2>
-                    <div class="confidence">Probabilité : <strong>{non_pct:.1f}%</strong></div>
-                    <div class="sub">Le modèle ne détecte pas d'anémie.</div>
-                </div>
-                """, unsafe_allow_html=True)
-        with col_conf:
-            st.metric("📊 Niveau de confiance", f"{confidence:.1f}%")
-            st.progress(int(confidence))
+            # --- DIAGNOSTIC ---
+            st.markdown('<div class="section-title">🩺 Diagnostic</div>', unsafe_allow_html=True)
+            col_res, col_conf = st.columns(2)
+            with col_res:
+                if result == "Anemic":
+                    st.markdown(f"""
+                    <div class="result-card positive">
+                        <h2>🩸 Anémie</h2>
+                        <div class="confidence">Probabilité : <strong>{anemia_pct:.1f}%</strong></div>
+                        <div class="sub">Le modèle détecte une anémie probable.</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.markdown(f"""
+                    <div class="result-card negative">
+                        <h2>✅ Non Anémie</h2>
+                        <div class="confidence">Probabilité : <strong>{non_pct:.1f}%</strong></div>
+                        <div class="sub">Le modèle ne détecte pas d'anémie.</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            with col_conf:
+                st.metric("📊 Niveau de confiance", f"{confidence:.1f}%")
+                st.progress(int(confidence))
 
-        # --- GRAPHIQUE ---
-        st.markdown('<div class="section-title">📈 Distribution des probabilités</div>', unsafe_allow_html=True)
-        fig, ax = plt.subplots(figsize=(8,5))
-        cats = ['Non Anemic', 'Anemic']
-        vals = [non_pct, anemia_pct]
-        colors = ['#10b981', '#dc2626']
-        bars = ax.bar(cats, vals, color=colors, width=0.5, edgecolor='white', linewidth=2)
-        ax.set_ylim(0,100)
-        ax.set_ylabel('Pourcentage (%)')
-        ax.set_title('Probabilité estimée par le modèle (décision brute)', fontweight='bold')
-        ax.grid(True, alpha=0.3, axis='y')
-        for bar, v in zip(bars, vals):
-            ax.text(bar.get_x()+bar.get_width()/2, v+2, f'{v:.1f}%', ha='center', fontweight='bold', fontsize=14)
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        st.pyplot(fig)
+            # --- GRAPHIQUE ---
+            st.markdown('<div class="section-title">📈 Distribution des probabilités</div>', unsafe_allow_html=True)
+            fig, ax = plt.subplots(figsize=(8,5))
+            cats = ['Non Anemic', 'Anemic']
+            vals = [non_pct, anemia_pct]
+            colors = ['#10b981', '#dc2626']
+            bars = ax.bar(cats, vals, color=colors, width=0.5, edgecolor='white', linewidth=2)
+            ax.set_ylim(0,100)
+            ax.set_ylabel('Pourcentage (%)')
+            ax.set_title('Probabilité estimée par le modèle', fontweight='bold')
+            ax.grid(True, alpha=0.3, axis='y')
+            for bar, v in zip(bars, vals):
+                ax.text(bar.get_x()+bar.get_width()/2, v+2, f'{v:.1f}%', ha='center', fontweight='bold', fontsize=14)
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            st.pyplot(fig)
 
-        # --- DÉTAILS TECHNIQUES ---
-        with st.expander("📘 Détails techniques"):
-            st.write(f"**Modèle de segmentation:** U‑Net (ResNet34)")
-            st.write(f"**Modèle de classification:** EfficientNet‑B3")
-            st.write(f"**Appareil:** {'GPU' if clf_device.type == 'cuda' else 'CPU'}")
-            st.write(f"**Valeur sigmoïde brute:** {raw_pred:.4f}")
-            st.write(f"**Probabilité Anémie:** {anemia_pct:.1f}%")
-            st.write(f"**Probabilité Non Anémie:** {non_pct:.1f}%")
-            st.write("**Prétraitement:** CLAHE + Filtrage + Netteté")
-            st.write("**Décision:** 100% autonome, sans biais")
+            # --- HISTORIQUE ---
+            entry = {
+                "Date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "Diagnostic": result,
+                "Confiance": f"{confidence:.1f}%",
+                "Probabilité Anémie": f"{anemia_pct:.1f}%"
+            }
+            st.session_state.history.append(entry)
+            if len(st.session_state.history) > 10:
+                st.session_state.history.pop(0)
 
-        # --- AVERTISSEMENT ---
-        st.markdown("""
-        <div class="disclaimer">
-            <strong>⚠️ Avertissement médical</strong><br>
-            Ce résultat est généré par un modèle d'intelligence artificielle et ne remplace en aucun cas l'avis d'un médecin.<br>
-            Consultez un professionnel de santé pour un diagnostic fiable.
-        </div>
-        """, unsafe_allow_html=True)
+            if st.session_state.history:
+                st.markdown('<div class="section-title">📋 Historique des analyses</div>', unsafe_allow_html=True)
+                df = pd.DataFrame(st.session_state.history)
+                # Afficher sous forme de tableau stylisé
+                st.dataframe(df, use_container_width=True, hide_index=True)
+
+            # --- DÉTAILS TECHNIQUES ---
+            with st.expander("📘 Détails techniques"):
+                st.write(f"**Modèle de segmentation:** U‑Net (ResNet34)")
+                st.write(f"**Modèle de classification:** EfficientNet‑B3")
+                st.write(f"**Appareil:** {'GPU' if clf_device.type == 'cuda' else 'CPU'}")
+                st.write(f"**Valeur sigmoïde brute:** {raw_pred:.4f}")
+                st.write(f"**Probabilité Anémie:** {anemia_pct:.1f}%")
+                st.write(f"**Probabilité Non Anémie:** {non_pct:.1f}%")
+                st.write("**Prétraitement:** CLAHE + Filtrage + Netteté")
+                st.write("**Décision:** 100% autonome, sans biais")
+
+            # --- AVERTISSEMENT ---
+            st.markdown("""
+            <div class="disclaimer">
+                <strong>⚠️ Avertissement médical</strong><br>
+                Ce résultat est généré par un modèle d'intelligence artificielle et ne remplace en aucun cas l'avis d'un médecin.<br>
+                Consultez un professionnel de santé pour un diagnostic fiable.
+            </div>
+            """, unsafe_allow_html=True)
 
 else:
     st.markdown("""
