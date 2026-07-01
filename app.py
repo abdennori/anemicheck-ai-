@@ -23,13 +23,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-from PIL import Image
-
-qr = Image.open("qr_code.png")
-
-st.sidebar.markdown("## 📱 Scan QR Code")
-st.sidebar.image(qr, width=180)
-
 # ========== CSS للواجهة ==========
 st.markdown("""
 <style>
