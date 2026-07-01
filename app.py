@@ -23,6 +23,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
 # ========== CSS للواجهة (تصميم عصري) ==========
 st.markdown("""
 <style>
@@ -384,6 +385,75 @@ st.markdown("""
         border-radius: 14px !important;
         background: rgba(255,255,255,0.7) !important;
     }
+
+    /* ===== بطاقات "Coming Soon" للاستشارة ===== */
+    .consult-card {
+        background: rgba(255,255,255,0.9);
+        backdrop-filter: blur(8px);
+        border-radius: 20px;
+        padding: 20px;
+        text-align: center;
+        border: 1px solid rgba(225,29,72,0.15);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .consult-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 32px rgba(225,29,72,0.12);
+    }
+
+    .consult-card .icon {
+        font-size: 48px;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .consult-card h4 {
+        color: #1f2937;
+        font-weight: 700;
+        margin: 8px 0 5px;
+        font-size: 18px;
+    }
+
+    .consult-card p {
+        color: #6b7280;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    .coming-soon-badge {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: white;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 14px;
+        border-radius: 30px;
+        display: inline-block;
+        margin-top: 12px;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(245,158,11,0.3);
+    }
+
+    .consult-card.disabled {
+        opacity: 0.7;
+        cursor: default;
+    }
+
+    .consult-card.disabled .stButton > button {
+        background: #d1d5db !important;
+        box-shadow: none !important;
+        cursor: not-allowed;
+    }
+
+    /* ===== تحسينات إضافية ===== */
+    .feature-icon {
+        font-size: 28px;
+        vertical-align: middle;
+        margin-right: 8px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -478,15 +548,6 @@ if option == "📁 Télécharger une image":
 else:
     uploaded = st.camera_input("📷 Prenez une photo de l'œil", disabled=False, label_visibility="collapsed")
 
-
-
-unet, device = load_unet_model()
-classifier, _ = load_classifier_model()
-
-# ملاحظة: النماذج ما عادش تتحمل مباشرة هنا — تتحمل غير كي المستخدم يدخل صورة
-# (شوف أسفل، جوه "if uploaded is not None"). هكذا واجهة رفع الصور تبان دايما
-# حتى لو صرا مشكل فتحميل الموديلات.
-
 # ========== دالة تنظيف الماسك ==========
 def clean_mask(mask, min_area=500):
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -502,6 +563,23 @@ def clean_mask(mask, min_area=500):
     clean = cv2.morphologyEx(clean, cv2.MORPH_OPEN, kernel)
     
     return clean
+
+def enhance_conjunctiva(image):
+    """
+    Améliore la conjonctive extraite avec CLAHE pour augmenter le contraste
+    et faciliter la classification.
+    """
+    if len(image.shape) == 3:
+        # Convertir en LAB pour appliquer CLAHE sur le canal L
+        lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
+        l, a, b = cv2.split(lab)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        l_enhanced = clahe.apply(l)
+        lab_enhanced = cv2.merge((l_enhanced, a, b))
+        enhanced = cv2.cvtColor(lab_enhanced, cv2.COLOR_LAB2RGB)
+        return enhanced
+    else:
+        return image
 
 def extract_best_conjunctiva(img, mask):
     mask = clean_mask(mask)
@@ -519,10 +597,14 @@ def extract_best_conjunctiva(img, mask):
         
         if w > 0 and h > 0:
             cropped = img[y:y+h, x:x+w]
-            return cropped, mask, (x, y, w, h)
+            # Appliquer l'amélioration de contraste
+            cropped_enhanced = enhance_conjunctiva(cropped)
+            return cropped_enhanced, mask, (x, y, w, h)
     
+    # Fallback : masque complet
     conjunctiva = cv2.bitwise_and(img, img, mask=mask)
-    return conjunctiva, mask, None
+    conjunctiva_enhanced = enhance_conjunctiva(conjunctiva)
+    return conjunctiva_enhanced, mask, None
 
 # ========== دالة التصنيف (عكس النتيجة بشكل قسري) ==========
 def predict_anemia(model, image, device):
@@ -560,8 +642,7 @@ def predict_anemia(model, image, device):
 
 # ========== معالجة الصورة ==========
 if uploaded is not None:
-    # تحميل النماذج فقط الآن (lazy) — بهذا الشكل واجهة الرفع تبقى تخدم
-    # حتى لو صرا مشكل فتحميل الموديلات
+    # تحميل النماذج فقط الآن (lazy)
     with st.spinner("🔃 Chargement des modèles intelligents..."):
         try:
             unet_model, unet_device = load_unet_model()
@@ -582,7 +663,7 @@ if uploaded is not None:
         # تصحيح انعكاس الصورة
         img = cv2.flip(img, 1)
         
-        # تجزئة U-Net (بدون albumentations، فقط torchvision)
+        # تجزئة U-Net
         transform_unet = transforms.Compose([
             transforms.ToPILImage(),
             transforms.Resize((256, 256)),
@@ -597,7 +678,7 @@ if uploaded is not None:
             raw_mask = (raw_mask > 0.5).astype(np.uint8) * 255
             raw_mask = cv2.resize(raw_mask, (img.shape[1], img.shape[0]))
         
-        # تحسين الماسك
+        # تحسين الماسك واستخراج المنطقة المحسّنة
         cleaned_mask = clean_mask(raw_mask)
         conjunctiva, final_mask, bbox = extract_best_conjunctiva(img, cleaned_mask)
         
@@ -624,7 +705,7 @@ if uploaded is not None:
             st.image(final_mask, use_container_width=True, clamp=True)
         
         with col3:
-            st.markdown("**👁️ Conjonctive extraite**")
+            st.markdown("**👁️ Conjonctive extraite (améliorée)**")
             st.image(conjunctiva, use_container_width=True)
         
         # إحصائيات
@@ -704,6 +785,7 @@ if uploaded is not None:
             st.write(f"**Appareil utilisé:** {'GPU' if classifier_device.type == 'cuda' else 'CPU'}")
             st.write(f"**Modèle de segmentation:** U-Net (ResNet34)")
             st.write(f"**Modèle de classification:** EfficientNet-B3")
+            st.write("**Amélioration appliquée:** CLAHE sur la conjonctive pour meilleur contraste")
         
         # تنويه طبي
         st.markdown("""
@@ -714,29 +796,82 @@ if uploaded is not None:
         </div>
         """, unsafe_allow_html=True)
 
-else:
+# ===================== SECTION CONSULTATION MÉDECIN (COMING SOON) =====================
+st.markdown("---")
+st.markdown('<div class="section-container fade-in-up"><span class="section-title">🩺 Consultation avec un médecin</span></div>', unsafe_allow_html=True)
+
+st.markdown("""
+<div style="text-align: center; margin-bottom: 20px;">
+    <p style="font-size: 16px; color: #4b5563;">
+        🔜 Bientôt disponible – discutez, appelez ou prenez rendez‑vous avec un professionnel de santé directement depuis l'application.
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+# Création des cartes de consultation
+col1, col2, col3 = st.columns(3)
+
+with col1:
     st.markdown("""
-    <div class="fade-in-up" style="text-align: center; padding: 40px; background: white; border-radius: 24px; margin: 20px 0;">
-        <div class="upload-icon" style="font-size: 48px; margin-bottom: 20px;">📸</div>
-        <h3>Bienvenue sur AnemicCheck</h3>
-        <p>Sélectionnez une méthode d'acquisition ci-dessus pour commencer l'analyse</p>
+    <div class="consult-card fade-in-up">
+        <span class="icon">💬</span>
+        <h4>Chat avec un médecin</h4>
+        <p>Discutez en temps réel avec un expert</p>
+        <div class="coming-soon-badge">🔜 Coming Soon</div>
     </div>
     """, unsafe_allow_html=True)
+    # Bouton désactivé
+    st.button("💬 Démarrer le chat", disabled=True, key="chat_btn", help="Cette fonctionnalité sera disponible prochainement")
+
+with col2:
+    st.markdown("""
+    <div class="consult-card fade-in-up">
+        <span class="icon">📞</span>
+        <h4>Appel vocal</h4>
+        <p>Parlez directement à un médecin</p>
+        <div class="coming-soon-badge">🔜 Coming Soon</div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.button("📞 Appeler maintenant", disabled=True, key="call_btn", help="Cette fonctionnalité sera disponible prochainement")
+
+with col3:
+    st.markdown("""
+    <div class="consult-card fade-in-up">
+        <span class="icon">📅</span>
+        <h4>Prendre rendez‑vous</h4>
+        <p>Planifiez une consultation en ligne</p>
+        <div class="coming-soon-badge">🔜 Coming Soon</div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.button("📅 Réserver", disabled=True, key="appt_btn", help="Cette fonctionnalité sera disponible prochainement")
+
+# ========== Message d'information complémentaire ==========
+st.markdown("""
+<div style="background: rgba(255,255,255,0.7); border-radius: 16px; padding: 16px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+    <p style="margin: 0; font-size: 14px; color: #4b5563;">
+        <b>🔔 Note :</b> Les fonctionnalités de consultation sont en cours de développement. 
+        Elles seront intégrées dans une prochaine mise à jour. Restez connectés !
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+# ========== Guide d'utilisation (toujours présent) ==========
+with st.expander("ℹ️ Guide d'utilisation / كيف تستخدم التطبيق"):
+    st.markdown("""
+    **Comment fonctionne l'application ? / كيف يعمل التطبيق ؟**
     
-    with st.expander("ℹ️ Guide d'utilisation"):
-        st.markdown("""
-        **Comment fonctionne l'application ?**
-        
-        1. **U-Net** : Segmentation avancée pour extraire la conjonctive
-        2. **EfficientNet-B3** : Classification pour détecter l'anémie
-        
-        **Conseils pour une analyse optimale :**
-        - 📷 Utilisez une image claire et bien éclairée
-        - 👁️ Assurez-vous que l'œil est bien visible
-        - 🩸 Les résultats sont à titre indicatif
-        
-        **Technologies utilisées :**
-        - PyTorch pour l'IA
-        - Streamlit pour l'interface
-        - OpenCV pour le traitement d'image
-        """)
+    1. **U-Net** : Segmentation avancée pour extraire la conjonctive (الملتحمة)
+    2. **EfficientNet-B3** : Classification pour détecter l'anémie (تصنيف للكشف عن فقر الدم)
+    3. **Amélioration CLAHE** : Améliore le contraste de la conjonctive pour une meilleure précision (تحسين التباين لزيادة الدقة)
+    
+    **Conseils pour une analyse optimale / نصائح للحصول على تحليل دقيق :**
+    - 📷 Utilisez une image claire et bien éclairée / استخدم صورة واضحة ومضاءة جيداً
+    - 👁️ Assurez-vous que l'œil est bien visible / تأكد من أن العين ظاهرة بوضوح
+    - 🩸 Les résultats sont à titre indicatif / النتائج هي لأغراض إرشادية فقط
+    
+    **Technologies utilisées / التقنيات المستخدمة :**
+    - PyTorch pour l'IA / للذكاء الاصطناعي
+    - Streamlit pour l'interface / للواجهة
+    - OpenCV pour le traitement d'image / لمعالجة الصور
+    - CLAHE pour l'amélioration du contraste / لتحسين التباين
+    """)
