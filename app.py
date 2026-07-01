@@ -429,11 +429,11 @@ else:
 
 # عنوان التطبيق
 st.markdown("""
-<div class="app-title fade-in-up">AnemicCheck</div>
+<div class="app-title fade-in-up">AnemiCheck</div>
 <div class="app-subtitle-ar fade-in-up">رؤية ميد</div>
 <div class="app-subtitle fade-in-up">Détection d'Anémie par Intelligence Artificielle</div>
 <div class="tagline-container fade-in-up">
-    <div class="app-tagline">فحص فقر الدم غير الجراحي • Dépistage non invasif</div>
+    <div class="app-tagline">فحص فقر الدم غير الجراحي • Non-Invasive Anemia Screening</div>
 </div>
 """, unsafe_allow_html=True)
 
