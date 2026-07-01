@@ -1089,11 +1089,7 @@ with st.sidebar:
     <div class="sidebar-glass">
         <h4>📋 القائمة / Menu</h4>
         <div class="nav-item active">🏠 {t('nav_home')}</div>
-        <div class="nav-item">🔬 {t('nav_analyze')}</div>
-        <div class="nav-item">📊 {t('nav_history')}</div>
-        <div class="nav-item">ℹ️ {t('nav_info')}</div>
-        <div class="nav-item">💡 {t('nav_health')}</div>
-        <div class="nav-item">📱 {t('nav_about')}</div>
+
     </div>
     """, unsafe_allow_html=True)
     
@@ -1164,10 +1160,6 @@ st.markdown(f"""
     <div class="top-badge-card">
         <div class="tb-icon">🎧</div>
         <div><div class="tb-title">{t('top_badge1_title')}</div><div class="tb-desc">{t('top_badge1_desc')}</div></div>
-    </div>
-    <div class="top-badge-card">
-        <div class="tb-icon">📞</div>
-        <div><div class="tb-title">{t('top_badge2_title')}</div><div class="tb-desc">{t('top_badge2_desc')}</div></div>
     </div>
     <div class="top-badge-card">
         <div class="tb-icon">🕐</div>
