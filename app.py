@@ -10,7 +10,7 @@ import numpy as np
 from PIL import Image
 from torchvision import models, transforms
 import matplotlib
-matplotlib.use("Agg")  # headless backend, obligatoire sur un serveur sans écran
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import base64
 import os
@@ -24,7 +24,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ========== CSS للواجهة (تصميم عصري) ==========
+# ========== CSS ==========
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap');
@@ -50,10 +50,6 @@ st.markdown("""
         70% { opacity: 1; transform: scale(1.03); }
         100% { opacity: 1; transform: scale(1); }
     }
-    @keyframes floatSlow {
-        0%, 100% { transform: translate(0, 0); }
-        50% { transform: translate(15px, -15px); }
-    }
     @keyframes gradientShift {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
@@ -74,12 +70,127 @@ st.markdown("""
     }
 
     #MainMenu, footer {visibility: hidden;}
+    .fade-in-up { animation: fadeInUp 0.7s ease both; }
 
-    .fade-in-up {
-        animation: fadeInUp 0.7s ease both;
+    /* ===== الهيرو الخاص بالطبيب ===== */
+    .doctor-hero {
+        background: rgba(255,255,255,0.92);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 32px;
+        padding: 35px 30px 30px;
+        margin: 15px 0 20px 0;
+        text-align: center;
+        border: 1px solid rgba(225,29,72,0.12);
+        box-shadow: 0 20px 40px -12px rgba(225,29,72,0.15);
+        transition: all 0.3s ease;
+    }
+    .doctor-hero:hover {
+        box-shadow: 0 28px 48px -12px rgba(225,29,72,0.20);
+    }
+    .doctor-icon {
+        font-size: 64px;
+        margin-bottom: 6px;
+        display: block;
+        animation: bounceSlow 2.8s ease-in-out infinite;
+    }
+    .doctor-title {
+        font-size: 38px;
+        font-weight: 800;
+        color: #1f2937;
+        margin: 0 0 4px 0;
+        font-family: 'Tajawal', sans-serif;
+        letter-spacing: 1px;
+    }
+    .doctor-title span {
+        background: linear-gradient(135deg, #9f1239, #e11d48);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .doctor-subtitle {
+        font-size: 20px;
+        font-weight: 700;
+        color: #9f1239;
+        margin: 0 0 2px 0;
+        font-family: 'Tajawal', sans-serif;
+    }
+    .doctor-subtitle-light {
+        font-size: 16px;
+        color: #6b7280;
+        margin: 0 0 18px 0;
+        font-weight: 500;
+    }
+    .doctor-features {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin: 20px 0;
+    }
+    .feature-item {
+        background: rgba(255,255,255,0.8);
+        border: 1px solid rgba(225,29,72,0.15);
+        border-radius: 20px;
+        padding: 14px 22px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #1f2937;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+    .feature-item:hover {
+        transform: translateY(-3px);
+        border-color: #e11d48;
+        box-shadow: 0 8px 20px rgba(225,29,72,0.10);
+    }
+    .feature-item .badge {
+        background: #f59e0b;
+        color: white;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 12px;
+        border-radius: 30px;
+        margin-left: 6px;
+        letter-spacing: 0.5px;
+    }
+    .doctor-cta {
+        background: linear-gradient(90deg, #e11d48, #f43f5e, #fb7185);
+        color: white;
+        border: none;
+        border-radius: 60px;
+        padding: 16px 48px;
+        font-size: 20px;
+        font-weight: 700;
+        font-family: 'Tajawal', sans-serif;
+        cursor: not-allowed;
+        opacity: 0.85;
+        box-shadow: 0 8px 24px rgba(225,29,72,0.25);
+        transition: all 0.3s ease;
+        margin: 10px 0 6px 0;
+        display: inline-block;
+        letter-spacing: 1px;
+    }
+    .doctor-cta:hover {
+        transform: scale(1.02);
+        box-shadow: 0 12px 28px rgba(225,29,72,0.35);
+    }
+    .doctor-brand {
+        font-size: 13px;
+        color: #9ca3af;
+        margin-top: 12px;
+        font-weight: 500;
+        letter-spacing: 2px;
+        border-top: 1px solid #f3f4f6;
+        padding-top: 12px;
+    }
+    .doctor-brand strong {
+        color: #e11d48;
     }
 
-    /* ===== منطقة الرفع ===== */
+    /* ===== باقي العناصر ===== */
     .upload-zone {
         background: rgba(255,255,255,0.75);
         backdrop-filter: blur(10px);
@@ -91,46 +202,22 @@ st.markdown("""
         margin: 15px 0 5px 0;
         animation: pulseBorder 2.5s ease-in-out infinite, fadeInUp 0.7s ease both;
     }
-
     .upload-zone .upload-icon {
         font-size: 54px;
         animation: bounceSlow 2.2s ease-in-out infinite;
         display: inline-block;
     }
-
     .upload-zone h4 {
         color: #9f1239;
         margin: 10px 0 5px 0;
         font-weight: 700;
     }
-
     .upload-zone p {
         color: #6b7280;
         font-size: 14px;
         margin: 0;
     }
 
-    [data-testid="stFileUploader"], [data-testid="stCameraInput"] {
-        animation: fadeIn 0.6s ease both;
-    }
-
-    [data-testid="stFileUploaderDropzone"] {
-        border-radius: 18px !important;
-        border: 2px dashed #fda4af !important;
-        background: rgba(255,255,255,0.6) !important;
-        transition: all 0.3s ease !important;
-    }
-
-    [data-testid="stFileUploaderDropzone"]:hover {
-        border-color: #e11d48 !important;
-        background: #fff1f2 !important;
-    }
-
-    .result-anemia, .result-non-anemia {
-        animation: popIn 0.5s ease both;
-    }
-
-    /* ===== الشعار والعنوان ===== */
     .logo-container {
         text-align: center;
         padding: 15px;
@@ -138,7 +225,6 @@ st.markdown("""
         border-radius: 30px;
         margin-bottom: 5px;
     }
-
     .logo-image {
         width: 100%;
         max-width: 260px;
@@ -149,11 +235,9 @@ st.markdown("""
         transition: transform 0.4s ease;
         filter: drop-shadow(0 12px 20px rgba(225,29,72,0.18));
     }
-
     .logo-image:hover {
         transform: scale(1.04) rotate(-1deg);
     }
-
     .app-title {
         text-align: center;
         font-size: 46px;
@@ -164,7 +248,6 @@ st.markdown("""
         margin: 5px 0;
         letter-spacing: 1px;
     }
-
     .app-subtitle-ar {
         text-align: center;
         font-size: 24px;
@@ -173,7 +256,6 @@ st.markdown("""
         font-weight: 700;
         font-family: 'Tajawal', sans-serif;
     }
-
     .app-subtitle {
         text-align: center;
         font-size: 17px;
@@ -181,7 +263,6 @@ st.markdown("""
         margin: 5px 0;
         font-weight: 500;
     }
-
     .app-tagline {
         text-align: center;
         font-size: 14px;
@@ -194,30 +275,8 @@ st.markdown("""
         display: inline-block;
         width: auto;
     }
+    .tagline-container { text-align: center; margin-bottom: 15px; }
 
-    .tagline-container {
-        text-align: center;
-        margin-bottom: 15px;
-    }
-
-    /* ===== بطاقات عامة ===== */
-    .card {
-        background: rgba(255,255,255,0.85);
-        backdrop-filter: blur(8px);
-        border-radius: 22px;
-        padding: 24px;
-        margin: 18px 0;
-        box-shadow: 0 16px 30px -12px rgba(225,29,72,0.14);
-        transition: all 0.3s ease;
-        border: 1px solid rgba(225,29,72,0.12);
-    }
-
-    .card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 22px 36px -12px rgba(225,29,72,0.2);
-    }
-
-    /* ===== بطاقة مشاركة QR ===== */
     .qr-card {
         background: rgba(255,255,255,0.85);
         backdrop-filter: blur(8px);
@@ -228,16 +287,14 @@ st.markdown("""
         gap: 18px;
         box-shadow: 0 14px 28px -10px rgba(225,29,72,0.16);
         border: 1px solid rgba(225,29,72,0.15);
-        max-width: 480px;
+        max-width: 520px;
         margin: 18px auto;
         transition: all 0.3s ease;
     }
-
     .qr-card:hover {
         transform: translateY(-3px);
         box-shadow: 0 18px 32px -10px rgba(225,29,72,0.22);
     }
-
     .qr-card img {
         border-radius: 14px;
         border: 1px solid rgba(225,29,72,0.15);
@@ -245,26 +302,38 @@ st.markdown("""
         padding: 6px;
         flex-shrink: 0;
     }
-
     .qr-text h5 {
         margin: 0 0 6px 0;
         color: #9f1239;
         font-size: 16px;
         font-weight: 700;
     }
-
     .qr-text p {
-        margin: 0;
+        margin: 0 0 6px 0;
         font-size: 12.5px;
         color: #6b7280;
         line-height: 1.5;
     }
-
     .qr-text a {
         color: #e11d48;
         font-weight: 600;
         text-decoration: none;
         word-break: break-all;
+        font-size: 13px;
+    }
+    .qr-text .copy-btn {
+        margin-top: 8px;
+        background: #e11d48;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 6px 18px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: background 0.2s;
+    }
+    .qr-text .copy-btn:hover {
+        background: #9f1239;
     }
 
     .result-anemia {
@@ -274,8 +343,8 @@ st.markdown("""
         margin: 20px 0;
         border: 2px solid #e11d48;
         box-shadow: 0 14px 28px rgba(225,29,72,0.14);
+        animation: popIn 0.5s ease both;
     }
-
     .result-non-anemia {
         background: linear-gradient(135deg, #f0fdf6 0%, #dcfce7 100%);
         border-radius: 22px;
@@ -283,6 +352,7 @@ st.markdown("""
         margin: 20px 0;
         border: 2px solid #16a34a;
         box-shadow: 0 14px 28px rgba(22,163,74,0.14);
+        animation: popIn 0.5s ease both;
     }
 
     .stButton > button {
@@ -297,73 +367,10 @@ st.markdown("""
         width: 100%;
         box-shadow: 0 4px 14px rgba(225,29,72,0.3);
     }
-
     .stButton > button:hover {
         transform: scale(1.02) translateY(-1px);
         background: linear-gradient(90deg, #9f1239, #e11d48, #f43f5e);
         box-shadow: 0 8px 18px rgba(225,29,72,0.35);
-    }
-
-    .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #e11d48, #fb7185);
-        border-radius: 10px;
-    }
-
-    .disclaimer {
-        background: rgba(255,255,255,0.7);
-        border-radius: 16px;
-        padding: 16px;
-        text-align: center;
-        font-size: 12.5px;
-        color: #495057;
-        margin-top: 30px;
-        border: 1px solid rgba(225,29,72,0.2);
-        border-left: 4px solid #e11d48;
-    }
-
-    .stImage img {
-        border-radius: 18px;
-        box-shadow: 0 10px 22px rgba(0,0,0,0.08);
-    }
-
-    .info-box {
-        background: rgba(255,255,255,0.7);
-        border-radius: 16px;
-        padding: 15px;
-        margin: 15px 0;
-        border-left: 4px solid #e11d48;
-    }
-
-    .metric-card {
-        background: rgba(255,255,255,0.85);
-        border-radius: 18px;
-        padding: 15px;
-        text-align: center;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.06);
-        border: 1px solid rgba(225,29,72,0.15);
-    }
-
-    .stRadio > div {
-        gap: 30px;
-        justify-content: center;
-    }
-
-    .stRadio label {
-        font-size: 16px;
-        font-weight: 500;
-    }
-
-    [data-testid="stMetricValue"] {
-        font-size: 28px;
-        font-weight: 700;
-        color: #e11d48;
-    }
-
-    [data-testid="stMetric"] {
-        background: rgba(255,255,255,0.7);
-        border-radius: 16px;
-        padding: 12px 10px;
-        border: 1px solid rgba(225,29,72,0.12);
     }
 
     .section-title {
@@ -375,84 +382,38 @@ st.markdown("""
         border-bottom: 3px solid #e11d48;
         display: inline-block;
     }
+    .section-container { text-align: center; margin-bottom: 20px; }
 
-    .section-container {
+    /* ===== تحسين التنويه الطبي (نتائج أولية) ===== */
+    .disclaimer {
+        background: #fffbeb;
+        border-radius: 16px;
+        padding: 18px 20px;
         text-align: center;
-        margin-bottom: 20px;
-    }
-
-    .streamlit-expanderHeader {
-        border-radius: 14px !important;
-        background: rgba(255,255,255,0.7) !important;
-    }
-
-    /* ===== بطاقات "Coming Soon" للاستشارة ===== */
-    .consult-card {
-        background: rgba(255,255,255,0.9);
-        backdrop-filter: blur(8px);
-        border-radius: 20px;
-        padding: 20px;
-        text-align: center;
-        border: 1px solid rgba(225,29,72,0.15);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .consult-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 16px 32px rgba(225,29,72,0.12);
-    }
-
-    .consult-card .icon {
-        font-size: 48px;
-        margin-bottom: 10px;
-        display: block;
-    }
-
-    .consult-card h4 {
-        color: #1f2937;
-        font-weight: 700;
-        margin: 8px 0 5px;
-        font-size: 18px;
-    }
-
-    .consult-card p {
-        color: #6b7280;
         font-size: 13px;
-        margin: 0;
+        color: #4b5563;
+        margin-top: 30px;
+        border: 1px solid #fcd34d;
+        border-left: 6px solid #f59e0b;
+        box-shadow: 0 4px 12px rgba(245,158,11,0.12);
+        transition: all 0.3s ease;
+    }
+    .disclaimer:hover {
+        box-shadow: 0 8px 20px rgba(245,158,11,0.18);
+        transform: translateY(-2px);
+    }
+    .disclaimer strong {
+        color: #b45309;
     }
 
-    .coming-soon-badge {
-        background: linear-gradient(135deg, #f59e0b, #fbbf24);
-        color: white;
-        font-size: 12px;
-        font-weight: 700;
-        padding: 4px 14px;
-        border-radius: 30px;
-        display: inline-block;
-        margin-top: 12px;
-        letter-spacing: 0.5px;
-        box-shadow: 0 2px 8px rgba(245,158,11,0.3);
-    }
-
-    .consult-card.disabled {
-        opacity: 0.7;
-        cursor: default;
-    }
-
-    .consult-card.disabled .stButton > button {
-        background: #d1d5db !important;
-        box-shadow: none !important;
-        cursor: not-allowed;
-    }
-
-    /* ===== تحسينات إضافية ===== */
-    .feature-icon {
-        font-size: 28px;
-        vertical-align: middle;
-        margin-right: 8px;
+    .stRadio > div { gap: 30px; justify-content: center; }
+    .stRadio label { font-size: 16px; font-weight: 500; }
+    [data-testid="stMetricValue"] { font-size: 28px; font-weight: 700; color: #e11d48; }
+    [data-testid="stMetric"] {
+        background: rgba(255,255,255,0.7);
+        border-radius: 16px;
+        padding: 12px 10px;
+        border: 1px solid rgba(225,29,72,0.12);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -507,17 +468,42 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ========== مشاركة التطبيق عبر QR Code ==========
+# ============================================================
+# ====== HERO SECTION: تطبيق مع طبيب ======
+# ============================================================
+st.markdown("""
+<div class="doctor-hero fade-in-up">
+    <span class="doctor-icon">🩺</span>
+    <h1 class="doctor-title">تطبيق مع <span>طبيب</span></h1>
+    <p class="doctor-subtitle">طبيبك معك بأقبل من دقيقتين</p>
+    <p class="doctor-subtitle-light">بدون مواعيد أو انتظار • Sans rendez-vous ni attente</p>
+    
+    <div class="doctor-features">
+        <div class="feature-item">💬 محادثة نصية <span class="badge">قريباً</span></div>
+        <div class="feature-item">📞 مكالمة صوتية <span class="badge">قريباً</span></div>
+        <div class="feature-item">🖼️ إرسال صورة <span class="badge">قريباً</span></div>
+    </div>
+
+    <button class="doctor-cta" disabled>🔜 تحدث مع طبيب الآن</button>
+    <div class="doctor-brand">الطبيب <strong>altibbi</strong></div>
+</div>
+""", unsafe_allow_html=True)
+
+# ========== مشاركة التطبيق عبر QR Code (محسّن) ==========
 APP_URL = "https://hwaxrexkahkxaazwwjjr3d.streamlit.app/"
-qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=8&color=9f1239&data={APP_URL}"
+qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&color=9f1239&data={APP_URL}"
 
 st.markdown(f"""
 <div class="qr-card fade-in-up">
-    <img src="{qr_api_url}" width="110" height="110" alt="QR Code">
+    <img src="{qr_api_url}" width="120" height="120" alt="QR Code pour AnemiCheck" loading="lazy" 
+         onerror="this.style.display='none'; document.getElementById('qr-fallback').style.display='block';">
+    <div id="qr-fallback" style="display:none; font-size:14px; color:#e11d48;">⚠️ QR Code non disponible</div>
     <div class="qr-text">
         <h5>📱 شارك التطبيق / Partager l'app</h5>
         <p>امسح الكود بالكاميرا باش تفتح التطبيق فأي جهاز آخر مباشرة</p>
         <a href="{APP_URL}" target="_blank">{APP_URL}</a>
+        <br>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText('{APP_URL}')">📋 نسخ الرابط</button>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -548,29 +534,21 @@ if option == "📁 Télécharger une image":
 else:
     uploaded = st.camera_input("📷 Prenez une photo de l'œil", disabled=False, label_visibility="collapsed")
 
-# ========== دالة تنظيف الماسك ==========
+# ========== دوال المعالجة ==========
 def clean_mask(mask, min_area=500):
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     clean = np.zeros_like(mask)
-    
     for contour in contours:
         area = cv2.contourArea(contour)
         if area >= min_area:
             cv2.drawContours(clean, [contour], -1, 255, -1)
-    
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
     clean = cv2.morphologyEx(clean, cv2.MORPH_CLOSE, kernel)
     clean = cv2.morphologyEx(clean, cv2.MORPH_OPEN, kernel)
-    
     return clean
 
 def enhance_conjunctiva(image):
-    """
-    Améliore la conjonctive extraite avec CLAHE pour augmenter le contraste
-    et faciliter la classification.
-    """
     if len(image.shape) == 3:
-        # Convertir en LAB pour appliquer CLAHE sur le canal L
         lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
         l, a, b = cv2.split(lab)
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
@@ -578,78 +556,55 @@ def enhance_conjunctiva(image):
         lab_enhanced = cv2.merge((l_enhanced, a, b))
         enhanced = cv2.cvtColor(lab_enhanced, cv2.COLOR_LAB2RGB)
         return enhanced
-    else:
-        return image
+    return image
 
 def extract_best_conjunctiva(img, mask):
     mask = clean_mask(mask)
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
     if contours:
         largest_contour = max(contours, key=cv2.contourArea)
         x, y, w, h = cv2.boundingRect(largest_contour)
-        
         padding = 15
         x = max(0, x - padding)
         y = max(0, y - padding)
         w = min(img.shape[1] - x, w + 2*padding)
         h = min(img.shape[0] - y, h + 2*padding)
-        
         if w > 0 and h > 0:
             cropped = img[y:y+h, x:x+w]
-            # Appliquer l'amélioration de contraste
             cropped_enhanced = enhance_conjunctiva(cropped)
             return cropped_enhanced, mask, (x, y, w, h)
-    
-    # Fallback : masque complet
     conjunctiva = cv2.bitwise_and(img, img, mask=mask)
     conjunctiva_enhanced = enhance_conjunctiva(conjunctiva)
     return conjunctiva_enhanced, mask, None
 
-# ========== دالة التصنيف (عكس النتيجة بشكل قسري) ==========
+# ========== دالة التصنيف (بدون تصحيح) ==========
 def predict_anemia(model, image, device):
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
     ])
-    
     if isinstance(image, np.ndarray):
         image = Image.fromarray(image)
-    
     img_tensor = transform(image).unsqueeze(0).to(device)
-    
     with torch.no_grad():
         output = model(img_tensor)
         prediction = torch.sigmoid(output).item()
-    
-    # ==================================================
-    # تصحيح النتيجة: النموذج يعطي نتائج معكوسة
-    # المصاب يعطيه نسبة منخفضة، غير المصاب نسبة عالية
-    # لذلك نعكس النتيجة بشكل قسري
-    # ==================================================
-    
-    # عكس النسبة
-    corrected_prediction = 1 - prediction
-    
-    if corrected_prediction >= 0.5:
+    if prediction >= 0.5:
         result = "Anemic"
-        confidence = corrected_prediction * 100
+        confidence = prediction * 100
     else:
         result = "Non Anemic"
-        confidence = (1 - corrected_prediction) * 100
-    
-    return result, confidence, corrected_prediction, prediction
+        confidence = (1 - prediction) * 100
+    return result, confidence, prediction
 
 # ========== معالجة الصورة ==========
 if uploaded is not None:
-    # تحميل النماذج فقط الآن (lazy)
     with st.spinner("🔃 Chargement des modèles intelligents..."):
         try:
             unet_model, unet_device = load_unet_model()
         except Exception as e:
             st.error(f"❌ Erreur de chargement U-Net: {e}")
             st.stop()
-
         try:
             classifier_model, classifier_device = load_classifier_model()
         except Exception as e:
@@ -657,74 +612,56 @@ if uploaded is not None:
             st.stop()
 
     with st.spinner("🔍 Analyse de l'image en cours..."):
-        # قراءة الصورة
         img = np.array(Image.open(uploaded).convert('RGB'))
-        
-        # تصحيح انعكاس الصورة
         img = cv2.flip(img, 1)
-        
-        # تجزئة U-Net
+
         transform_unet = transforms.Compose([
             transforms.ToPILImage(),
             transforms.Resize((256, 256)),
             transforms.ToTensor(),
             transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
         ])
-        
         img_tensor = transform_unet(img).unsqueeze(0).to(unet_device)
-        
         with torch.no_grad():
             raw_mask = torch.sigmoid(unet_model(img_tensor)).squeeze().cpu().numpy()
             raw_mask = (raw_mask > 0.5).astype(np.uint8) * 255
             raw_mask = cv2.resize(raw_mask, (img.shape[1], img.shape[0]))
-        
-        # تحسين الماسك واستخراج المنطقة المحسّنة
+
         cleaned_mask = clean_mask(raw_mask)
         conjunctiva, final_mask, bbox = extract_best_conjunctiva(img, cleaned_mask)
-        
-        # تصنيف الأنيميا (مع التصحيح)
-        result, confidence, corrected_pred, raw_pred = predict_anemia(classifier_model, conjunctiva, classifier_device)
-        
-        # حساب النسب للمخطط (بعد التصحيح)
-        anemia_percent = corrected_pred * 100
-        non_anemia_percent = (1 - corrected_pred) * 100
-        
+
+        result, confidence, raw_pred = predict_anemia(classifier_model, conjunctiva, classifier_device)
+
+        anemia_percent = raw_pred * 100
+        non_anemia_percent = (1 - raw_pred) * 100
+
         st.success("✅ Analyse terminée avec succès")
 
-        # عرض النتائج
         st.markdown("## 📊 Résultats de l'analyse")
-        
         col1, col2, col3 = st.columns(3)
-        
         with col1:
             st.markdown("**🖼️ Image originale**")
             st.image(img, use_container_width=True)
-        
         with col2:
             st.markdown("**🎭 Segmentation (U-Net)**")
             st.image(final_mask, use_container_width=True, clamp=True)
-        
         with col3:
-            st.markdown("**👁️ Conjonctive extraite (améliorée)**")
+            st.markdown("**👁️ Conjonctive extraite (améliorée CLAHE)**")
             st.image(conjunctiva, use_container_width=True)
-        
-        # إحصائيات
+
         before_area = np.sum(raw_mask > 0) / 255
         after_area = np.sum(final_mask > 0) / 255
         reduction = ((before_area - after_area) / before_area * 100) if before_area > 0 else 0
-        
+
         col_stat1, col_stat2 = st.columns(2)
         with col_stat1:
             st.metric("Surface segmentée", f"{after_area:.0f} px²")
         with col_stat2:
             st.metric("Nettoyage", f"{reduction:.1f}% d'artefacts")
-        
-        # نتيجة التشخيص
+
         st.markdown("---")
         st.markdown("## 🩺 Diagnostic (EfficientNet-B3)")
-        
         col_result, col_conf = st.columns(2)
-        
         with col_result:
             if result == "Anemic":
                 st.markdown("""
@@ -742,120 +679,70 @@ if uploaded is not None:
                     <p style="font-size: 14px; color: #666;">لا يوجد فقر دم</p>
                 </div>
                 """, unsafe_allow_html=True)
-        
         with col_conf:
             st.metric("Niveau de confiance", f"{confidence:.1f}%")
             st.progress(int(confidence))
-        
-        # مخطط الأعمدة
+
         st.markdown("### 📈 Niveau d'anémie")
-        
         fig, ax = plt.subplots(figsize=(8, 5))
-        
         categories = ['Non anemic', 'Anemic']
         values = [non_anemia_percent, anemia_percent]
         colors = ['#10b981', '#dc2626']
-        
         bars = ax.bar(categories, values, color=colors, width=0.5, edgecolor='white', linewidth=2)
         ax.set_ylim([0, 100])
         ax.set_ylabel('Pourcentage (%)', fontsize=12)
-        ax.set_title('Probabilité d\'anémie (après correction)', fontsize=14, fontweight='bold')
+        ax.set_title('Probabilité d\'anémie (résultat brut)', fontsize=14, fontweight='bold')
         ax.set_facecolor('#f8f9fa')
         ax.grid(True, alpha=0.3, axis='y')
-        
         for bar, val in zip(bars, values):
-            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2, 
-                    f'{val:.1f}%', ha='center', fontweight='bold', fontsize=14, 
+            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2,
+                    f'{val:.1f}%', ha='center', fontweight='bold', fontsize=14,
                     color='#8b0000' if val == anemia_percent else '#166534')
-        
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
-        
         st.pyplot(fig)
-        
-        # معلومات إضافية
+
         with st.expander("📈 Détails techniques"):
             st.write(f"**Diagnostic:** {result}")
             st.write(f"**Niveau de confiance:** {confidence:.2f}%")
-            st.write(f"**Valeur brute (sigmoid originale):** {raw_pred:.4f}")
-            st.write(f"**Valeur corrigée:** {corrected_pred:.4f}")
-            st.write(f"**Règle de correction:** 1 - valeur brute (car modèle inversé)")
-            st.write(f"**Anémie (probabilité corrigée):** {anemia_percent:.1f}%")
-            st.write(f"**Non Anémie (probabilité corrigée):** {non_anemia_percent:.1f}%")
+            st.write(f"**Valeur brute (sigmoid):** {raw_pred:.4f}")
+            st.write(f"**Règle utilisée:** Pas de correction, résultat direct du modèle")
+            st.write(f"**Anémie (probabilité):** {anemia_percent:.1f}%")
+            st.write(f"**Non Anémie (probabilité):** {non_anemia_percent:.1f}%")
             st.write(f"**Appareil utilisé:** {'GPU' if classifier_device.type == 'cuda' else 'CPU'}")
             st.write(f"**Modèle de segmentation:** U-Net (ResNet34)")
             st.write(f"**Modèle de classification:** EfficientNet-B3")
-            st.write("**Amélioration appliquée:** CLAHE sur la conjonctive pour meilleur contraste")
-        
-        # تنويه طبي
+            st.write("**Amélioration appliquée:** CLAHE sur la conjonctive (améliore le contraste)")
+
+        # ========== التنويه المحسّن (نتائج أولية) ==========
         st.markdown("""
         <div class="disclaimer">
-            ⚠️ <b>Avertissement médical / تنويه طبي</b><br>
-            Ce résultat est fourni à titre indicatif et ne remplace pas un avis médical professionnel.<br>
-            Veuillez consulter un médecin pour un diagnostic fiable.
+            <div style="display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 8px;">
+                <span style="font-size: 28px;">⚠️</span>
+                <span style="font-size: 18px; font-weight: 700; color: #b45309;">Résultats préliminaires / نتائج أولية</span>
+            </div>
+            <p style="margin: 0; font-size: 14px; color: #4b5563; line-height: 1.6;">
+                Ces résultats sont générés par un modèle d'intelligence artificielle et sont fournis à titre indicatif.<br>
+                Ils peuvent comporter des erreurs et ne remplacent en aucun cas un diagnostic médical professionnel.<br>
+                <strong>Veuillez consulter un médecin pour une évaluation fiable.</strong>
+            </p>
+            <p style="margin: 8px 0 0 0; font-size: 13px; color: #6b7280; line-height: 1.5;">
+                هذه النتائج مبنية على الذكاء الاصطناعي وهي لأغراض إرشادية فقط، وقد تحتوي على أخطاء.<br>
+                لا تغني عن استشارة الطبيب المختص للحصول على تشخيص دقيق.
+            </p>
         </div>
         """, unsafe_allow_html=True)
 
-# ===================== SECTION CONSULTATION MÉDECIN (COMING SOON) =====================
-st.markdown("---")
-st.markdown('<div class="section-container fade-in-up"><span class="section-title">🩺 Consultation avec un médecin</span></div>', unsafe_allow_html=True)
-
-st.markdown("""
-<div style="text-align: center; margin-bottom: 20px;">
-    <p style="font-size: 16px; color: #4b5563;">
-        🔜 Bientôt disponible – discutez, appelez ou prenez rendez‑vous avec un professionnel de santé directement depuis l'application.
-    </p>
-</div>
-""", unsafe_allow_html=True)
-
-# Création des cartes de consultation
-col1, col2, col3 = st.columns(3)
-
-with col1:
+else:
     st.markdown("""
-    <div class="consult-card fade-in-up">
-        <span class="icon">💬</span>
-        <h4>Chat avec un médecin</h4>
-        <p>Discutez en temps réel avec un expert</p>
-        <div class="coming-soon-badge">🔜 Coming Soon</div>
+    <div class="fade-in-up" style="text-align: center; padding: 40px; background: white; border-radius: 24px; margin: 20px 0;">
+        <div style="font-size: 48px; margin-bottom: 20px;">📸</div>
+        <h3>Bienvenue sur AnemicCheck</h3>
+        <p>Sélectionnez une méthode d'acquisition ci-dessus pour commencer l'analyse</p>
     </div>
     """, unsafe_allow_html=True)
-    # Bouton désactivé
-    st.button("💬 Démarrer le chat", disabled=True, key="chat_btn", help="Cette fonctionnalité sera disponible prochainement")
 
-with col2:
-    st.markdown("""
-    <div class="consult-card fade-in-up">
-        <span class="icon">📞</span>
-        <h4>Appel vocal</h4>
-        <p>Parlez directement à un médecin</p>
-        <div class="coming-soon-badge">🔜 Coming Soon</div>
-    </div>
-    """, unsafe_allow_html=True)
-    st.button("📞 Appeler maintenant", disabled=True, key="call_btn", help="Cette fonctionnalité sera disponible prochainement")
-
-with col3:
-    st.markdown("""
-    <div class="consult-card fade-in-up">
-        <span class="icon">📅</span>
-        <h4>Prendre rendez‑vous</h4>
-        <p>Planifiez une consultation en ligne</p>
-        <div class="coming-soon-badge">🔜 Coming Soon</div>
-    </div>
-    """, unsafe_allow_html=True)
-    st.button("📅 Réserver", disabled=True, key="appt_btn", help="Cette fonctionnalité sera disponible prochainement")
-
-# ========== Message d'information complémentaire ==========
-st.markdown("""
-<div style="background: rgba(255,255,255,0.7); border-radius: 16px; padding: 16px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-    <p style="margin: 0; font-size: 14px; color: #4b5563;">
-        <b>🔔 Note :</b> Les fonctionnalités de consultation sont en cours de développement. 
-        Elles seront intégrées dans une prochaine mise à jour. Restez connectés !
-    </p>
-</div>
-""", unsafe_allow_html=True)
-
-# ========== Guide d'utilisation (toujours présent) ==========
+# ========== Guide d'utilisation ==========
 with st.expander("ℹ️ Guide d'utilisation / كيف تستخدم التطبيق"):
     st.markdown("""
     **Comment fonctionne l'application ? / كيف يعمل التطبيق ؟**
@@ -868,10 +755,4 @@ with st.expander("ℹ️ Guide d'utilisation / كيف تستخدم التطبي�
     - 📷 Utilisez une image claire et bien éclairée / استخدم صورة واضحة ومضاءة جيداً
     - 👁️ Assurez-vous que l'œil est bien visible / تأكد من أن العين ظاهرة بوضوح
     - 🩸 Les résultats sont à titre indicatif / النتائج هي لأغراض إرشادية فقط
-    
-    **Technologies utilisées / التقنيات المستخدمة :**
-    - PyTorch pour l'IA / للذكاء الاصطناعي
-    - Streamlit pour l'interface / للواجهة
-    - OpenCV pour le traitement d'image / لمعالجة الصور
-    - CLAHE pour l'amélioration du contraste / لتحسين التباين
     """)
