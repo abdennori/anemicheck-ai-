@@ -23,9 +23,11 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-# ========== CSS للواجهة ==========
+# ========== CSS للواجهة (تصميم عصري) ==========
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap');
+
     @keyframes fadeInUp {
         from { opacity: 0; transform: translateY(24px); }
         to { opacity: 1; transform: translateY(0); }
@@ -35,36 +37,55 @@ st.markdown("""
         to { opacity: 1; }
     }
     @keyframes pulseBorder {
-        0%, 100% { border-color: #dc2626; box-shadow: 0 0 0 0 rgba(220,38,38,0.25); }
-        50% { border-color: #f87171; box-shadow: 0 0 0 10px rgba(220,38,38,0); }
+        0%, 100% { border-color: #e11d48; box-shadow: 0 0 0 0 rgba(225,29,72,0.20); }
+        50% { border-color: #fb7185; box-shadow: 0 0 0 12px rgba(225,29,72,0); }
     }
     @keyframes bounceSlow {
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-10px); }
-    }
-    @keyframes shimmer {
-        0% { background-position: -400px 0; }
-        100% { background-position: 400px 0; }
     }
     @keyframes popIn {
         0% { opacity: 0; transform: scale(0.85); }
         70% { opacity: 1; transform: scale(1.03); }
         100% { opacity: 1; transform: scale(1); }
     }
+    @keyframes floatSlow {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(15px, -15px); }
+    }
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    html, body, [class*="css"] {
+        font-family: 'Poppins', 'Tajawal', sans-serif;
+    }
 
     .stApp {
-        background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+        background:
+            radial-gradient(circle at 15% 10%, rgba(251,113,133,0.16) 0%, transparent 45%),
+            radial-gradient(circle at 85% 25%, rgba(244,63,94,0.12) 0%, transparent 45%),
+            linear-gradient(160deg, #fff8f7 0%, #fff1f1 50%, #ffeaea 100%);
+        background-size: 200% 200%;
+        animation: gradientShift 18s ease infinite;
     }
+
+    #MainMenu, footer {visibility: hidden;}
 
     .fade-in-up {
         animation: fadeInUp 0.7s ease both;
     }
 
+    /* ===== منطقة الرفع ===== */
     .upload-zone {
-        background: white;
-        border: 2.5px dashed #dc2626;
-        border-radius: 24px;
-        padding: 35px 20px;
+        background: rgba(255,255,255,0.75);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 2.5px dashed #e11d48;
+        border-radius: 28px;
+        padding: 38px 20px;
         text-align: center;
         margin: 15px 0 5px 0;
         animation: pulseBorder 2.5s ease-in-out infinite, fadeInUp 0.7s ease both;
@@ -77,12 +98,13 @@ st.markdown("""
     }
 
     .upload-zone h4 {
-        color: #b91c1c;
+        color: #9f1239;
         margin: 10px 0 5px 0;
+        font-weight: 700;
     }
 
     .upload-zone p {
-        color: #6c757d;
+        color: #6b7280;
         font-size: 14px;
         margin: 0;
     }
@@ -92,165 +114,178 @@ st.markdown("""
     }
 
     [data-testid="stFileUploaderDropzone"] {
-        border-radius: 16px !important;
-        border: 2px dashed #f0a0a0 !important;
+        border-radius: 18px !important;
+        border: 2px dashed #fda4af !important;
+        background: rgba(255,255,255,0.6) !important;
         transition: all 0.3s ease !important;
     }
 
     [data-testid="stFileUploaderDropzone"]:hover {
-        border-color: #dc2626 !important;
-        background: #fff5f5 !important;
+        border-color: #e11d48 !important;
+        background: #fff1f2 !important;
     }
 
     .result-anemia, .result-non-anemia {
         animation: popIn 0.5s ease both;
     }
-    
+
+    /* ===== الشعار والعنوان ===== */
     .logo-container {
         text-align: center;
-        padding: 20px;
+        padding: 15px;
         background: transparent;
         border-radius: 30px;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
     }
-    
+
     .logo-image {
         width: 100%;
-        max-width: 500px;
+        max-width: 260px;
         height: auto;
         object-fit: contain;
         margin: 0 auto;
         display: block;
         transition: transform 0.4s ease;
-        filter: drop-shadow(0 15px 25px rgba(220,38,38,0.2));
+        filter: drop-shadow(0 12px 20px rgba(225,29,72,0.18));
     }
-    
+
     .logo-image:hover {
-        transform: scale(1.02);
+        transform: scale(1.04) rotate(-1deg);
     }
-    
+
     .app-title {
         text-align: center;
-        font-size: 52px;
+        font-size: 46px;
         font-weight: 800;
-        background: linear-gradient(135deg, #8b0000, #dc2626, #ef4444);
+        background: linear-gradient(135deg, #9f1239, #e11d48, #fb7185);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin: 5px 0;
-        letter-spacing: 2px;
+        letter-spacing: 1px;
     }
-    
+
     .app-subtitle-ar {
         text-align: center;
-        font-size: 28px;
-        color: #b91c1c;
+        font-size: 24px;
+        color: #9f1239;
         margin: 5px 0;
-        font-weight: 600;
+        font-weight: 700;
+        font-family: 'Tajawal', sans-serif;
     }
-    
+
     .app-subtitle {
         text-align: center;
-        font-size: 20px;
-        color: #dc2626;
+        font-size: 17px;
+        color: #e11d48;
         margin: 5px 0;
-        font-style: italic;
+        font-weight: 500;
     }
-    
+
     .app-tagline {
         text-align: center;
-        font-size: 16px;
-        color: #6c757d;
+        font-size: 14px;
+        color: #6b7280;
         margin-top: 5px;
-        padding-bottom: 15px;
-        border-bottom: 2px solid #dc2626;
+        padding: 8px 22px;
+        background: rgba(255,255,255,0.6);
+        border-radius: 30px;
+        border: 1px solid rgba(225,29,72,0.25);
         display: inline-block;
         width: auto;
     }
-    
+
     .tagline-container {
         text-align: center;
-        margin-bottom: 20px;
-    }
-    
-    .card {
-        background: white;
-        border-radius: 24px;
-        padding: 25px;
-        margin: 20px 0;
-        box-shadow: 0 20px 35px -10px rgba(220,38,38,0.15);
-        transition: all 0.3s ease;
-        border: 1px solid rgba(220,38,38,0.2);
-    }
-    
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 25px 40px -12px rgba(220,38,38,0.25);
-    }
-    
-    .model-card {
-        background: white;
-        border-radius: 20px;
-        padding: 20px;
-        text-align: center;
-        transition: all 0.3s ease;
-        border: 1px solid #ffcccc;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    }
-    
-    .model-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(220,38,38,0.15);
-        border-color: #dc2626;
-    }
-    
-    .model-icon {
-        font-size: 48px;
         margin-bottom: 15px;
     }
-    
-    .model-title {
-        font-size: 22px;
-        font-weight: 700;
-        color: #dc2626;
-        margin: 10px 0;
+
+    /* ===== بطاقات عامة ===== */
+    .card {
+        background: rgba(255,255,255,0.85);
+        backdrop-filter: blur(8px);
+        border-radius: 22px;
+        padding: 24px;
+        margin: 18px 0;
+        box-shadow: 0 16px 30px -12px rgba(225,29,72,0.14);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(225,29,72,0.12);
     }
-    
-    .model-desc {
-        font-size: 14px;
-        color: #6c757d;
+
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 22px 36px -12px rgba(225,29,72,0.2);
+    }
+
+    /* ===== بطاقة مشاركة QR ===== */
+    .qr-card {
+        background: rgba(255,255,255,0.85);
+        backdrop-filter: blur(8px);
+        border-radius: 24px;
+        padding: 20px 26px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        box-shadow: 0 14px 28px -10px rgba(225,29,72,0.16);
+        border: 1px solid rgba(225,29,72,0.15);
+        max-width: 480px;
+        margin: 18px auto;
+        transition: all 0.3s ease;
+    }
+
+    .qr-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 18px 32px -10px rgba(225,29,72,0.22);
+    }
+
+    .qr-card img {
+        border-radius: 14px;
+        border: 1px solid rgba(225,29,72,0.15);
+        background: white;
+        padding: 6px;
+        flex-shrink: 0;
+    }
+
+    .qr-text h5 {
+        margin: 0 0 6px 0;
+        color: #9f1239;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .qr-text p {
+        margin: 0;
+        font-size: 12.5px;
+        color: #6b7280;
         line-height: 1.5;
     }
-    
-    .model-badge {
-        display: inline-block;
-        background: linear-gradient(90deg, #dc2626, #ef4444);
-        color: white;
-        padding: 5px 15px;
-        border-radius: 20px;
-        font-size: 12px;
-        margin-top: 10px;
+
+    .qr-text a {
+        color: #e11d48;
+        font-weight: 600;
+        text-decoration: none;
+        word-break: break-all;
     }
-    
+
     .result-anemia {
-        background: linear-gradient(135deg, #fff5f5 0%, #fee2e2 100%);
-        border-radius: 20px;
-        padding: 25px;
+        background: linear-gradient(135deg, #fff5f5 0%, #ffe1e4 100%);
+        border-radius: 22px;
+        padding: 26px;
         margin: 20px 0;
-        border: 2px solid #dc2626;
-        box-shadow: 0 10px 25px rgba(220,38,38,0.15);
+        border: 2px solid #e11d48;
+        box-shadow: 0 14px 28px rgba(225,29,72,0.14);
     }
-    
+
     .result-non-anemia {
-        background: linear-gradient(135deg, #f0fff4 0%, #dcfce7 100%);
-        border-radius: 20px;
-        padding: 25px;
+        background: linear-gradient(135deg, #f0fdf6 0%, #dcfce7 100%);
+        border-radius: 22px;
+        padding: 26px;
         margin: 20px 0;
         border: 2px solid #16a34a;
-        box-shadow: 0 10px 25px rgba(22,163,74,0.15);
+        box-shadow: 0 14px 28px rgba(22,163,74,0.14);
     }
-    
+
     .stButton > button {
-        background: linear-gradient(90deg, #dc2626, #ef4444, #f87171);
+        background: linear-gradient(90deg, #e11d48, #f43f5e, #fb7185);
         color: white;
         border: none;
         border-radius: 40px;
@@ -259,83 +294,95 @@ st.markdown("""
         font-weight: 600;
         transition: all 0.3s ease;
         width: 100%;
-        box-shadow: 0 4px 10px rgba(220,38,38,0.3);
+        box-shadow: 0 4px 14px rgba(225,29,72,0.3);
     }
-    
+
     .stButton > button:hover {
-        transform: scale(1.02);
-        background: linear-gradient(90deg, #b91c1c, #dc2626, #ef4444);
-        box-shadow: 0 6px 15px rgba(220,38,38,0.4);
+        transform: scale(1.02) translateY(-1px);
+        background: linear-gradient(90deg, #9f1239, #e11d48, #f43f5e);
+        box-shadow: 0 8px 18px rgba(225,29,72,0.35);
     }
-    
+
     .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #dc2626, #ef4444);
+        background: linear-gradient(90deg, #e11d48, #fb7185);
         border-radius: 10px;
     }
-    
+
     .disclaimer {
-        background: linear-gradient(135deg, #fff5f5, #ffe0e0);
-        border-radius: 15px;
-        padding: 15px;
+        background: rgba(255,255,255,0.7);
+        border-radius: 16px;
+        padding: 16px;
         text-align: center;
-        font-size: 12px;
+        font-size: 12.5px;
         color: #495057;
         margin-top: 30px;
-        border-left: 4px solid #dc2626;
+        border: 1px solid rgba(225,29,72,0.2);
+        border-left: 4px solid #e11d48;
     }
-    
-    .stImage {
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+
+    .stImage img {
+        border-radius: 18px;
+        box-shadow: 0 10px 22px rgba(0,0,0,0.08);
     }
-    
+
     .info-box {
-        background: linear-gradient(135deg, #fff5f5, #ffe0e0);
-        border-radius: 15px;
+        background: rgba(255,255,255,0.7);
+        border-radius: 16px;
         padding: 15px;
         margin: 15px 0;
-        border-left: 4px solid #dc2626;
+        border-left: 4px solid #e11d48;
     }
-    
+
     .metric-card {
-        background: white;
-        border-radius: 16px;
+        background: rgba(255,255,255,0.85);
+        border-radius: 18px;
         padding: 15px;
         text-align: center;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        border: 1px solid #ffcccc;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+        border: 1px solid rgba(225,29,72,0.15);
     }
-    
+
     .stRadio > div {
         gap: 30px;
         justify-content: center;
     }
-    
+
     .stRadio label {
         font-size: 16px;
         font-weight: 500;
     }
-    
+
     [data-testid="stMetricValue"] {
         font-size: 28px;
         font-weight: 700;
-        color: #dc2626;
+        color: #e11d48;
     }
-    
+
+    [data-testid="stMetric"] {
+        background: rgba(255,255,255,0.7);
+        border-radius: 16px;
+        padding: 12px 10px;
+        border: 1px solid rgba(225,29,72,0.12);
+    }
+
     .section-title {
-        font-size: 28px;
+        font-size: 26px;
         font-weight: 700;
-        color: #dc2626;
+        color: #9f1239;
         margin: 20px 0 15px 0;
         padding-bottom: 10px;
-        border-bottom: 3px solid #dc2626;
+        border-bottom: 3px solid #e11d48;
         display: inline-block;
     }
-    
+
     .section-container {
         text-align: center;
         margin-bottom: 20px;
+    }
+
+    .streamlit-expanderHeader {
+        border-radius: 14px !important;
+        background: rgba(255,255,255,0.7) !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -390,47 +437,18 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ========== عرض النماذج المستخدمة ==========
-st.markdown('<div class="section-container">', unsafe_allow_html=True)
-st.markdown('<span class="section-title">🧠 Modèles d\'IA utilisés / النماذج المستخدمة</span>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
+# ========== مشاركة التطبيق عبر QR Code ==========
+APP_URL = "https://hwaxrexkahkxaazwwjjr3d.streamlit.app/"
+qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=8&color=9f1239&data={APP_URL}"
 
-col_model1, col_model2 = st.columns(2)
-
-with col_model1:
-    st.markdown("""
-    <div class="model-card fade-in-up">
-        <div class="model-icon">🖼️🔬</div>
-        <div class="model-title">U-Net</div>
-        <div class="model-desc">
-            <b>Segmentation / تجزئة الصور</b><br>
-            Encoder: ResNet34<br>
-            Extraction de la conjonctive / استخراج الملتحمة<br>
-            <span class="model-badge">Segmentation model</span>
-        </div>
+st.markdown(f"""
+<div class="qr-card fade-in-up">
+    <img src="{qr_api_url}" width="110" height="110" alt="QR Code">
+    <div class="qr-text">
+        <h5>📱 شارك التطبيق / Partager l'app</h5>
+        <p>امسح الكود بالكاميرا باش تفتح التطبيق فأي جهاز آخر مباشرة</p>
+        <a href="{APP_URL}" target="_blank">{APP_URL}</a>
     </div>
-    """, unsafe_allow_html=True)
-
-with col_model2:
-    st.markdown("""
-    <div class="model-card fade-in-up" style="animation-delay: 0.1s;">
-        <div class="model-icon">🧠📊</div>
-        <div class="model-title">EfficientNet-B3</div>
-        <div class="model-desc">
-            <b>Classification / تصنيف</b><br>
-            Architecture EfficientNet<br>
-            Détection d'anémie / كشف فقر الدم<br>
-            <span class="model-badge">Classification model</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-st.markdown("""
-<div style="background: rgba(220,38,38,0.05); border-radius: 15px; padding: 15px; margin: 10px 0; text-align: center;">
-    <p style="color: #666; margin: 0;">
-        <b>📊 Pipeline de traitement / سير المعالجة:</b><br>
-        Image → U-Net (Segmentation) → Extraction Conjonctive → EfficientNet-B3 (Classification) → Diagnostic
-    </p>
 </div>
 """, unsafe_allow_html=True)
 
