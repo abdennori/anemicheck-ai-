@@ -1173,7 +1173,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ========== HERO SECTION AVEC IMAGE DU MÉDECIN ==========
-doctor_img_url = "doctor.jpg"
+doctor_img_url = "https://unsplash.com/photos/ready-to-help-cheerful-pleasant-positive-pediatrician-holding-pen-and-expressing-gladness-while-sitting-at-the-table-FLvJ1TUDuaU"
 heartbeat_svg = (
     "data:image/svg+xml;utf8,"
     "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60'>"
