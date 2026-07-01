@@ -34,6 +34,16 @@ LANGUAGES = {
         "hero_title": "طبيبك معك بأقل من دقيقتين",
         "hero_desc": "تحليل ذكي لصورة العين لكشف الأنيميا بدقة وسرعة عالية",
         "hero_badge": "100% نتائج دقيقة وآمنة",
+        "hero_cta": "ابدأ التحليل الآن",
+        "ai_dev_badge": "تم تطويره بواسطة الذكاء الاصطناعي",
+        "top_badge1_title": "مساعدة فورية",
+        "top_badge1_desc": "تواصل مع فريق الدعم",
+        "top_badge2_title": "مكالمة مجانية",
+        "top_badge2_desc": "213 123 456 789+",
+        "top_badge3_title": "خدمة متاحة 24/7",
+        "top_badge3_desc": "نحن هنا من أجلك دائماً",
+        "top_badge4_title": "آمن وموثوق",
+        "top_badge4_desc": "خصوصيتك محمية 100%",
         "feature_1_title": "نتيجة سريعة",
         "feature_1_desc": "احصل على النتيجة فوراً مع تقرير مفصل",
         "feature_2_title": "رفع الصورة",
@@ -137,6 +147,16 @@ LANGUAGES = {
         "hero_title": "Votre médecin en moins de deux minutes",
         "hero_desc": "Analyse intelligente de l'image oculaire pour détecter l'anémie avec précision et rapidité",
         "hero_badge": "100% de résultats précis et sécurisés",
+        "hero_cta": "Commencer l'analyse",
+        "ai_dev_badge": "Développé avec l'intelligence artificielle",
+        "top_badge1_title": "Aide immédiate",
+        "top_badge1_desc": "Contactez notre équipe",
+        "top_badge2_title": "Appel gratuit",
+        "top_badge2_desc": "+213 123 456 789",
+        "top_badge3_title": "Service 24/7",
+        "top_badge3_desc": "Nous sommes toujours là",
+        "top_badge4_title": "Sûr et fiable",
+        "top_badge4_desc": "100% de confidentialité",
         "feature_1_title": "Résultat rapide",
         "feature_1_desc": "Obtenez le résultat immédiatement avec un rapport détaillé",
         "feature_2_title": "Téléchargement d'image",
@@ -240,6 +260,16 @@ LANGUAGES = {
         "hero_title": "Your doctor in less than two minutes",
         "hero_desc": "Intelligent analysis of eye images to detect anemia with high accuracy and speed",
         "hero_badge": "100% accurate and secure results",
+        "hero_cta": "Start analysis now",
+        "ai_dev_badge": "Built with artificial intelligence",
+        "top_badge1_title": "Instant help",
+        "top_badge1_desc": "Chat with our support team",
+        "top_badge2_title": "Free call",
+        "top_badge2_desc": "+213 123 456 789",
+        "top_badge3_title": "24/7 available",
+        "top_badge3_desc": "We are always here for you",
+        "top_badge4_title": "Safe & trusted",
+        "top_badge4_desc": "100% of your privacy protected",
         "feature_1_title": "Quick Result",
         "feature_1_desc": "Get instant results with a detailed report",
         "feature_2_title": "Upload Image",
@@ -348,7 +378,7 @@ st.markdown("""
     * { font-family: 'Inter', 'Tajawal', sans-serif; }
     
     .stApp {
-        background: linear-gradient(-45deg, #f8fafc, #eef2ff, #f1f5f9, #f8fafc);
+        background: linear-gradient(-45deg, #f4f7fb, #eaf1fb, #f1f5fb, #f4f7fb);
         background-size: 400% 400%;
         animation: gradientBG 15s ease infinite;
     }
@@ -360,17 +390,14 @@ st.markdown("""
     
     /* ===== HEADER ===== */
     .header {
-        background: rgba(255,255,255,0.7);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        padding: 0.8rem 2rem;
-        border-radius: 0 0 24px 24px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.06);
-        margin-bottom: 1.5rem;
+        background: linear-gradient(120deg, #1e3a8a 0%, #1d4ed8 55%, #2563eb 100%);
+        padding: 1rem 2rem;
+        border-radius: 0 0 26px 26px;
+        box-shadow: 0 10px 32px rgba(30,58,138,0.25);
+        margin-bottom: 1rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        border: 1px solid rgba(255,255,255,0.3);
         animation: slideDown 0.6s ease;
     }
     @keyframes slideDown {
@@ -385,19 +412,54 @@ st.markdown("""
     .header-left h1 {
         font-size: 24px;
         font-weight: 800;
-        color: #0f172a;
+        color: #ffffff;
         margin: 0;
     }
-    .header-left h1 span { color: #e11d48; }
+    .header-left h1 span { color: #7dd3fc; }
     .header-left .subtitle {
         font-size: 13px;
-        color: #64748b;
+        color: #dbeafe;
         font-weight: 500;
     }
     .header-badges {
         display: flex;
-        gap: 20px;
+        align-items: center;
+        gap: 14px;
         flex-wrap: wrap;
+    }
+    .header-ai-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #ffffff;
+        background: rgba(16,185,129,0.25);
+        border: 1px solid rgba(16,185,129,0.5);
+        padding: 6px 16px;
+        border-radius: 30px;
+    }
+    .header-icon-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 16px;
+        position: relative;
+    }
+    .header-icon-btn .dot {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #f87171;
+        border: 1.5px solid #1e3a8a;
     }
     .header-badge {
         display: flex;
@@ -411,8 +473,56 @@ st.markdown("""
         border: 1px solid rgba(255,255,255,0.3);
     }
     .header-badge strong {
-        color: #e11d48;
+        color: #2563eb;
         font-weight: 700;
+    }
+
+    /* ===== TOP QUICK BADGES ===== */
+    .top-badges {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin: 0 0 1.5rem;
+    }
+    @media (max-width: 768px) {
+        .top-badges { grid-template-columns: repeat(2, 1fr); }
+    }
+    .top-badge-card {
+        background: rgba(255,255,255,0.75);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.4);
+        border-radius: 18px;
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 4px 16px rgba(30,58,138,0.05);
+        transition: all 0.3s ease;
+    }
+    .top-badge-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px rgba(30,58,138,0.1);
+    }
+    .top-badge-card .tb-icon {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+    }
+    .top-badge-card .tb-title {
+        font-weight: 700;
+        font-size: 13px;
+        color: #0f172a;
+    }
+    .top-badge-card .tb-desc {
+        font-size: 11px;
+        color: #64748b;
     }
     
     /* ===== SIDEBAR ===== */
@@ -450,13 +560,13 @@ st.markdown("""
         transition: all 0.3s ease;
     }
     .sidebar-glass .nav-item.active {
-        background: rgba(225,29,72,0.12);
-        color: #e11d48;
+        background: rgba(37,99,235,0.12);
+        color: #2563eb;
         font-weight: 600;
-        border: 1px solid rgba(225,29,72,0.15);
+        border: 1px solid rgba(37,99,235,0.15);
     }
     .sidebar-glass .nav-item:hover {
-        background: rgba(225,29,72,0.04);
+        background: rgba(37,99,235,0.04);
     }
     .sidebar-glass p, .sidebar-glass li {
         color: #334155;
@@ -485,49 +595,49 @@ st.markdown("""
     
     /* ===== HERO ===== */
     .hero {
-        background: rgba(255,255,255,0.7);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-radius: 28px;
-        padding: 2.5rem 2rem;
+        background: linear-gradient(120deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
+        border-radius: 32px;
+        padding: 2.5rem 2.5rem;
         margin-bottom: 2rem;
-        border: 1px solid rgba(255,255,255,0.3);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+        box-shadow: 0 16px 40px rgba(30,58,138,0.25);
         animation: fadeUp 0.8s ease;
         transition: all 0.3s ease;
-        text-align: center;
+        text-align: right;
+        position: relative;
+        overflow: hidden;
     }
     .hero:hover {
-        box-shadow: 0 16px 48px rgba(225,29,72,0.08);
+        box-shadow: 0 20px 48px rgba(30,58,138,0.32);
     }
     .hero .icon {
-        font-size: 48px;
+        font-size: 40px;
         animation: float 3s ease-in-out infinite;
-        display: block;
+        display: inline-block;
     }
     @keyframes float {
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-10px); }
     }
     .hero h1 {
-        font-size: 32px;
+        font-size: 34px;
         font-weight: 800;
-        color: #0f172a;
+        color: #ffffff;
         margin: 0.5rem 0 0.2rem;
+        line-height: 1.3;
     }
     .hero h1 span {
-        background: linear-gradient(135deg, #9f1239, #e11d48);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #34d399;
     }
     .hero p {
         font-size: 16px;
-        color: #64748b;
-        margin: 0.5rem 0 1.2rem;
+        color: #dbeafe;
+        margin: 0.5rem 0 1.4rem;
+        max-width: 480px;
     }
     .hero .hero-badge {
-        background: rgba(225,29,72,0.08);
-        color: #e11d48;
+        background: rgba(16,185,129,0.18);
+        color: #d1fae5;
+        border: 1px solid rgba(52,211,153,0.4);
         padding: 6px 18px;
         border-radius: 30px;
         font-size: 14px;
@@ -535,27 +645,70 @@ st.markdown("""
         display: inline-block;
     }
     .doctor-image {
-        border-radius: 50%;
-        box-shadow: 0 8px 32px rgba(225,29,72,0.15);
-        border: 3px solid rgba(225,29,72,0.1);
+        border-radius: 24px;
+        filter: drop-shadow(0 12px 28px rgba(0,0,0,0.25));
         transition: transform 0.3s ease;
-        width: 120px;
-        height: 120px;
-        object-fit: cover;
+        width: 100%;
+        max-width: 320px;
+        object-fit: contain;
     }
     .doctor-image:hover {
-        transform: scale(1.05);
+        transform: scale(1.02);
     }
     .hero-content {
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         gap: 30px;
-        flex-wrap: wrap;
+        flex-wrap: wrap-reverse;
+        position: relative;
+        z-index: 2;
     }
     .hero-text {
         flex: 1;
-        min-width: 250px;
+        min-width: 280px;
+    }
+    .hero-visual {
+        position: relative;
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 260px;
+    }
+    .hero-visual .glow {
+        position: absolute;
+        width: 260px;
+        height: 260px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
+    }
+    .hero-heartbeat {
+        position: absolute;
+        top: 50%;
+        left: -10%;
+        width: 60%;
+        opacity: 0.55;
+        transform: translateY(-50%);
+        z-index: 1;
+    }
+    .hero-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #ffffff;
+        color: #1d4ed8 !important;
+        font-weight: 700;
+        font-size: 15px;
+        padding: 12px 28px;
+        border-radius: 40px;
+        text-decoration: none !important;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+    }
+    .hero-cta:hover {
+        transform: scale(1.03);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.2);
     }
     
     /* ===== FEATURES ===== */
@@ -630,7 +783,7 @@ st.markdown("""
         padding: 0 10px;
     }
     .how-step .step-num {
-        background: linear-gradient(135deg, #e11d48, #fb7185);
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
         color: white;
         width: 40px;
         height: 40px;
@@ -726,7 +879,7 @@ st.markdown("""
         color: #0f172a;
         margin: 2rem 0 1rem;
         padding-bottom: 8px;
-        border-bottom: 3px solid #e11d48;
+        border-bottom: 3px solid #2563eb;
         display: inline-block;
         animation: fadeUp 0.6s ease;
     }
@@ -748,7 +901,7 @@ st.markdown("""
     #MainMenu, footer, .stDeployButton { display: none; }
     
     .stButton > button {
-        background: linear-gradient(135deg, #e11d48, #be123c);
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
         color: white;
         border: none;
         border-radius: 40px;
@@ -756,15 +909,15 @@ st.markdown("""
         font-weight: 600;
         transition: 0.3s;
         width: 100%;
-        box-shadow: 0 4px 16px rgba(225,29,72,0.2);
+        box-shadow: 0 4px 16px rgba(37,99,235,0.25);
     }
     .stButton > button:hover {
         transform: scale(1.02);
-        box-shadow: 0 8px 24px rgba(225,29,72,0.3);
+        box-shadow: 0 8px 24px rgba(37,99,235,0.35);
     }
     
     .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #e11d48, #fb7185);
+        background: linear-gradient(90deg, #2563eb, #60a5fa);
         border-radius: 10px;
         transition: width 0.5s ease;
     }
@@ -777,17 +930,17 @@ st.markdown("""
         border-radius: 28px;
         padding: 2rem 1.5rem;
         text-align: center;
-        border: 2px dashed rgba(225,29,72,0.2);
+        border: 2px dashed rgba(37,99,235,0.25);
         transition: all 0.4s ease;
         margin-bottom: 2rem;
         box-shadow: 0 8px 32px rgba(0,0,0,0.04);
         animation: fadeUp 0.8s ease;
     }
     .upload-card:hover {
-        border-color: #e11d48;
+        border-color: #2563eb;
         background: rgba(255,255,255,0.8);
         transform: translateY(-4px);
-        box-shadow: 0 16px 48px rgba(225,29,72,0.08);
+        box-shadow: 0 16px 48px rgba(37,99,235,0.1);
     }
     .upload-card .icon {
         font-size: 48px;
@@ -921,7 +1074,7 @@ with st.sidebar:
     
     # QR Code
     APP_URL = "https://hwaxrexkahkxaazwwjjr3d.streamlit.app/"
-    qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&color=e11d48&data={APP_URL}"
+    qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&color=2563eb&data={APP_URL}"
     
     st.markdown(f"""
     <div class="sidebar-glass">
@@ -961,56 +1114,72 @@ with st.sidebar:
 
 # ========== PAGE PRINCIPALE ==========
 # Header avec badges
-if logo:
-    st.markdown(f"""
-    <div class="header">
-        <div class="header-left">
-            <img src="data:image/png;base64,{logo}" style="height:42px;">
-            <div>
-                <h1>{t('app_title')}</h1>
-                <div class="subtitle">{t('app_subtitle')}</div>
-            </div>
-        </div>
-        <div class="header-badges">
-            <div class="header-badge">🔒 <strong>{t('badge_private')}</strong> {t('badge_private_desc')}</div>
-            <div class="header-badge">⏰ <strong>{t('badge_available')}</strong> {t('badge_available_desc')}</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-else:
-    st.markdown(f"""
-    <div class="header">
-        <div class="header-left">
-            <div style="font-size:36px;">🩸</div>
-            <div>
-                <h1>{t('app_title')}</h1>
-                <div class="subtitle">{t('app_subtitle')}</div>
-            </div>
-        </div>
-        <div class="header-badges">
-            <div class="header-badge">🔒 <strong>{t('badge_private')}</strong> {t('badge_private_desc')}</div>
-            <div class="header-badge">⏰ <strong>{t('badge_available')}</strong> {t('badge_available_desc')}</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-# ========== HERO SECTION AVEC IMAGE DU MÉDECIN ==========
-# Utilisation d'une icône de médecin (Flaticon)
-doctor_img_url = "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"
+logo_html = f'<img src="data:image/png;base64,{logo}" style="height:38px;">' if logo else '<div style="font-size:30px;">🧬</div>'
 
 st.markdown(f"""
-<div class="hero">
-    <div class="hero-content">
+<div class="header">
+    <div class="header-badges">
+        <div class="header-icon-btn">🔔<span class="dot"></span></div>
+        <div class="header-badge" style="background:rgba(255,255,255,0.15); color:#fff; border-color:rgba(255,255,255,0.25);">🌐 {lang_map[st.session_state.language]}</div>
+        <div class="header-ai-badge">✅ {t('ai_dev_badge')}</div>
+    </div>
+    <div class="header-left">
         <div>
-            <img src="{doctor_img_url}" class="doctor-image" alt="Médecin / Doctor">
+            <h1>{t('app_title')}</h1>
+            <div class="subtitle">{t('app_subtitle')}</div>
         </div>
+        {logo_html}
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# ========== TOP QUICK BADGES ==========
+st.markdown(f"""
+<div class="top-badges">
+    <div class="top-badge-card">
+        <div class="tb-icon">🎧</div>
+        <div><div class="tb-title">{t('top_badge1_title')}</div><div class="tb-desc">{t('top_badge1_desc')}</div></div>
+    </div>
+    <div class="top-badge-card">
+        <div class="tb-icon">📞</div>
+        <div><div class="tb-title">{t('top_badge2_title')}</div><div class="tb-desc">{t('top_badge2_desc')}</div></div>
+    </div>
+    <div class="top-badge-card">
+        <div class="tb-icon">🕐</div>
+        <div><div class="tb-title">{t('top_badge3_title')}</div><div class="tb-desc">{t('top_badge3_desc')}</div></div>
+    </div>
+    <div class="top-badge-card">
+        <div class="tb-icon">🛡️</div>
+        <div><div class="tb-title">{t('top_badge4_title')}</div><div class="tb-desc">{t('top_badge4_desc')}</div></div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# ========== HERO SECTION AVEC IMAGE DU MÉDECIN ==========
+doctor_img_url = "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"
+heartbeat_svg = (
+    "data:image/svg+xml;utf8,"
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60'>"
+    "<polyline points='0,30 60,30 80,10 100,50 120,5 140,55 160,30 220,30 240,15 260,45 280,30 400,30' "
+    "fill='none' stroke='white' stroke-width='3'/></svg>"
+)
+
+st.markdown(f"""
+<div class="hero" id="hero-top">
+    <img src="{heartbeat_svg}" class="hero-heartbeat" alt="">
+    <div class="hero-content">
         <div class="hero-text">
             <span class="icon">🩺</span>
             <h1>{t('hero_title')}</h1>
             <p>{t('hero_desc')}</p>
-            <div style="margin-top:10px;">
+            <a href="#upload-zone" class="hero-cta">➜ {t('hero_cta')}</a>
+            <div style="margin-top:14px;">
                 <span class="hero-badge">✅ {t('hero_badge')}</span>
             </div>
+        </div>
+        <div class="hero-visual">
+            <div class="glow"></div>
+            <img src="{doctor_img_url}" class="doctor-image" alt="Médecin / Doctor">
         </div>
     </div>
 </div>
@@ -1018,7 +1187,7 @@ st.markdown(f"""
 
 # ========== ZONE UPLOAD ==========
 st.markdown(f"""
-<div class="upload-card">
+<div class="upload-card" id="upload-zone">
     <div class="icon">📸</div>
     <h3>{t('upload_title')}</h3>
     <p>{t('upload_desc')}</p>
