@@ -340,15 +340,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-st.subheader("📱 Scan QR Code")
-
-url = "https://hwaxrexkahkxaazwwjjr3d.streamlit.app/"
-
-qr = qrcode.make(url)
-
-st.image(qr, width=200)
-
-st.write(url)
 
 # ========== JavaScript لطلب الكاميرا ==========
 st.markdown("""
