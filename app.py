@@ -2,7 +2,6 @@ import streamlit as st
 import torch
 import cv2
 from PIL import Image
-import qrcode
 import streamlit as st
 import torch
 import torch.nn as nn
