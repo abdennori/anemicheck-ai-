@@ -534,6 +534,29 @@ st.markdown("""
         font-weight: 600;
         display: inline-block;
     }
+    .doctor-image {
+        border-radius: 50%;
+        box-shadow: 0 8px 32px rgba(225,29,72,0.15);
+        border: 3px solid rgba(225,29,72,0.1);
+        transition: transform 0.3s ease;
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+    }
+    .doctor-image:hover {
+        transform: scale(1.05);
+    }
+    .hero-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 30px;
+        flex-wrap: wrap;
+    }
+    .hero-text {
+        flex: 1;
+        min-width: 250px;
+    }
     
     /* ===== FEATURES ===== */
     .features-grid {
@@ -883,7 +906,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # ===== قائمة ثابتة (غير قابلة للنقر) =====
+    # ===== قائمة ثابتة =====
     st.markdown(f"""
     <div class="sidebar-glass">
         <h4>📋 القائمة / Menu</h4>
@@ -937,7 +960,7 @@ with st.sidebar:
     st.caption(t('sidebar_version'))
 
 # ========== PAGE PRINCIPALE ==========
-# Header avec badges (sans appel ni numéro)
+# Header avec badges
 if logo:
     st.markdown(f"""
     <div class="header">
@@ -971,14 +994,24 @@ else:
     </div>
     """, unsafe_allow_html=True)
 
-# Hero Section
+# ========== HERO SECTION AVEC IMAGE DU MÉDECIN ==========
+# Utilisation d'une icône de médecin (Flaticon)
+doctor_img_url = "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"
+
 st.markdown(f"""
 <div class="hero">
-    <span class="icon">🩺</span>
-    <h1>{t('hero_title')}</h1>
-    <p>{t('hero_desc')}</p>
-    <div style="margin-top:10px;">
-        <span class="hero-badge">✅ {t('hero_badge')}</span>
+    <div class="hero-content">
+        <div>
+            <img src="{doctor_img_url}" class="doctor-image" alt="Médecin / Doctor">
+        </div>
+        <div class="hero-text">
+            <span class="icon">🩺</span>
+            <h1>{t('hero_title')}</h1>
+            <p>{t('hero_desc')}</p>
+            <div style="margin-top:10px;">
+                <span class="hero-badge">✅ {t('hero_badge')}</span>
+            </div>
+        </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
