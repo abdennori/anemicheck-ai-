@@ -1161,10 +1161,11 @@ st.markdown(f"""
         <div class="tb-icon">🎧</div>
         <div><div class="tb-title">{t('top_badge1_title')}</div><div class="tb-desc">{t('top_badge1_desc')}</div></div>
     </div>
-    <div class="top-badge-card">
-        <div class="tb-icon">📞</div>
-        <div><div class="tb-title">{t('top_badge2_title')}</div><div class="tb-desc">{t('top_badge2_desc')}</div></div>
-    </div>
+    <div class="top-badge-card disabled">
+    <span class="tb-soon">🔜 قريباً</span>
+    <div class="tb-icon">📞</div>
+    <div><div class="tb-title">{t('top_badge2_title')}</div><div class="tb-desc">{t('top_badge2_desc')}</div></div>
+</div>
     <div class="top-badge-card">
         <div class="tb-icon">🕐</div>
         <div><div class="tb-title">{t('top_badge3_title')}</div><div class="tb-desc">{t('top_badge3_desc')}</div></div>
@@ -1177,7 +1178,11 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ========== HERO SECTION AVEC IMAGE DU MÉDECIN ==========
-doctor_img_url = "https://ar.pngtree.com/freepng/portrait-of-attractive-male-doctor_14354532.html"
+doctor_local = get_file_base64(["doctor.png", "doctor.jpg", "doctor.jpeg"])
+if doctor_local:
+    doctor_img_url = f"data:image/png;base64,{doctor_local}"
+else:
+    doctor_img_url = "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"
 heartbeat_svg = (
     "data:image/svg+xml;utf8,"
     "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60'>"
