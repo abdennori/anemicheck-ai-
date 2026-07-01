@@ -10,6 +10,7 @@ matplotlib.use("Agg")  # headless backend, obligatoire sur un serveur sans écra
 import matplotlib.pyplot as plt
 import base64
 import os
+from model_loader import load_unet_model, load_classifier_model
 
 # ========== إعداد الصفحة ==========
 st.set_page_config(
@@ -456,38 +457,10 @@ if option == "📁 Télécharger une image":
 else:
     uploaded = st.camera_input("📷 Prenez une photo de l'œil", disabled=False, label_visibility="collapsed")
 
-# ========== تحميل النماذج (Lazy loading) ==========
-@st.cache_resource
-def load_unet_model():
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    import segmentation_models_pytorch as smp
-    
-    unet = smp.Unet(encoder_name="resnet34", encoder_weights=None, in_channels=3, classes=1)
-    unet.load_state_dict(torch.load("unet_model.pth", map_location=device, weights_only=True))
-    unet.to(device)
-    unet.eval()
-    
-    return unet, device
 
-@st.cache_resource
-def load_classifier_model():
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    
-    model = models.efficientnet_b3(weights=None)
-    model.classifier[1] = nn.Linear(model.classifier[1].in_features, 1)
-    
-    checkpoint = torch.load("efficientnet_b3.pth", map_location=device, weights_only=True)
-    
-    if 'classifier.1.weight' in checkpoint:
-        del checkpoint['classifier.1.weight']
-    if 'classifier.1.bias' in checkpoint:
-        del checkpoint['classifier.1.bias']
-    
-    model.load_state_dict(checkpoint, strict=False)
-    model.to(device)
-    model.eval()
-    
-    return model, device
+
+unet, device = load_unet_model()
+classifier, _ = load_classifier_model()
 
 # ملاحظة: النماذج ما عادش تتحمل مباشرة هنا — تتحمل غير كي المستخدم يدخل صورة
 # (شوف أسفل، جوه "if uploaded is not None"). هكذا واجهة رفع الصور تبان دايما
