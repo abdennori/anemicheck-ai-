@@ -12,6 +12,7 @@ import os
 import time
 import pandas as pd
 import io
+import json
 from datetime import datetime
 from model_loader import load_unet_model, load_classifier_model
 
@@ -103,11 +104,16 @@ LANGUAGES = {
         "history_diagnostic": "التشخيص",
         "history_confidence": "الثقة",
         "history_prob": "احتمال فقر الدم",
+        "history_empty": "📭 لا توجد تحليلات سابقة",
+        "history_clear": "🗑️ مسح التاريخ",
+        "history_clear_confirm": "هل أنت متأكد من مسح كل التحليلات السابقة؟",
+        "history_download": "📥 تحميل التاريخ",
         "tech_details": "📘 التفاصيل التقنية",
         "tech_model_seg": "نموذج التجزئة",
         "tech_model_clf": "نموذج التصنيف",
         "tech_device": "الجهاز المستخدم",
         "tech_sigmoid": "قيمة السيجمويد الخام",
+        "tech_sigmoid_corrected": "قيمة السيجمويد بعد التصحيح",
         "tech_prob_anemic": "احتمال فقر الدم",
         "tech_prob_non": "احتمال عدم الإصابة",
         "tech_preprocess": "المعالجة المسبقة",
@@ -211,11 +217,16 @@ LANGUAGES = {
         "history_diagnostic": "Diagnostic",
         "history_confidence": "Confiance",
         "history_prob": "Probabilité Anémie",
+        "history_empty": "📭 Aucun historique",
+        "history_clear": "🗑️ Effacer l'historique",
+        "history_clear_confirm": "Voulez-vous vraiment effacer tout l'historique ?",
+        "history_download": "📥 Télécharger l'historique",
         "tech_details": "📘 Détails techniques",
         "tech_model_seg": "Modèle de segmentation",
         "tech_model_clf": "Modèle de classification",
         "tech_device": "Appareil utilisé",
         "tech_sigmoid": "Valeur sigmoïde brute",
+        "tech_sigmoid_corrected": "Valeur sigmoïde corrigée",
         "tech_prob_anemic": "Probabilité Anémie",
         "tech_prob_non": "Probabilité Non Anémie",
         "tech_preprocess": "Prétraitement",
@@ -319,11 +330,16 @@ LANGUAGES = {
         "history_diagnostic": "Diagnosis",
         "history_confidence": "Confidence",
         "history_prob": "Anemia Probability",
+        "history_empty": "📭 No history yet",
+        "history_clear": "🗑️ Clear history",
+        "history_clear_confirm": "Are you sure you want to clear all history?",
+        "history_download": "📥 Download history",
         "tech_details": "📘 Technical Details",
         "tech_model_seg": "Segmentation Model",
         "tech_model_clf": "Classification Model",
         "tech_device": "Device Used",
         "tech_sigmoid": "Raw Sigmoid Value",
+        "tech_sigmoid_corrected": "Corrected Sigmoid Value",
         "tech_prob_anemic": "Anemia Probability",
         "tech_prob_non": "Non-Anemia Probability",
         "tech_preprocess": "Preprocessing",
@@ -355,6 +371,78 @@ LANGUAGES = {
 def t(key):
     lang = st.session_state.get("language", "fr")
     return LANGUAGES.get(lang, LANGUAGES["fr"]).get(key, key)
+
+# ========== SESSION STATE ==========
+if 'language' not in st.session_state:
+    st.session_state.language = "fr"
+if 'history' not in st.session_state:
+    st.session_state.history = []
+if 'history_loaded' not in st.session_state:
+    st.session_state.history_loaded = False
+
+# ========== LOCALSTORAGE : حفظ واسترجاع التاريخ ==========
+def save_history_to_localstorage():
+    """حفظ التاريخ في LocalStorage عبر JavaScript"""
+    history_json = json.dumps(st.session_state.history, ensure_ascii=False)
+    # نستخدم st.components.v1.html لتنفيذ JavaScript في المتصفح
+    js = f"""
+    <script>
+    try {{
+        localStorage.setItem('anemicheck_history', '{history_json}');
+        console.log('✅ History saved to localStorage');
+    }} catch(e) {{
+        console.warn('⚠️ Could not save to localStorage:', e);
+    }}
+    </script>
+    """
+    st.components.v1.html(js, height=0)
+
+def load_history_from_localstorage():
+    """استرجاع التاريخ من LocalStorage عبر JavaScript وتحديث session_state"""
+    # نستخدم st.components.v1.html مع إعادة تحميل الصفحة للحصول على البيانات
+    # الطريقة الأبسط: نمرر البيانات عبر query parameters
+    if not st.session_state.history_loaded:
+        # نضيف JavaScript لقراءة localStorage وتوجيهها إلى Streamlit
+        js = """
+        <script>
+        try {
+            const stored = localStorage.getItem('anemicheck_history');
+            if (stored) {
+                const history = JSON.parse(stored);
+                // نمرر البيانات إلى Streamlit عبر query params
+                const params = new URLSearchParams(window.location.search);
+                params.set('history', encodeURIComponent(stored));
+                window.history.replaceState({}, '', '?' + params.toString());
+                // نعيد تحميل الصفحة لتحديث session_state
+                // ولكننا نمنع إعادة التحميل المتكررة
+                if (!window._historyLoaded) {
+                    window._historyLoaded = true;
+                    window.location.reload();
+                }
+            }
+        } catch(e) {
+            console.warn('⚠️ Could not load history:', e);
+        }
+        </script>
+        """
+        st.components.v1.html(js, height=0)
+        
+        # التحقق من وجود التاريخ في query params
+        query_params = st.query_params
+        if 'history' in query_params:
+            try:
+                import urllib.parse
+                history_json = urllib.parse.unquote(query_params['history'])
+                stored_history = json.loads(history_json)
+                if isinstance(stored_history, list) and len(stored_history) > 0:
+                    st.session_state.history = stored_history
+                    st.session_state.history_loaded = True
+            except Exception as e:
+                pass
+
+# ========== تحميل التاريخ من LocalStorage (مرة واحدة) ==========
+if not st.session_state.history_loaded:
+    load_history_from_localstorage()
 
 # ========== CSS ==========
 st.markdown("""
@@ -1149,6 +1237,17 @@ st.markdown("""
         animation: pulse-badge 1.5s ease-in-out infinite;
     }
     
+    .history-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 10px 0;
+    }
+    .history-actions .stButton {
+        flex: 1;
+        min-width: 120px;
+    }
+    
     @media (max-width: 640px) {
         .header-left h1 { font-size: 18px; }
         .header-left .subtitle { font-size: 11px; }
@@ -1167,15 +1266,10 @@ st.markdown("""
         .result-card { padding: 1.2rem; }
         .result-card h2 { font-size: 24px; }
         .stButton > button { padding: 12px 20px; font-size: 14px; }
+        .history-actions { flex-direction: column; }
     }
 </style>
 """, unsafe_allow_html=True)
-
-# ========== SESSION STATE ==========
-if 'language' not in st.session_state:
-    st.session_state.language = "fr"
-if 'history' not in st.session_state:
-    st.session_state.history = []
 
 # ========== HEADER ==========
 def get_file_base64(names):
@@ -1419,55 +1513,34 @@ def extract_best_conjunctiva(img, mask):
     enhanced = enhance_conjunctiva(conj)
     return enhanced, mask, None
 
-# ================================================================
-# ===== دالة التصنيف المصححة (Softmax مع 2 مخرجات - EfficientNet-B3) =====
-# ================================================================
-# ملاحظة هامة: فحص ملف efficientnet_b3.pth أظهر أن الطبقة الأخيرة
-# classifier.1 هي Linear(1536 -> 2)، أي أن النموذج مدرّب بمخرجين (Softmax)
-# وليس مخرجاً واحداً (Sigmoid). الكود القديم كان يستعمل sigmoid().item()
-# وهذا غير متوافق مع هذا الملف إطلاقاً. تم تصحيح الدالة بالكامل هنا.
-#
-# ترتيب الأصناف (class order):
-# ImageFolder/torchvision يرتب المجلدات أبجدياً افتراضياً، لذا الافتراض هنا هو:
-#   index 0 -> "Anemic"      (A تأتي قبل N أبجدياً)
-#   index 1 -> "Non Anemic"
-# يجب التحقق من هذا الترتيب فعلياً بصورة معروفة النتيجة قبل الاعتماد الكامل.
-CLASS_NAMES = ["Anemic", "Non Anemic"]
-
+# ===== دالة التصنيف (مع عكس النتيجة لأن النموذج معكوس) =====
 def predict_anemia(model, image, device):
-    """
-    تصنيف صورة الملتحمة المستخرجة إلى Anemic / Non Anemic
-    باستخدام Softmax على مخرجين (يطابق معمارية classifier.1 = Linear(1536, 2)).
-    """
+    """تصنيف الأنيميا مع تصحيح النتيجة (لأن النموذج يعطي نتائج معكوسة)"""
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
-
+    
     if isinstance(image, np.ndarray):
         image = Image.fromarray(image)
-
+    
     tensor = transform(image).unsqueeze(0).to(device)
-
+    
     with torch.no_grad():
-        output = model(tensor)                            # shape: [1, 2]
-        probs = torch.softmax(output, dim=1).squeeze(0)    # [p_anemic, p_non_anemic]
-
-    prob_anemic = probs[0].item()
-    prob_non_anemic = probs[1].item()
-
-    if prob_anemic >= prob_non_anemic:
+        output = model(tensor)
+        raw_pred = torch.sigmoid(output).item()
+    
+    # عكس النتيجة (تصحيح) لأن النموذج معكوس
+    corrected_pred = 1 - raw_pred
+    
+    if corrected_pred >= 0.5:
         result = "Anemic"
-        confidence = prob_anemic * 100
+        confidence = corrected_pred * 100
     else:
         result = "Non Anemic"
-        confidence = prob_non_anemic * 100
-
-    # نرجع raw_pred/corrected_pred لتوافق باقي الكود (الرسم البياني، الجدول التقني)
-    corrected_pred = prob_anemic
-    raw_pred = prob_anemic
-
+        confidence = (1 - corrected_pred) * 100
+    
     return result, confidence, corrected_pred, raw_pred
 
 @st.cache_resource
@@ -1475,6 +1548,37 @@ def load_models():
     unet, dev_unet = load_unet_model()
     clf, dev_clf = load_classifier_model()
     return unet, dev_unet, clf, dev_clf
+
+# ========== عرض التاريخ المحفوظ (قبل معالجة الصورة) ==========
+# نعرض التاريخ دائماً إذا كان موجوداً
+if st.session_state.history:
+    st.markdown(f'<div class="section-title">{t("history_title")}</div>', unsafe_allow_html=True)
+    df = pd.DataFrame(st.session_state.history)
+    st.dataframe(df, use_container_width=True, hide_index=True)
+    
+    # أزرار إدارة التاريخ
+    col_hist1, col_hist2, col_hist3 = st.columns([1, 1, 1])
+    with col_hist1:
+        # زر مسح التاريخ
+        if st.button(t("history_clear"), use_container_width=True):
+            st.session_state.history = []
+            save_history_to_localstorage()
+            st.rerun()
+    
+    with col_hist2:
+        # زر تحميل التاريخ كـ CSV
+        csv = df.to_csv(index=False)
+        st.download_button(
+            label=t("history_download"),
+            data=csv,
+            file_name=f"anemicheck_history_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+    
+    with col_hist3:
+        # عرض عدد التحليلات
+        st.metric("📊", f"{len(st.session_state.history)}")
 
 # ========== TRAITEMENT ==========
 if uploaded is not None:
@@ -1522,7 +1626,6 @@ if uploaded is not None:
         # 2. Real processing
         with st.spinner(t("analyzing")):
             img = np.array(img_pil)
-            # تم إزالة `cv2.flip` لتجنب التشويش (النموذج لم يُدرّب عليه)
             
             transform_unet = transforms.Compose([
                 transforms.ToPILImage(),
@@ -1538,7 +1641,7 @@ if uploaded is not None:
 
             conj_enhanced, final_mask, bbox = extract_best_conjunctiva(img, raw_mask)
 
-            # استدعاء الدالة المعدلة
+            # استدعاء دالة التصنيف (مع التصحيح)
             result, confidence, corrected_pred, raw_pred = predict_anemia(clf_model, conj_enhanced, clf_device)
 
             anemia_pct = corrected_pred * 100
@@ -1554,19 +1657,16 @@ if uploaded is not None:
             # ===== RESULTS DASHBOARD =====
             st.markdown(f'<div class="section-title">{t("results_title")}</div>', unsafe_allow_html=True)
             
-            # عرض الملتحمة المستخرجة فقط (بناءً على طلبك) - بلا الصورة الأصلية ولا القناع
-            st.markdown(f"**👁️ {t('result_conjunctiva')}**")
-            st.image(conj_enhanced, use_container_width=True)
-
-            # الصورة الأصلية والقناع يبقيان متاحين في التفاصيل التقنية لمن أراد التحقق
-            with st.expander(f"🔍 {t('result_original')} / {t('result_mask')}"):
-                col_o, col_m = st.columns(2)
-                with col_o:
-                    st.markdown(f"**{t('result_original')}**")
-                    st.image(img, use_container_width=True)
-                with col_m:
-                    st.markdown(f"**{t('result_mask')}**")
-                    st.image(final_mask, use_container_width=True, clamp=True)
+            # Layout: Conjunctiva BIG, Original + Mask small
+            col_left, col_right = st.columns([2, 1])
+            with col_left:
+                st.markdown(f"**👁️ {t('result_conjunctiva')}**")
+                st.image(conj_enhanced, use_container_width=True)
+            with col_right:
+                st.markdown(f"**{t('result_original')}**")
+                st.image(img, use_container_width=True)
+                st.markdown(f"**{t('result_mask')}**")
+                st.image(final_mask, use_container_width=True, clamp=True)
 
             # Metrics
             before = np.sum(raw_mask > 0) / 255
@@ -1620,7 +1720,7 @@ if uploaded is not None:
             ax.spines['right'].set_visible(False)
             st.pyplot(fig)
 
-            # HISTORY
+            # ===== HISTORY =====
             entry = {
                 t("history_date"): datetime.now().strftime("%Y-%m-%d %H:%M"),
                 t("history_diagnostic"): result,
@@ -1628,20 +1728,45 @@ if uploaded is not None:
                 t("history_prob"): f"{anemia_pct:.1f}%"
             }
             st.session_state.history.append(entry)
-            if len(st.session_state.history) > 10:
+            if len(st.session_state.history) > 50:  # حد أقصى 50 تحليل
                 st.session_state.history.pop(0)
+            
+            # حفظ في localStorage
+            save_history_to_localstorage()
 
+            # عرض التاريخ المحدث
             if st.session_state.history:
                 st.markdown(f'<div class="section-title">{t("history_title")}</div>', unsafe_allow_html=True)
                 df = pd.DataFrame(st.session_state.history)
                 st.dataframe(df, use_container_width=True, hide_index=True)
+                
+                col_hist1, col_hist2, col_hist3 = st.columns([1, 1, 1])
+                with col_hist1:
+                    if st.button(t("history_clear"), use_container_width=True):
+                        st.session_state.history = []
+                        save_history_to_localstorage()
+                        st.rerun()
+                
+                with col_hist2:
+                    csv = df.to_csv(index=False)
+                    st.download_button(
+                        label=t("history_download"),
+                        data=csv,
+                        file_name=f"anemicheck_history_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+                
+                with col_hist3:
+                    st.metric("📊", f"{len(st.session_state.history)}")
 
             # TECH DETAILS
             with st.expander(t("tech_details")):
                 st.write(f"**{t('tech_model_seg')}:** U‑Net (ResNet34)")
                 st.write(f"**{t('tech_model_clf')}:** EfficientNet‑B3")
                 st.write(f"**{t('tech_device')}:** {'GPU' if clf_device.type == 'cuda' else 'CPU'}")
-                st.write(f"**{t('tech_sigmoid')} (Softmax):** {raw_pred:.4f}")
+                st.write(f"**{t('tech_sigmoid')}:** {raw_pred:.4f}")
+                st.write(f"**{t('tech_sigmoid_corrected')}:** {corrected_pred:.4f}")
                 st.write(f"**{t('tech_prob_anemic')}:** {anemia_pct:.1f}%")
                 st.write(f"**{t('tech_prob_non')}:** {non_pct:.1f}%")
                 st.write(f"**{t('tech_preprocess')}:** CLAHE + Filtrage + Netteté")
