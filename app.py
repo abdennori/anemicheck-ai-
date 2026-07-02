@@ -1277,66 +1277,43 @@ if st.session_state.page == "home":
     # ===== دالة التصنيف المعدلة (مع فحص صحة الصورة) =====
     # ================================================================
     def predict_anemia(model, image, device):
-        """
-        تصنيف الأنيميا مع تصحيح النتيجة (لأن النموذج يعطي نتائج معكوسة)
-        مع فحص صحة الصورة ومنع RuntimeError
-        """
-        # ===== فحص الصورة =====
-        if isinstance(image, np.ndarray):
-            # التأكد من أن الصورة ليست فارغة
-            if image.size == 0 or image.shape[0] < 10 or image.shape[1] < 10:
-                return "Non Anemic", 50.0, 0.5, 0.5
-            
-            # إذا كانت الصورة تحتوي على قناة ألفا (RGBA) نحولها إلى RGB
-            if image.shape[-1] == 4:
-                image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
-            elif len(image.shape) == 2:  # صورة رمادية
-                image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-            elif image.shape[-1] == 1:
-                image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+    """
+    تصنيف الأنيميا باستخدام EfficientNet-B3 (مخرجان).
+    تعيد التشخيص، نسبة الثقة، الاحتمال المصحح، والاحتمال الخام.
+    """
+    # 1. التحويلات الصحيحة (مع التطبيع)
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225])
+    ])
+    
+    if isinstance(image, np.ndarray):
+        image = Image.fromarray(image)
+    
+    img_tensor = transform(image).unsqueeze(0).to(device)
+    
+    model.eval()
+    with torch.no_grad():
+        output = model(img_tensor)          # shape: (1, 2)
+        probabilities = torch.softmax(output, dim=1)   # shape: (1, 2)
         
-        try:
-            # تطبيق التحويلات
-            transform = transforms.Compose([
-                transforms.ToPILImage(),
-                transforms.Resize((224, 224)),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ])
-            
-            tensor = transform(image).unsqueeze(0).to(device)
-            
-            # وضع النموذج في وضع التقييم
-            model.eval()
-            
-            with torch.no_grad():
-                output = model(tensor)
-                # التأكد من أن output ليس فارغاً
-                if output.numel() == 0:
-                    return "Non Anemic", 50.0, 0.5, 0.5
-                raw_pred = torch.sigmoid(output).item()
-        except Exception as e:
-            # في حال حدوث أي خطأ أثناء المعالجة، نعود بقيم آمنة
-            print(f"⚠️ Error in predict_anemia: {e}")
-            return "Non Anemic", 50.0, 0.5, 0.5
-        
-        # تصحيح النتيجة (عكس القيمة لأن النموذج معكوس)
-        corrected_pred = 1 - raw_pred
-        
-        if corrected_pred >= 0.5:
-            result = "Anemic"
-            confidence = corrected_pred * 100
-        else:
-            result = "Non Anemic"
-            confidence = (1 - corrected_pred) * 100
-        
-        return result, confidence, corrected_pred, raw_pred
-
-    @st.cache_resource
-    def load_models():
-        unet, dev_unet = load_unet_model()
-        clf, dev_clf = load_classifier_model()
-        return unet, dev_unet, clf, dev_clf
+        # افترض أن الفهرس 1 هو فئة "Anemic" (هذا يعتمد على ترتيب الفئات في التدريب)
+        # يمكنك التأكد من الترتيب بفحص البيانات، لكن الأغلب أن 0 = Non Anemic، 1 = Anemic
+        prob_anemic = probabilities[0, 1].item()
+        prob_non = probabilities[0, 0].item()
+    
+    # نقرر بناءً على الاحتمال الأكبر
+    if prob_anemic >= 0.5:
+        result = "Anemic"
+        confidence = prob_anemic * 100
+    else:
+        result = "Non Anemic"
+        confidence = prob_non * 100
+    
+    # نعيد: النتيجة، الثقة، الاحتمال المصحح (نفسه لأنه softmax)، والاحتمال الخام (نفسه)
+    return result, confidence, prob_anemic, prob_anemic
 
     # ========== TRAITEMENT ==========
     if uploaded is not None:
