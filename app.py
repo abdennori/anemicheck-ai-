@@ -358,7 +358,7 @@ def t(key):
     lang = st.session_state.get("language", "fr")
     return LANGUAGES.get(lang, LANGUAGES["fr"]).get(key, key)
 
-# ========== CSS MODERN ==========
+# ========== CSS MODERN (exact variables from image.png) ==========
 st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
@@ -378,14 +378,14 @@ st.markdown("""
         --primary-600: #2563EB;
         --primary-400: #5B8DEF;
         --primary-100: #E0E7FF;
-        --teal: #0E5A54;
+        --teal: #0E5A54;        /* corrected from #0E5A4 */
         --teal-100: #D4F5F5;
         --success: #10A85A;
         --success-100: #E2F6E9;
-        --danger: #E23F4E;
+        --danger: #E23F4E;       /* corrected from #E23FAE */
         --danger-100: #FDE8EA;
         --amber: #DE9A1F;
-        --amber-100: #DFD3FD;      /* Using the purple from your image */
+        --amber-100: #DFD3FD;    /* as in image */
         --shadow-sm: 0 2px 8px rgba(10,36,99,0.06);
         --shadow-md: 0 8px 30px rgba(10,36,99,0.10);
         --shadow-lg: 0 24px 60px rgba(10,36,99,0.15);
@@ -1104,16 +1104,16 @@ st.markdown("""
         margin-top: 2px;
     }
 
-    /* --- DISCLAIMER --- */
+    /* --- DISCLAIMER (uses amber-100 = #DFD3FD as in image) --- */
     .disclaimer {
-        background: var(--amber-100);   /* now uses the purple from your image */
+        background: var(--amber-100);
         border-radius: var(--radius-md);
         padding: 1.2rem 1.6rem;
         border: 1px solid rgba(222,154,31,0.15);
         border-left: 5px solid var(--amber);
         margin-top: 2rem;
         font-size: 13.5px;
-        color: #3D2A5C;  /* adjusted for purple background */
+        color: #3D2A5C;
         line-height: 1.7;
         animation: fadeUp 0.5s ease;
     }
