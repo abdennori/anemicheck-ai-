@@ -1,18 +1,15 @@
 import streamlit as st
 import torch
+import torch.nn as nn
 import cv2
 import numpy as np
 from PIL import Image
-from torchvision import transforms
-import matplotlib.pyplot as plt
+from torchvision import models, transforms
 import matplotlib
-matplotlib.use("Agg")
+matplotlib.use("Agg")  # headless backend, obligatoire sur un serveur sans écran
+import matplotlib.pyplot as plt
 import base64
 import os
-import time
-import pandas as pd
-import io
-from datetime import datetime
 from model_loader import load_unet_model, load_classifier_model
 
 # ========== إعداد الصفحة ==========
@@ -20,1413 +17,487 @@ st.set_page_config(
     page_title="AnemiCheck - Détection d'Anémie",
     page_icon="🩸",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
-
-# ========== الترجمة ==========
-LANGUAGES = {
-    "ar": {
-        "app_title": "AnemiCheck AI",
-        "app_subtitle": "الذكاء الاصطناعي لصحة الدم",
-        "badge_private": "أمين وموثوق",
-        "badge_private_desc": "100% خصوصيتك محمية",
-        "badge_available": "خدمة متاحة",
-        "badge_available_desc": "24/7 نحن هنا من أجلك دائماً",
-        "hero_title": "طبيبك معك بأقل من دقيقتين",
-        "hero_desc": "تحليل ذكي لصورة العين لكشف الأنيميا بدقة وسرعة عالية",
-        "hero_badge": "100% نتائج دقيقة وآمنة",
-        "hero_cta": "ابدأ التحليل الآن",
-        "ai_dev_badge": "تم تطويره بواسطة الذكاء الاصطناعي",
-        "top_badge1_title": "مساعدة فورية",
-        "top_badge1_desc": "تواصل مع فريق الدعم",
-        "top_badge2_title": "مكالمة مجانية",
-        "top_badge2_desc": "🔜 قريباً",
-        "top_badge3_title": "خدمة متاحة 24/7",
-        "top_badge3_desc": "نحن هنا من أجلك دائماً",
-        "top_badge4_title": "آمن وموثوق",
-        "top_badge4_desc": "خصوصيتك محمية 100%",
-        "feature_1_title": "نتيجة سريعة",
-        "feature_1_desc": "احصل على النتيجة فوراً مع تقرير مفصل",
-        "feature_2_title": "رفع الصورة",
-        "feature_2_desc": "قم برفع صورة واضحة للعين (JPG, PNG)",
-        "feature_3_title": "موثوق ومعتمد",
-        "feature_3_desc": "هذا التطبيق يساعد في الكشف المبكر عن الأنيميا",
-        "feature_4_title": "أمان",
-        "feature_4_desc": "بياناتك محمية بالكامل",
-        "how_title": "كيف يعمل التطبيق؟",
-        "how_step1": "رفع الصورة",
-        "how_step1_desc": "ارفع صورة واضحة للعين",
-        "how_step2": "تحليل ذكي",
-        "how_step2_desc": "يستخدم النموذج الذكاء الاصطناعي للتحليل",
-        "how_step3": "النتيجة الفورية",
-        "how_step3_desc": "احصل على التشخيص في ثوانٍ",
-        "trust_1": "أمان",
-        "trust_2": "رعاية",
-        "trust_3": "ثقة عالية",
-        "version": "الإصدار 1.0.0",
-        "accuracy": "دقة تصل إلى 96%",
-        "fast": "سريع",
-        "fast_desc": "النتيجة في أقل من دقيقتين",
-        "smart": "ذكي",
-        "smart_desc": "تقنية ذكاء اصطناعي متقدمة",
-        "secure": "أمان",
-        "secure_desc": "بياناتك محمية بالكامل",
-        "upload_title": "رفع صورة العين",
-        "upload_desc": "صورة واضحة للعين للكشف عن الأنيميا",
-        "upload_method_file": "📁 رفع صورة",
-        "upload_method_camera": "📷 تصوير",
-        "upload_file_label": "اختر صورة من جهازك",
-        "upload_camera_label": "التقط صورة بالكاميرا",
-        "preview_title": "📷 معاينة الصورة",
-        "preview_caption": "الصورة المرفوعة",
-        "analyze_btn": "🔍 تحليل الصورة",
-        "loading_models": "⏳ جارٍ تحميل النماذج...",
-        "analyzing": "⏳ جارٍ التحليل...",
-        "analysis_done": "✅ تم التحليل بنجاح",
-        "results_title": "📊 نتائج التحليل",
-        "result_original": "🖼️ الصورة الأصلية",
-        "result_mask": "🎭 القناع النهائي",
-        "result_conjunctiva": "👁️ الملتحمة المحسّنة",
-        "metric_surface": "📐 المساحة المقطعة",
-        "metric_cleaning": "🧼 التنظيف",
-        "diagnostic_title": "🩺 التشخيص",
-        "diagnostic_anemic": "🩸 فقر دم",
-        "diagnostic_anemic_desc": "يوجد فقر دم",
-        "diagnostic_non_anemic": "✅ لا يوجد فقر دم",
-        "diagnostic_non_anemic_desc": "لا يوجد فقر دم",
-        "diagnostic_confidence": "📊 مستوى الثقة",
-        "chart_title": "📈 توزيع الاحتمالات",
-        "chart_non": "غير مصاب",
-        "chart_anemic": "مصاب",
-        "history_title": "📋 سجل التحليلات",
-        "history_date": "التاريخ",
-        "history_diagnostic": "التشخيص",
-        "history_confidence": "الثقة",
-        "history_prob": "احتمال فقر الدم",
-        "tech_details": "📘 التفاصيل التقنية",
-        "tech_model_seg": "نموذج التجزئة",
-        "tech_model_clf": "نموذج التصنيف",
-        "tech_device": "الجهاز المستخدم",
-        "tech_sigmoid": "قيمة السيجمويد الخام",
-        "tech_prob_anemic": "احتمال فقر الدم",
-        "tech_prob_non": "احتمال عدم الإصابة",
-        "tech_preprocess": "المعالجة المسبقة",
-        "tech_decision": "القرار",
-        "tech_decision_value": "مستقل تماماً، بدون تحيز",
-        "disclaimer": "⚠️ تنويه طبي",
-        "disclaimer_text": "هذه النتيجة صادرة عن نموذج ذكاء اصطناعي ولا تغني عن استشارة الطبيب المختص.",
-        "disclaimer_consult": "استشر طبيباً للحصول على تشخيص دقيق.",
-        "welcome_title": "👁️ جاهز للتحليل",
-        "welcome_desc": "حمّل صورة العين للبدء.",
-        "lang_selector": "🌐 اللغة",
-        "sidebar_qr_title": "📱 وصول سريع",
-        "sidebar_qr_desc": "امسح الكود لفتح التطبيق",
-        "sidebar_health_title": "💡 نصائح صحية",
-        "sidebar_health_1": "التغذية: ركز على الأطعمة الغنية بالحديد.",
-        "sidebar_health_2": "فيتامين C: يحسن امتصاص الحديد.",
-        "sidebar_health_3": "الترطيب: اشرب 1.5 لتر ماء يومياً.",
-        "sidebar_health_4": "استشر الطبيب عند الشعور بالتعب الشديد.",
-        "sidebar_doctor_title": "🩺 استشارة طبيب",
-        "sidebar_doctor_desc": "احجز موعداً أو تحدث مع طبيب مباشرة.",
-        "sidebar_doctor_btn": "📅 حجز استشارة",
-        "sidebar_doctor_soon": "🔜 متاح في التحديث القادم",
-        "sidebar_version": "AnemiCheck v2.0 • الذكاء الاصطناعي الطبي",
-        "nav_home": "🏠 الرئيسية",
-    },
-    "fr": {
-        "app_title": "AnemiCheck AI",
-        "app_subtitle": "L'IA pour la santé sanguine",
-        "badge_private": "Sécurisé et fiable",
-        "badge_private_desc": "100% de confidentialité garantie",
-        "badge_available": "Service disponible",
-        "badge_available_desc": "24/7 nous sommes là pour vous",
-        "hero_title": "Votre médecin en moins de deux minutes",
-        "hero_desc": "Analyse intelligente de l'image oculaire pour détecter l'anémie avec précision et rapidité",
-        "hero_badge": "100% de résultats précis et sécurisés",
-        "hero_cta": "Commencer l'analyse",
-        "ai_dev_badge": "Développé avec l'intelligence artificielle",
-        "top_badge1_title": "Aide immédiate",
-        "top_badge1_desc": "Contactez notre équipe",
-        "top_badge2_title": "Appel gratuit",
-        "top_badge2_desc": "🔜 Bientôt",
-        "top_badge3_title": "Service 24/7",
-        "top_badge3_desc": "Nous sommes toujours là",
-        "top_badge4_title": "Sûr et fiable",
-        "top_badge4_desc": "100% de confidentialité",
-        "feature_1_title": "Résultat rapide",
-        "feature_1_desc": "Obtenez le résultat immédiatement avec un rapport détaillé",
-        "feature_2_title": "Téléchargement d'image",
-        "feature_2_desc": "Téléchargez une image claire de l'œil (JPG, PNG)",
-        "feature_3_title": "Fiable et approuvé",
-        "feature_3_desc": "Cette application aide à la détection précoce de l'anémie",
-        "feature_4_title": "Sécurité",
-        "feature_4_desc": "Vos données sont entièrement protégées",
-        "how_title": "Comment ça marche ?",
-        "how_step1": "Téléchargement",
-        "how_step1_desc": "Téléchargez une image claire de l'œil",
-        "how_step2": "Analyse intelligente",
-        "how_step2_desc": "Le modèle d'IA analyse l'image",
-        "how_step3": "Résultat instantané",
-        "how_step3_desc": "Obtenez le diagnostic en quelques secondes",
-        "trust_1": "Sécurité",
-        "trust_2": "Soins",
-        "trust_3": "Haute confiance",
-        "version": "Version 1.0.0",
-        "accuracy": "Précision jusqu'à 96%",
-        "fast": "Rapide",
-        "fast_desc": "Résultat en moins de 2 minutes",
-        "smart": "Intelligent",
-        "smart_desc": "Technologie IA avancée",
-        "secure": "Sécurisé",
-        "secure_desc": "Vos données sont protégées",
-        "upload_title": "Télécharger une image de l'œil",
-        "upload_desc": "Image claire de l'œil pour la détection de l'anémie",
-        "upload_method_file": "📁 Télécharger",
-        "upload_method_camera": "📷 Appareil photo",
-        "upload_file_label": "Choisissez une image depuis votre appareil",
-        "upload_camera_label": "Prenez une photo avec la caméra",
-        "preview_title": "📷 Aperçu de l'image",
-        "preview_caption": "Image chargée",
-        "analyze_btn": "🔍 Analyser l'image",
-        "loading_models": "⏳ Chargement des modèles...",
-        "analyzing": "⏳ Analyse en cours...",
-        "analysis_done": "✅ Analyse terminée",
-        "results_title": "📊 Résultats de l'analyse",
-        "result_original": "🖼️ Image originale",
-        "result_mask": "🎭 Masque final",
-        "result_conjunctiva": "👁️ Conjonctive optimisée",
-        "metric_surface": "📐 Surface segmentée",
-        "metric_cleaning": "🧼 Nettoyage",
-        "diagnostic_title": "🩺 Diagnostic",
-        "diagnostic_anemic": "🩸 Anémie",
-        "diagnostic_anemic_desc": "Anémie détectée",
-        "diagnostic_non_anemic": "✅ Non Anémie",
-        "diagnostic_non_anemic_desc": "Pas d'anémie détectée",
-        "diagnostic_confidence": "📊 Niveau de confiance",
-        "chart_title": "📈 Distribution des probabilités",
-        "chart_non": "Non Anémique",
-        "chart_anemic": "Anémique",
-        "history_title": "📋 Historique des analyses",
-        "history_date": "Date",
-        "history_diagnostic": "Diagnostic",
-        "history_confidence": "Confiance",
-        "history_prob": "Probabilité Anémie",
-        "tech_details": "📘 Détails techniques",
-        "tech_model_seg": "Modèle de segmentation",
-        "tech_model_clf": "Modèle de classification",
-        "tech_device": "Appareil utilisé",
-        "tech_sigmoid": "Valeur sigmoïde brute",
-        "tech_prob_anemic": "Probabilité Anémie",
-        "tech_prob_non": "Probabilité Non Anémie",
-        "tech_preprocess": "Prétraitement",
-        "tech_decision": "Décision",
-        "tech_decision_value": "100% autonome, sans biais",
-        "disclaimer": "⚠️ Avertissement médical",
-        "disclaimer_text": "Ce résultat est généré par un modèle d'IA et ne remplace pas un avis médical.",
-        "disclaimer_consult": "Consultez un professionnel de santé.",
-        "welcome_title": "👁️ Prêt à analyser",
-        "welcome_desc": "Téléchargez une image de l'œil pour commencer.",
-        "lang_selector": "🌐 Langue",
-        "sidebar_qr_title": "📱 Accès rapide",
-        "sidebar_qr_desc": "Scannez pour ouvrir l'application",
-        "sidebar_health_title": "💡 Conseils santé",
-        "sidebar_health_1": "Alimentation : aliments riches en fer.",
-        "sidebar_health_2": "Vitamine C : améliore l'absorption du fer.",
-        "sidebar_health_3": "Hydratation : 1,5 L d'eau par jour.",
-        "sidebar_health_4": "Consultez un médecin en cas de fatigue.",
-        "sidebar_doctor_title": "🩺 Consultation médecin",
-        "sidebar_doctor_desc": "Prenez rendez-vous ou discutez avec un médecin.",
-        "sidebar_doctor_btn": "📅 Réserver",
-        "sidebar_doctor_soon": "🔜 Bientôt disponible",
-        "sidebar_version": "AnemiCheck v2.0 • IA médicale",
-        "nav_home": "🏠 Accueil",
-    },
-    "en": {
-        "app_title": "AnemiCheck AI",
-        "app_subtitle": "AI for Blood Health",
-        "badge_private": "Secure & Trusted",
-        "badge_private_desc": "100% privacy protected",
-        "badge_available": "Service Available",
-        "badge_available_desc": "24/7 we are here for you",
-        "hero_title": "Your doctor in less than two minutes",
-        "hero_desc": "Intelligent analysis of eye images to detect anemia with high accuracy and speed",
-        "hero_badge": "100% accurate and secure results",
-        "hero_cta": "Start analysis now",
-        "ai_dev_badge": "Built with artificial intelligence",
-        "top_badge1_title": "Instant help",
-        "top_badge1_desc": "Chat with our support team",
-        "top_badge2_title": "Free call",
-        "top_badge2_desc": "🔜 Coming soon",
-        "top_badge3_title": "24/7 available",
-        "top_badge3_desc": "We are always here for you",
-        "top_badge4_title": "Safe & trusted",
-        "top_badge4_desc": "100% of your privacy protected",
-        "feature_1_title": "Quick Result",
-        "feature_1_desc": "Get instant results with a detailed report",
-        "feature_2_title": "Upload Image",
-        "feature_2_desc": "Upload a clear eye image (JPG, PNG)",
-        "feature_3_title": "Reliable & Approved",
-        "feature_3_desc": "This app helps in early detection of anemia",
-        "feature_4_title": "Security",
-        "feature_4_desc": "Your data is fully protected",
-        "how_title": "How it works?",
-        "how_step1": "Upload",
-        "how_step1_desc": "Upload a clear eye image",
-        "how_step2": "Smart Analysis",
-        "how_step2_desc": "AI model analyzes the image",
-        "how_step3": "Instant Result",
-        "how_step3_desc": "Get diagnosis in seconds",
-        "trust_1": "Security",
-        "trust_2": "Care",
-        "trust_3": "High Trust",
-        "version": "Version 1.0.0",
-        "accuracy": "Accuracy up to 96%",
-        "fast": "Fast",
-        "fast_desc": "Result in less than 2 minutes",
-        "smart": "Smart",
-        "smart_desc": "Advanced AI technology",
-        "secure": "Secure",
-        "secure_desc": "Your data is protected",
-        "upload_title": "Upload Eye Image",
-        "upload_desc": "Clear eye image for anemia detection",
-        "upload_method_file": "📁 Upload",
-        "upload_method_camera": "📷 Camera",
-        "upload_file_label": "Choose an image from your device",
-        "upload_camera_label": "Take a photo with camera",
-        "preview_title": "📷 Image Preview",
-        "preview_caption": "Uploaded image",
-        "analyze_btn": "🔍 Analyze Image",
-        "loading_models": "⏳ Loading models...",
-        "analyzing": "⏳ Analyzing...",
-        "analysis_done": "✅ Analysis complete",
-        "results_title": "📊 Analysis Results",
-        "result_original": "🖼️ Original Image",
-        "result_mask": "🎭 Final Mask",
-        "result_conjunctiva": "👁️ Enhanced Conjunctiva",
-        "metric_surface": "📐 Segmented Area",
-        "metric_cleaning": "🧼 Cleaning",
-        "diagnostic_title": "🩺 Diagnosis",
-        "diagnostic_anemic": "🩸 Anemia",
-        "diagnostic_anemic_desc": "Anemia detected",
-        "diagnostic_non_anemic": "✅ No Anemia",
-        "diagnostic_non_anemic_desc": "No anemia detected",
-        "diagnostic_confidence": "📊 Confidence Level",
-        "chart_title": "📈 Probability Distribution",
-        "chart_non": "Non Anemic",
-        "chart_anemic": "Anemic",
-        "history_title": "📋 Analysis History",
-        "history_date": "Date",
-        "history_diagnostic": "Diagnosis",
-        "history_confidence": "Confidence",
-        "history_prob": "Anemia Probability",
-        "tech_details": "📘 Technical Details",
-        "tech_model_seg": "Segmentation Model",
-        "tech_model_clf": "Classification Model",
-        "tech_device": "Device Used",
-        "tech_sigmoid": "Raw Sigmoid Value",
-        "tech_prob_anemic": "Anemia Probability",
-        "tech_prob_non": "Non-Anemia Probability",
-        "tech_preprocess": "Preprocessing",
-        "tech_decision": "Decision",
-        "tech_decision_value": "100% autonomous, no bias",
-        "disclaimer": "⚠️ Medical Disclaimer",
-        "disclaimer_text": "This result is generated by an AI model and does not replace professional medical advice.",
-        "disclaimer_consult": "Consult a healthcare professional.",
-        "welcome_title": "👁️ Ready to analyze",
-        "welcome_desc": "Upload an eye image to start.",
-        "lang_selector": "🌐 Language",
-        "sidebar_qr_title": "📱 Quick Access",
-        "sidebar_qr_desc": "Scan to open the app",
-        "sidebar_health_title": "💡 Health Tips",
-        "sidebar_health_1": "Diet: focus on iron-rich foods.",
-        "sidebar_health_2": "Vitamin C: improves iron absorption.",
-        "sidebar_health_3": "Hydration: drink 1.5 L of water daily.",
-        "sidebar_health_4": "Consult a doctor if you experience fatigue.",
-        "sidebar_doctor_title": "🩺 Doctor Consultation",
-        "sidebar_doctor_desc": "Book an appointment or chat with a doctor.",
-        "sidebar_doctor_btn": "📅 Book Appointment",
-        "sidebar_doctor_soon": "🔜 Coming soon",
-        "sidebar_version": "AnemiCheck v2.0 • Medical AI",
-        "nav_home": "🏠 Home",
-    }
-}
-
-# ========== دالة الترجمة ==========
-def t(key):
-    lang = st.session_state.get("language", "fr")
-    return LANGUAGES.get(lang, LANGUAGES["fr"]).get(key, key)
-
-# ========== CSS ==========
+# ========== CSS للواجهة ==========
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;700;800&display=swap');
-    
-    * { font-family: 'Inter', 'Tajawal', sans-serif; }
-    
-    .stApp {
-        background: linear-gradient(-45deg, #f4f7fb, #eaf1fb, #f1f5fb, #f4f7fb);
-        background-size: 400% 400%;
-        animation: gradientBG 15s ease infinite;
-    }
-    @keyframes gradientBG {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-    
-    .header {
-        background: linear-gradient(120deg, #1e3a8a 0%, #1d4ed8 55%, #2563eb 100%);
-        padding: 0.8rem 1.5rem;
-        border-radius: 0 0 26px 26px;
-        box-shadow: 0 10px 32px rgba(30,58,138,0.25);
-        margin-bottom: 1.5rem;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        animation: slideDown 0.6s ease;
-        gap: 12px;
-    }
-    @keyframes slideDown {
-        from { opacity: 0; transform: translateY(-20px); }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(24px); }
         to { opacity: 1; transform: translateY(0); }
     }
-    .header-left {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        order: 2;
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
-    .header-left h1 {
-        font-size: 22px;
-        font-weight: 800;
-        color: #ffffff;
-        margin: 0;
+    @keyframes pulseBorder {
+        0%, 100% { border-color: #dc2626; box-shadow: 0 0 0 0 rgba(220,38,38,0.25); }
+        50% { border-color: #f87171; box-shadow: 0 0 0 10px rgba(220,38,38,0); }
     }
-    .header-left h1 span { color: #7dd3fc; }
-    .header-left .subtitle {
-        font-size: 12px;
-        color: #dbeafe;
-        font-weight: 500;
-    }
-    .header-badges {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-        order: 1;
-    }
-    .header-ai-badge {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #ffffff;
-        background: rgba(16,185,129,0.25);
-        border: 1px solid rgba(16,185,129,0.5);
-        padding: 5px 14px;
-        border-radius: 30px;
-    }
-    .header-logo-badge {
-        width: 48px;
-        height: 48px;
-        min-width: 48px;
-        border-radius: 14px;
-        background: #ffffff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.15);
-        overflow: hidden;
-    }
-    .header-logo-badge img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        padding: 4px;
-    }
-    .header-icon-btn {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.15);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #ffffff;
-        font-size: 15px;
-        position: relative;
-    }
-    .header-icon-btn .dot {
-        position: absolute;
-        top: 4px;
-        right: 4px;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #f87171;
-        border: 1.5px solid #1e3a8a;
-    }
-    .header-badge {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 11px;
-        color: #334155;
-        background: rgba(255,255,255,0.5);
-        padding: 4px 12px;
-        border-radius: 30px;
-        border: 1px solid rgba(255,255,255,0.3);
-    }
-    .header-badge strong {
-        color: #2563eb;
-        font-weight: 700;
-    }
-    @media (max-width: 700px) {
-        .header {
-            flex-direction: column;
-            align-items: stretch;
-            padding: 0.8rem 1rem;
-        }
-        .header-left {
-            order: 1;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .header-badges {
-            order: 2;
-            justify-content: center;
-        }
-        .header-left h1 { font-size: 20px; }
-    }
-
-    .top-badges {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 14px;
-        margin: 0 0 1.5rem;
-    }
-    @media (max-width: 768px) {
-        .top-badges { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 480px) {
-        .top-badges { grid-template-columns: 1fr; }
-    }
-    .top-badge-card {
-        background: rgba(255,255,255,0.75);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.4);
-        border-radius: 18px;
-        padding: 12px 14px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        box-shadow: 0 4px 16px rgba(30,58,138,0.05);
-        transition: all 0.3s ease;
-        position: relative;
-        min-height: 64px;
-    }
-    .top-badge-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 24px rgba(30,58,138,0.1);
-    }
-    .top-badge-card .tb-icon {
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #F59E0B, #D97706);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 18px;
-        box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
-    }
-    .top-badge-card .tb-title {
-        font-weight: 700;
-        font-size: 13px;
-        color: #0f172a;
-    }
-    .top-badge-card .tb-desc {
-        font-size: 11px;
-        color: #64748b;
-    }
-    .top-badge-card .tb-soon {
-        position: absolute;
-        top: -6px;
-        right: -6px;
-        background: #F59E0B;
-        color: #fff;
-        font-size: 9px;
-        font-weight: 700;
-        padding: 2px 10px;
-        border-radius: 30px;
-        letter-spacing: 0.5px;
-        box-shadow: 0 2px 8px rgba(245,158,11,0.4);
-        animation: pulse-badge 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse-badge {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-    }
-    
-    .sidebar-glass {
-        background: rgba(255,255,255,0.65);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        border-radius: 24px;
-        padding: 1.5rem;
-        border: 1px solid rgba(255,255,255,0.3);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.06);
-        margin-bottom: 1.5rem;
-        animation: fadeUp 0.8s ease;
-    }
-    .sidebar-glass h4 {
-        color: #0f172a;
-        font-weight: 700;
-        margin-bottom: 0.8rem;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 15px;
-    }
-    .sidebar-glass .nav-item {
-        padding: 10px 14px;
-        border-radius: 12px;
-        margin: 4px 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: 500;
-        color: #334155;
-        background: rgba(255,255,255,0.5);
-        cursor: default;
-        transition: all 0.3s ease;
-    }
-    .sidebar-glass .nav-item.active {
-        background: rgba(245,158,11,0.12);
-        color: #D97706;
-        font-weight: 600;
-        border: 1px solid rgba(245,158,11,0.2);
-    }
-    .sidebar-glass .nav-item:hover {
-        background: rgba(245,158,11,0.04);
-    }
-    .sidebar-glass p, .sidebar-glass li {
-        color: #334155;
-        font-size: 14px;
-        line-height: 1.6;
-    }
-    .sidebar-glass ul {
-        padding-left: 1.2rem;
-    }
-    .sidebar-glass .qr-container {
-        display: flex;
-        justify-content: center;
-        margin: 0.8rem 0;
-    }
-    .sidebar-glass .qr-container img {
-        border-radius: 16px;
-        border: 1px solid rgba(245,158,11,0.15);
-        background: white;
-        padding: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-        transition: transform 0.3s ease;
-        max-width: 100%;
-        height: auto;
-    }
-    .sidebar-glass .qr-container img:hover {
-        transform: scale(1.05);
-    }
-    
-    .hero {
-        background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
-        border-radius: 32px;
-        padding: 3rem 2.5rem;
-        margin-bottom: 2rem;
-        min-height: 65vh;
-        display: flex;
-        align-items: center;
-        box-shadow: 0 16px 40px rgba(30,58,138,0.25);
-        animation: fadeUp 0.8s ease;
-        transition: all 0.3s ease;
-        text-align: right;
-        position: relative;
-        overflow: hidden;
-    }
-    .hero:hover {
-        box-shadow: 0 20px 48px rgba(30,58,138,0.32);
-    }
-    .hero .icon {
-        font-size: 40px;
-        animation: float 3s ease-in-out infinite;
-        display: inline-block;
-    }
-    @keyframes float {
+    @keyframes bounceSlow {
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-10px); }
     }
-    .hero h1 {
-        font-size: 34px;
-        font-weight: 800;
-        color: #ffffff;
-        margin: 0.5rem 0 0.2rem;
-        line-height: 1.3;
-    }
-    .hero h1 span {
-        color: #FCD34D;
-    }
-    .hero p {
-        font-size: 16px;
-        color: #dbeafe;
-        margin: 0.5rem 0 1.4rem;
-        max-width: 480px;
-    }
-    .hero .hero-badge {
-        background: rgba(16,185,129,0.18);
-        color: #d1fae5;
-        border: 1px solid rgba(52,211,153,0.4);
-        padding: 6px 18px;
-        border-radius: 30px;
-        font-size: 14px;
-        font-weight: 600;
-        display: inline-block;
-    }
-    .doctor-image {
-        border-radius: 24px;
-        filter: drop-shadow(0 12px 28px rgba(0,0,0,0.25));
-        transition: transform 0.3s ease;
-        width: 100%;
-        max-width: 320px;
-        object-fit: contain;
-    }
-    .doctor-image:hover {
-        transform: scale(1.02);
-    }
-    .hero-content {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 30px;
-        flex-wrap: wrap-reverse;
-        position: relative;
-        z-index: 2;
-        width: 100%;
-    }
-    .hero-text {
-        flex: 1;
-        min-width: 280px;
-    }
-    .hero-visual {
-        position: relative;
-        flex: 0 0 auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 260px;
-    }
-    .hero-visual .glow {
-        position: absolute;
-        width: 280px;
-        height: 280px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(245,158,11,0.15), transparent 70%);
-    }
-    .hero-heartbeat {
-        position: absolute;
-        top: 50%;
-        left: -10%;
-        width: 60%;
-        opacity: 0.4;
-        transform: translateY(-50%);
-        z-index: 1;
-    }
-    .hero-cta {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: linear-gradient(135deg, #F59E0B, #D97706);
-        color: #ffffff !important;
-        font-weight: 700;
-        font-size: 16px;
-        padding: 14px 34px;
-        border-radius: 40px;
-        text-decoration: none !important;
-        box-shadow: 0 8px 24px rgba(245,158,11,0.4);
-        transition: all 0.3s ease;
-        border: none;
-    }
-    .hero-cta:hover {
-        transform: scale(1.04);
-        box-shadow: 0 12px 32px rgba(245,158,11,0.5);
-    }
-    @media (max-width: 700px) {
-        .hero {
-            padding: 2rem 1.5rem;
-            min-height: auto;
-        }
-        .hero-content {
-            flex-direction: column;
-            text-align: center;
-        }
-        .hero-text {
-            min-width: auto;
-        }
-        .hero h1 {
-            font-size: 26px;
-        }
-        .hero p {
-            max-width: 100%;
-        }
-        .hero-cta {
-            justify-content: center;
-            width: 100%;
-        }
-        .doctor-image {
-            max-width: 200px;
-        }
-    }
-
-    .scan-container {
-        position: relative;
-        overflow: hidden;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    }
-    .scan-container img {
-        width: 100%;
-        display: block;
-        border-radius: 16px;
-    }
-    .scan-line {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 3px;
-        background: #dc2626;
-        box-shadow: 0 0 20px #dc2626, 0 0 60px #dc2626;
-        animation: scanMove 2s ease-in-out infinite;
-        z-index: 10;
-        border-radius: 2px;
-    }
-    @keyframes scanMove {
-        0% { top: 0; opacity: 1; }
-        50% { top: 100%; opacity: 0.8; }
-        100% { top: 0; opacity: 1; }
-    }
-    .scan-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.02);
-        pointer-events: none;
-        border-radius: 16px;
-        border: 2px solid rgba(220, 38, 38, 0.3);
-    }
-
-    .features-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        margin: 1.5rem 0;
-    }
-    @media (max-width: 768px) {
-        .features-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 480px) {
-        .features-grid { grid-template-columns: 1fr; }
-    }
-    .feature-card {
-        background: rgba(255,255,255,0.7);
-        backdrop-filter: blur(8px);
-        border-radius: 20px;
-        padding: 1.5rem;
-        text-align: center;
-        border: 1px solid rgba(255,255,255,0.5);
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-        animation: fadeUp 0.8s ease;
-    }
-    .feature-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
-        border-color: rgba(245,158,11,0.2);
-    }
-    .feature-card .icon { font-size: 32px; }
-    .feature-card h4 {
-        color: #0f172a;
-        font-weight: 700;
-        margin: 8px 0 4px;
-        font-size: 16px;
-    }
-    .feature-card p {
-        color: #64748b;
-        font-size: 13px;
-        margin: 0;
-    }
-    
-    .how-section {
-        background: rgba(255,255,255,0.7);
-        backdrop-filter: blur(8px);
-        border-radius: 24px;
-        padding: 2rem;
-        margin: 1.5rem 0;
-        border: 1px solid rgba(255,255,255,0.5);
-        animation: fadeUp 0.8s ease;
-    }
-    .how-section h3 {
-        color: #0f172a;
-        font-weight: 700;
-        font-size: 22px;
-        text-align: center;
-        margin-bottom: 1.5rem;
-    }
-    .how-steps {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-    }
-    @media (max-width: 768px) {
-        .how-steps { grid-template-columns: 1fr; }
-    }
-    .how-step {
-        text-align: center;
-        padding: 0 10px;
-        animation: fadeUp 0.8s ease;
-    }
-    .how-step .step-num {
-        background: linear-gradient(135deg, #F59E0B, #D97706);
-        color: white;
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 18px;
-        margin: 0 auto 10px;
-        transition: transform 0.3s;
-        box-shadow: 0 4px 12px rgba(245,158,11,0.3);
-    }
-    .how-step:hover .step-num {
-        transform: scale(1.1) rotate(5deg);
-    }
-    .how-step h5 {
-        color: #0f172a;
-        font-weight: 700;
-        margin: 0 0 4px;
-        font-size: 16px;
-    }
-    .how-step p {
-        color: #64748b;
-        font-size: 14px;
-        margin: 0;
-    }
-    
-    .trust-section {
-        display: flex;
-        justify-content: center;
-        gap: 30px;
-        flex-wrap: wrap;
-        margin: 1.5rem 0;
-        padding: 1.5rem;
-        background: rgba(255,255,255,0.6);
-        backdrop-filter: blur(4px);
-        border-radius: 20px;
-        animation: fadeUp 1s ease;
-    }
-    .trust-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-weight: 600;
-        color: #0f172a;
-        font-size: 15px;
-    }
-    .trust-item .icon { font-size: 24px; }
-    
-    .result-card {
-        border-radius: 24px;
-        padding: 1.8rem;
-        margin-top: 0.5rem;
-        border-left: 6px solid #e11d48;
-        animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-        transition: all 0.3s ease;
-        border: 1px solid rgba(255,255,255,0.3);
-        backdrop-filter: blur(4px);
-    }
-    .result-card.positive {
-        background: rgba(254, 242, 242, 0.85);
-        border-left-color: #dc2626;
-        box-shadow: 0 0 30px rgba(220, 38, 38, 0.08);
-    }
-    .result-card.negative {
-        background: rgba(240, 253, 244, 0.85);
-        border-left-color: #16a34a;
-        box-shadow: 0 0 30px rgba(22, 163, 74, 0.08);
-    }
-    .result-card h2 {
-        font-size: 30px;
-        font-weight: 700;
-        margin: 0 0 6px;
-    }
-    .result-card .confidence {
-        font-size: 18px;
-        font-weight: 600;
-        color: #1e293b;
-    }
-    .result-card .sub {
-        font-size: 14px;
-        color: #64748b;
-    }
-    
-    @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
+    @keyframes shimmer {
+        0% { background-position: -400px 0; }
+        100% { background-position: 400px 0; }
     }
     @keyframes popIn {
-        from { opacity: 0; transform: scale(0.9); }
-        to { opacity: 1; transform: scale(1); }
+        0% { opacity: 0; transform: scale(0.85); }
+        70% { opacity: 1; transform: scale(1.03); }
+        100% { opacity: 1; transform: scale(1); }
     }
-    .section-title {
+
+    .stApp {
+        background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 0.7s ease both;
+    }
+
+    .upload-zone {
+        background: white;
+        border: 2.5px dashed #dc2626;
+        border-radius: 24px;
+        padding: 35px 20px;
+        text-align: center;
+        margin: 15px 0 5px 0;
+        animation: pulseBorder 2.5s ease-in-out infinite, fadeInUp 0.7s ease both;
+    }
+
+    .upload-zone .upload-icon {
+        font-size: 54px;
+        animation: bounceSlow 2.2s ease-in-out infinite;
+        display: inline-block;
+    }
+
+    .upload-zone h4 {
+        color: #b91c1c;
+        margin: 10px 0 5px 0;
+    }
+
+    .upload-zone p {
+        color: #6c757d;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    [data-testid="stFileUploader"], [data-testid="stCameraInput"] {
+        animation: fadeIn 0.6s ease both;
+    }
+
+    [data-testid="stFileUploaderDropzone"] {
+        border-radius: 16px !important;
+        border: 2px dashed #f0a0a0 !important;
+        transition: all 0.3s ease !important;
+    }
+
+    [data-testid="stFileUploaderDropzone"]:hover {
+        border-color: #dc2626 !important;
+        background: #fff5f5 !important;
+    }
+
+    .result-anemia, .result-non-anemia {
+        animation: popIn 0.5s ease both;
+    }
+    
+    .logo-container {
+        text-align: center;
+        padding: 20px;
+        background: transparent;
+        border-radius: 30px;
+        margin-bottom: 10px;
+    }
+    
+    .logo-image {
+        width: 100%;
+        max-width: 500px;
+        height: auto;
+        object-fit: contain;
+        margin: 0 auto;
+        display: block;
+        transition: transform 0.4s ease;
+        filter: drop-shadow(0 15px 25px rgba(220,38,38,0.2));
+    }
+    
+    .logo-image:hover {
+        transform: scale(1.02);
+    }
+    
+    .app-title {
+        text-align: center;
+        font-size: 52px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #8b0000, #dc2626, #ef4444);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 5px 0;
+        letter-spacing: 2px;
+    }
+    
+    .app-subtitle-ar {
+        text-align: center;
+        font-size: 28px;
+        color: #b91c1c;
+        margin: 5px 0;
+        font-weight: 600;
+    }
+    
+    .app-subtitle {
+        text-align: center;
+        font-size: 20px;
+        color: #dc2626;
+        margin: 5px 0;
+        font-style: italic;
+    }
+    
+    .app-tagline {
+        text-align: center;
+        font-size: 16px;
+        color: #6c757d;
+        margin-top: 5px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #dc2626;
+        display: inline-block;
+        width: auto;
+    }
+    
+    .tagline-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .card {
+        background: white;
+        border-radius: 24px;
+        padding: 25px;
+        margin: 20px 0;
+        box-shadow: 0 20px 35px -10px rgba(220,38,38,0.15);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(220,38,38,0.2);
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 25px 40px -12px rgba(220,38,38,0.25);
+    }
+    
+    .model-card {
+        background: white;
+        border-radius: 20px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 1px solid #ffcccc;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .model-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(220,38,38,0.15);
+        border-color: #dc2626;
+    }
+    
+    .model-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+    }
+    
+    .model-title {
         font-size: 22px;
         font-weight: 700;
-        color: #0f172a;
-        margin: 2rem 0 1rem;
-        padding-bottom: 8px;
-        border-bottom: 3px solid #F59E0B;
-        display: inline-block;
-        animation: fadeUp 0.6s ease;
+        color: #dc2626;
+        margin: 10px 0;
     }
-    .stImage img { border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
     
-    [data-testid="stMetricValue"] {
-        font-size: 28px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
+    .model-desc {
+        font-size: 14px;
+        color: #6c757d;
+        line-height: 1.5;
     }
-    [data-testid="stMetric"] {
-        background: rgba(255,255,255,0.7);
-        backdrop-filter: blur(4px);
-        border-radius: 16px;
-        padding: 12px 16px;
-        border: 1px solid rgba(255,255,255,0.3);
+    
+    .model-badge {
+        display: inline-block;
+        background: linear-gradient(90deg, #dc2626, #ef4444);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        margin-top: 10px;
+    }
+    
+    .result-anemia {
+        background: linear-gradient(135deg, #fff5f5 0%, #fee2e2 100%);
+        border-radius: 20px;
+        padding: 25px;
+        margin: 20px 0;
+        border: 2px solid #dc2626;
+        box-shadow: 0 10px 25px rgba(220,38,38,0.15);
+    }
+    
+    .result-non-anemia {
+        background: linear-gradient(135deg, #f0fff4 0%, #dcfce7 100%);
+        border-radius: 20px;
+        padding: 25px;
+        margin: 20px 0;
+        border: 2px solid #16a34a;
+        box-shadow: 0 10px 25px rgba(22,163,74,0.15);
+    }
+    
+    .stButton > button {
+        background: linear-gradient(90deg, #dc2626, #ef4444, #f87171);
+        color: white;
+        border: none;
+        border-radius: 40px;
+        padding: 14px 35px;
+        font-size: 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        width: 100%;
+        box-shadow: 0 4px 10px rgba(220,38,38,0.3);
+    }
+    
+    .stButton > button:hover {
+        transform: scale(1.02);
+        background: linear-gradient(90deg, #b91c1c, #dc2626, #ef4444);
+        box-shadow: 0 6px 15px rgba(220,38,38,0.4);
     }
     
     .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #10b981, #F59E0B, #dc2626) !important;
-        height: 12px !important;
-        border-radius: 20px !important;
-        transition: width 0.8s ease !important;
-    }
-    .stProgress > div > div {
-        background: #e2e8f0 !important;
-        border-radius: 20px !important;
-        height: 12px !important;
-    }
-    
-    #MainMenu, footer, .stDeployButton { display: none; }
-    
-    .stButton > button {
-        background: linear-gradient(135deg, #F59E0B, #D97706);
-        color: white;
-        border: none;
-        border-radius: 40px;
-        padding: 14px 32px;
-        font-weight: 700;
-        font-size: 16px;
-        transition: 0.3s;
-        width: 100%;
-        box-shadow: 0 4px 16px rgba(245,158,11,0.35);
-        animation: fadeUp 0.6s ease;
-    }
-    .stButton > button:hover {
-        transform: scale(1.02);
-        box-shadow: 0 8px 24px rgba(245,158,11,0.5);
-    }
-    
-    .upload-card {
-        background: rgba(255,255,255,0.7);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-radius: 28px;
-        padding: 2rem 1.5rem;
-        text-align: center;
-        border: 2px dashed rgba(245,158,11,0.3);
-        transition: all 0.4s ease;
-        margin-bottom: 2rem;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.04);
-        animation: fadeUp 0.8s ease;
-    }
-    .upload-card:hover {
-        border-color: #F59E0B;
-        background: rgba(255,255,255,0.85);
-        transform: translateY(-4px);
-        box-shadow: 0 16px 48px rgba(245,158,11,0.08);
-    }
-    .upload-card .icon {
-        font-size: 48px;
-        animation: float 3s ease-in-out infinite;
-    }
-    .upload-card h3 {
-        font-weight: 700;
-        color: #0f172a;
-        margin: 10px 0 4px;
-        font-size: 20px;
-    }
-    .upload-card p {
-        color: #64748b;
-        font-size: 14px;
-        margin: 0;
-    }
-    
-    .preview-container {
-        background: rgba(255,255,255,0.7);
-        backdrop-filter: blur(8px);
-        border-radius: 24px;
-        padding: 1.5rem;
-        border: 1px solid rgba(255,255,255,0.4);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.04);
-        margin: 1.5rem 0;
-        animation: fadeUp 0.6s ease;
-    }
-    .preview-container img {
-        border-radius: 16px;
-        max-height: 350px;
-        object-fit: contain;
-        width: 100%;
+        background: linear-gradient(90deg, #dc2626, #ef4444);
+        border-radius: 10px;
     }
     
     .disclaimer {
-        background: rgba(254, 252, 232, 0.85);
-        backdrop-filter: blur(4px);
-        border-radius: 16px;
-        padding: 1rem 1.5rem;
-        border-left: 6px solid #f59e0b;
-        margin-top: 2rem;
-        font-size: 13px;
-        color: #4b5563;
-        line-height: 1.6;
-        animation: fadeUp 1s ease;
-    }
-    
-    .doctor-btn {
-        background: linear-gradient(135deg, #F59E0B, #D97706);
-        color: white;
-        border: none;
-        border-radius: 40px;
-        padding: 12px 24px;
-        font-weight: 600;
-        font-size: 15px;
-        cursor: not-allowed;
-        opacity: 0.7;
-        width: 100%;
+        background: linear-gradient(135deg, #fff5f5, #ffe0e0);
+        border-radius: 15px;
+        padding: 15px;
         text-align: center;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(245,158,11,0.2);
-        margin-top: 10px;
-    }
-    .doctor-btn:hover {
-        opacity: 0.9;
-        transform: scale(1.02);
-    }
-    .coming-badge {
-        background: linear-gradient(135deg, #F59E0B, #D97706);
-        color: white;
-        font-size: 11px;
-        font-weight: 700;
-        padding: 2px 14px;
-        border-radius: 30px;
-        margin-left: 8px;
-        letter-spacing: 0.5px;
-        animation: pulse-badge 1.5s ease-in-out infinite;
+        font-size: 12px;
+        color: #495057;
+        margin-top: 30px;
+        border-left: 4px solid #dc2626;
     }
     
-    @media (max-width: 640px) {
-        .header-left h1 { font-size: 18px; }
-        .header-left .subtitle { font-size: 11px; }
-        .header-ai-badge { font-size: 10px; padding: 3px 10px; }
-        .top-badge-card { padding: 10px; gap: 8px; }
-        .top-badge-card .tb-icon { width: 34px; height: 34px; min-width: 34px; font-size: 15px; }
-        .top-badge-card .tb-title { font-size: 12px; }
-        .top-badge-card .tb-desc { font-size: 10px; }
-        .hero { padding: 1.5rem 1rem; min-height: auto; }
-        .hero h1 { font-size: 22px; }
-        .hero p { font-size: 14px; }
-        .feature-card { padding: 1rem; }
-        .feature-card .icon { font-size: 28px; }
-        .how-section { padding: 1.5rem; }
-        .sidebar-glass { padding: 1rem; }
-        .result-card { padding: 1.2rem; }
-        .result-card h2 { font-size: 24px; }
-        .stButton > button { padding: 12px 20px; font-size: 14px; }
+    .stImage {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    
+    .info-box {
+        background: linear-gradient(135deg, #fff5f5, #ffe0e0);
+        border-radius: 15px;
+        padding: 15px;
+        margin: 15px 0;
+        border-left: 4px solid #dc2626;
+    }
+    
+    .metric-card {
+        background: white;
+        border-radius: 16px;
+        padding: 15px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border: 1px solid #ffcccc;
+    }
+    
+    .stRadio > div {
+        gap: 30px;
+        justify-content: center;
+    }
+    
+    .stRadio label {
+        font-size: 16px;
+        font-weight: 500;
+    }
+    
+    [data-testid="stMetricValue"] {
+        font-size: 28px;
+        font-weight: 700;
+        color: #dc2626;
+    }
+    
+    .section-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #dc2626;
+        margin: 20px 0 15px 0;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #dc2626;
+        display: inline-block;
+    }
+    
+    .section-container {
+        text-align: center;
+        margin-bottom: 20px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# ========== SESSION STATE ==========
-if 'language' not in st.session_state:
-    st.session_state.language = "fr"
-if 'history' not in st.session_state:
-    st.session_state.history = []
-
-# ========== HEADER ==========
-def get_file_base64(names):
-    for name in names:
-        if os.path.exists(name):
-            with open(name, "rb") as f:
-                return base64.b64encode(f.read()).decode()
-    return None
-
-def image_to_base64(img):
-    """Convert PIL Image to base64 string"""
-    buffered = io.BytesIO()
-    img.save(buffered, format="JPEG")
-    return base64.b64encode(buffered.getvalue()).decode()
-
-logo = get_file_base64(["logo.png", "logo.jpg", "logo.jpeg", "LOGO.png"])
-logo_icon = get_file_base64(["logo_icon.png", "logo-icon.png"]) or logo
-
-# ========== SIDEBAR ==========
-with st.sidebar:
-    if logo:
-        st.markdown(f"""
-        <div style="text-align:center; margin-bottom:1rem;">
-            <img src="data:image/png;base64,{logo}" style="max-width:170px; width:100%;">
-        </div>
-        """, unsafe_allow_html=True)
-
-    lang_map = {
-        "ar": "🇸🇦 العربية",
-        "fr": "🇫🇷 Français",
-        "en": "🇬🇧 English"
+# ========== JavaScript لطلب الكاميرا ==========
+st.markdown("""
+<script>
+    async function requestCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            console.log("Camera access granted");
+            stream.getTracks().forEach(track => track.stop());
+        } catch (err) {
+            console.log("Camera access denied: " + err);
+        }
     }
-    selected_lang = st.selectbox(
-        t("lang_selector"),
-        options=list(lang_map.keys()),
-        format_func=lambda x: lang_map[x],
-        index=list(lang_map.keys()).index(st.session_state.language)
-    )
-    if selected_lang != st.session_state.language:
-        st.session_state.language = selected_lang
-        st.rerun()
-    
-    st.markdown("---")
-    
-    st.markdown(f"""
-    <div class="sidebar-glass">
-        <h4>📋 القائمة / Menu</h4>
-        <div class="nav-item active">🏠 {t('nav_home')}</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    APP_URL = "https://hwaxrexkahkxaazwwjjr3d.streamlit.app/"
-    qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&color=F59E0B&data={APP_URL}"
-    
-    st.markdown(f"""
-    <div class="sidebar-glass">
-        <h4>{t('sidebar_qr_title')}</h4>
-        <div class="qr-container">
-            <img src="{qr_api_url}" width="160" height="160" alt="QR Code">
-        </div>
-        <p style="text-align:center; font-size:13px; color:#64748b;">{t('sidebar_qr_desc')}</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown(f"""
-    <div class="sidebar-glass">
-        <h4>{t('sidebar_health_title')}</h4>
-        <ul>
-            <li>{t('sidebar_health_1')}</li>
-            <li>{t('sidebar_health_2')}</li>
-            <li>{t('sidebar_health_3')}</li>
-            <li>{t('sidebar_health_4')}</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown(f"""
-    <div class="sidebar-glass">
-        <h4>{t('sidebar_doctor_title')} <span class="coming-badge">{t('sidebar_doctor_soon')}</span></h4>
-        <p>{t('sidebar_doctor_desc')}</p>
-        <div class="doctor-btn">{t('sidebar_doctor_btn')}</div>
-        <p style="font-size:12px; color:#94a3b8; text-align:center; margin-top:8px;">{t('sidebar_doctor_soon')}</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.caption(t('sidebar_version'))
-
-# ========== PAGE PRINCIPALE ==========
-logo_html = f'<div class="header-logo-badge"><img src="data:image/png;base64,{logo_icon}"></div>' if logo_icon else '<div class="header-logo-badge" style="font-size:26px;">🧬</div>'
-
-st.markdown(f"""
-<div class="header">
-    <div class="header-badges">
-        <div class="header-icon-btn">🔔<span class="dot"></span></div>
-        <div class="header-badge" style="background:rgba(255,255,255,0.15); color:#fff; border-color:rgba(255,255,255,0.25);">🌐 {lang_map[st.session_state.language]}</div>
-        <div class="header-ai-badge">✅ {t('ai_dev_badge')}</div>
-    </div>
-    <div class="header-left">
-        <div>
-            <h1>{t('app_title')}</h1>
-            <div class="subtitle">{t('app_subtitle')}</div>
-        </div>
-        {logo_html}
-    </div>
-</div>
+    requestCamera();
+</script>
 """, unsafe_allow_html=True)
 
-# ========== TOP BADGES ==========
-st.markdown(f"""
-<div class="top-badges">
-    <div class="top-badge-card">
-        <div class="tb-icon">🎧</div>
-        <div><div class="tb-title">{t('top_badge1_title')}</div><div class="tb-desc">{t('top_badge1_desc')}</div></div>
-    </div>
-    <div class="top-badge-card disabled">
-        <span class="tb-soon">🔜 {t('sidebar_doctor_soon')}</span>
-        <div class="tb-icon">📞</div>
-        <div><div class="tb-title">{t('top_badge2_title')}</div><div class="tb-desc">{t('top_badge2_desc')}</div></div>
-    </div>
-    <div class="top-badge-card">
-        <div class="tb-icon">🕐</div>
-        <div><div class="tb-title">{t('top_badge3_title')}</div><div class="tb-desc">{t('top_badge3_desc')}</div></div>
-    </div>
-    <div class="top-badge-card">
-        <div class="tb-icon">🛡️</div>
-        <div><div class="tb-title">{t('top_badge4_title')}</div><div class="tb-desc">{t('top_badge4_desc')}</div></div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+# ========== عرض الشعار ==========
+def get_logo_base64():
+    possible_names = ["logo.png", "logo.jpg", "logo.jpeg", "LOGO.png", "Logo.png", "logo.PNG"]
+    for logo_path in possible_names:
+        if os.path.exists(logo_path):
+            with open(logo_path, "rb") as img_file:
+                return base64.b64encode(img_file.read()).decode(), logo_path
+    return None, None
 
-# ========== HERO ==========
-doctor_local = get_file_base64(["doctor.png", "doctor.jpg", "doctor.jpeg"])
-if doctor_local:
-    doctor_img_url = f"data:image/png;base64,{doctor_local}"
+logo_base64, logo_name = get_logo_base64()
+
+if logo_base64:
+    st.markdown(f"""
+    <div class="logo-container fade-in-up">
+        <img src="data:image/png;base64,{logo_base64}" class="logo-image">
+    </div>
+    """, unsafe_allow_html=True)
 else:
-    doctor_img_url = "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"
-heartbeat_svg = (
-    "data:image/svg+xml;utf8,"
-    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60'>"
-    "<polyline points='0,30 60,30 80,10 100,50 120,5 140,55 160,30 220,30 240,15 260,45 280,30 400,30' "
-    "fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='3'/></svg>"
+    st.markdown("""
+    <div class="logo-container fade-in-up">
+        <div style="font-size: 150px; text-align: center;">🩸👁️</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# عنوان التطبيق
+st.markdown("""
+<div class="app-title fade-in-up">AnemicCheck</div>
+<div class="app-subtitle-ar fade-in-up">رؤية ميد</div>
+<div class="app-subtitle fade-in-up">Détection d'Anémie par Intelligence Artificielle</div>
+<div class="tagline-container fade-in-up">
+    <div class="app-tagline">فحص فقر الدم غير الجراحي • Dépistage non invasif</div>
+</div>
+""", unsafe_allow_html=True)
+
+# ========== عرض النماذج المستخدمة ==========
+st.markdown('<div class="section-container">', unsafe_allow_html=True)
+st.markdown('<span class="section-title">🧠 Modèles d\'IA utilisés / النماذج المستخدمة</span>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
+col_model1, col_model2 = st.columns(2)
+
+with col_model1:
+    st.markdown("""
+    <div class="model-card fade-in-up">
+        <div class="model-icon">🖼️🔬</div>
+        <div class="model-title">U-Net</div>
+        <div class="model-desc">
+            <b>Segmentation / تجزئة الصور</b><br>
+            Encoder: ResNet34<br>
+            Extraction de la conjonctive / استخراج الملتحمة<br>
+            <span class="model-badge">Segmentation model</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_model2:
+    st.markdown("""
+    <div class="model-card fade-in-up" style="animation-delay: 0.1s;">
+        <div class="model-icon">🧠📊</div>
+        <div class="model-title">EfficientNet-B3</div>
+        <div class="model-desc">
+            <b>Classification / تصنيف</b><br>
+            Architecture EfficientNet<br>
+            Détection d'anémie / كشف فقر الدم<br>
+            <span class="model-badge">Classification model</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("""
+<div style="background: rgba(220,38,38,0.05); border-radius: 15px; padding: 15px; margin: 10px 0; text-align: center;">
+    <p style="color: #666; margin: 0;">
+        <b>📊 Pipeline de traitement / سير المعالجة:</b><br>
+        Image → U-Net (Segmentation) → Extraction Conjonctive → EfficientNet-B3 (Classification) → Diagnostic
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+# ========== منطقة رفع/تصوير الصورة ==========
+st.markdown("---")
+st.markdown('<div class="section-container fade-in-up"><span class="section-title">📸 Méthode d\'acquisition / طريقة الحصول على الصورة</span></div>', unsafe_allow_html=True)
+
+st.markdown("""
+<div class="upload-zone">
+    <div class="upload-icon">👁️📤</div>
+    <h4>حط الصورة تاعك هنا</h4>
+    <p>صورة واضحة للعين، أو تصور بالكاميرا مباشرة</p>
+</div>
+""", unsafe_allow_html=True)
+
+option = st.radio(
+    "Choisissez la méthode / اختر الطريقة:",
+    ["📁 Télécharger une image", "📷 Prendre une photo"],
+    horizontal=True,
+    label_visibility="collapsed"
 )
 
-st.markdown(f"""
-<div class="hero" id="hero-top">
-    <img src="{heartbeat_svg}" class="hero-heartbeat" alt="">
-    <div class="hero-content">
-        <div class="hero-text">
-            <span class="icon">🩺</span>
-            <h1>{t('hero_title')}</h1>
-            <p>{t('hero_desc')}</p>
-            <a href="#upload-zone" class="hero-cta">➜ {t('hero_cta')}</a>
-            <div style="margin-top:16px;">
-                <span class="hero-badge">✅ {t('hero_badge')}</span>
-            </div>
-        </div>
-        <div class="hero-visual">
-            <div class="glow"></div>
-            <img src="{doctor_img_url}" class="doctor-image" alt="Médecin / Doctor">
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+uploaded = None
 
-# ========== UPLOAD ==========
-st.markdown(f"""
-<div class="upload-card" id="upload-zone">
-    <div class="icon">📸</div>
-    <h3>{t('upload_title')}</h3>
-    <p>{t('upload_desc')}</p>
-</div>
-""", unsafe_allow_html=True)
+if option == "📁 Télécharger une image":
+    uploaded = st.file_uploader("Téléchargez une image de l'œil", type=["jpg", "png", "jpeg"], label_visibility="collapsed")
+else:
+    uploaded = st.camera_input("📷 Prenez une photo de l'œil", disabled=False, label_visibility="collapsed")
 
-col1, col2 = st.columns([1, 2])
-with col1:
-    option = st.radio(
-        t("upload_method_file"),
-        [t("upload_method_file"), t("upload_method_camera")],
-        horizontal=True,
-        label_visibility="collapsed"
-    )
-with col2:
-    if option == t("upload_method_file"):
-        uploaded = st.file_uploader(
-            t("upload_file_label"),
-            type=["jpg","png","jpeg"],
-            label_visibility="collapsed",
-            key="file_uploader"
-        )
-    else:
-        uploaded = st.camera_input(
-            t("upload_camera_label"),
-            label_visibility="collapsed",
-            key="camera_input"
-        )
-
-# ========== FONCTIONS ==========
+# ========== دالة تنظيف الماسك ==========
 def clean_mask(mask, min_area=500):
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    cleaned = np.zeros_like(mask)
-    for c in contours:
-        if cv2.contourArea(c) >= min_area:
-            cv2.drawContours(cleaned, [c], -1, 255, -1)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))
-    cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_CLOSE, kernel)
-    cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_OPEN, kernel)
-    return cleaned
-
-def enhance_conjunctiva(image):
-    if len(image.shape) == 3:
-        lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
-        l, a, b = cv2.split(lab)
-        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
-        l_enh = clahe.apply(l)
-        l_enh = cv2.GaussianBlur(l_enh, (3,3), 0)
-        kernel = np.array([[-1,-1,-1],[-1,9,-1],[-1,-1,-1]])
-        l_enh = cv2.filter2D(l_enh, -1, kernel)
-        lab_enh = cv2.merge((l_enh, a, b))
-        enhanced = cv2.cvtColor(lab_enh, cv2.COLOR_LAB2RGB)
-        return enhanced
-    return image
+    clean = np.zeros_like(mask)
+    
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area >= min_area:
+            cv2.drawContours(clean, [contour], -1, 255, -1)
+    
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    clean = cv2.morphologyEx(clean, cv2.MORPH_CLOSE, kernel)
+    clean = cv2.morphologyEx(clean, cv2.MORPH_OPEN, kernel)
+    
+    return clean
 
 def extract_best_conjunctiva(img, mask):
     mask = clean_mask(mask)
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
     if contours:
-        largest = max(contours, key=cv2.contourArea)
-        x, y, w, h = cv2.boundingRect(largest)
-        pad = 15
-        x = max(0, x - pad)
-        y = max(0, y - pad)
-        w = min(img.shape[1] - x, w + 2*pad)
-        h = min(img.shape[0] - y, h + 2*pad)
+        largest_contour = max(contours, key=cv2.contourArea)
+        x, y, w, h = cv2.boundingRect(largest_contour)
+        
+        padding = 15
+        x = max(0, x - padding)
+        y = max(0, y - padding)
+        w = min(img.shape[1] - x, w + 2*padding)
+        h = min(img.shape[0] - y, h + 2*padding)
+        
         if w > 0 and h > 0:
             cropped = img[y:y+h, x:x+w]
-            enhanced = enhance_conjunctiva(cropped)
-            mask_cropped = mask[y:y+h, x:x+w]
-            return enhanced, mask_cropped, (x, y, w, h)
-    conj = cv2.bitwise_and(img, img, mask=mask)
-    enhanced = enhance_conjunctiva(conj)
-    return enhanced, mask, None
+            return cropped, mask, (x, y, w, h)
+    
+    conjunctiva = cv2.bitwise_and(img, img, mask=mask)
+    return conjunctiva, mask, None
 
-# ================================================================
-# ===== دالة التصنيف المعدلة (مثل الموجودة في ملفك الجديد) =====
-# ================================================================
+# ====================================================
+# ===== دالة التصنيف (معدلة بدون قلب النتيجة) =====
+# ====================================================
 def predict_anemia(model, image, device):
-    """
-    هذه الدالة مطابقة للدالة الموجودة في ملف app.py الجديد.
-    تقوم بتطبيع الصورة (ImageNet) ثم عكس النتيجة لأن النموذج يعطي نتائج مقلوبة.
-    """
+    # إضافة التطبيع (Normalization) لأن EfficientNet مدرب على ImageNet
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -1436,14 +507,19 @@ def predict_anemia(model, image, device):
     if isinstance(image, np.ndarray):
         image = Image.fromarray(image)
     
-    tensor = transform(image).unsqueeze(0).to(device)
+    img_tensor = transform(image).unsqueeze(0).to(device)
     
     with torch.no_grad():
-        output = model(tensor)
+        output = model(img_tensor)
+        # raw_pred هي قيمة السيجمويد الخام (تتراوح بين 0 و 1)
         raw_pred = torch.sigmoid(output).item()
     
-    # عكس النتيجة (تصحيح) لأن النموذج معكوس
-    corrected_pred = 1 - raw_pred
+    # ==================================================
+    # تم إلغاء قلب النتيجة (التصحيح) نهائياً
+    # أصبحنا نعتمد على القيمة الخام مباشرة
+    # إذا كانت raw_pred >= 0.5 => أنيميا، وإلا => غير أنيميا
+    # ==================================================
+    corrected_pred = raw_pred  # بدون أي قلب
     
     if corrected_pred >= 0.5:
         result = "Anemic"
@@ -1454,267 +530,186 @@ def predict_anemia(model, image, device):
     
     return result, confidence, corrected_pred, raw_pred
 
-@st.cache_resource
-def load_models():
-    unet, dev_unet = load_unet_model()
-    clf, dev_clf = load_classifier_model()
-    return unet, dev_unet, clf, dev_clf
-
-# ========== TRAITEMENT ==========
+# ========== معالجة الصورة ==========
 if uploaded is not None:
-    # Preview container
-    preview_placeholder = st.empty()
-    with preview_placeholder.container():
-        st.markdown(f"""
-        <div class="preview-container">
-            <h4 style="margin-top:0;">{t('preview_title')}</h4>
-        """, unsafe_allow_html=True)
-        col_preview, _ = st.columns([1, 1])
-        with col_preview:
-            st.image(uploaded, use_container_width=True, caption=t('preview_caption'))
-        st.markdown("</div>", unsafe_allow_html=True)
-    
-    if st.button(t("analyze_btn"), use_container_width=True):
-        # 1. Show Scanning Effect
-        img_pil = Image.open(uploaded).convert('RGB')
-        img_b64 = image_to_base64(img_pil)
+    # تحميل النماذج فقط الآن (lazy loading)
+    with st.spinner("🔃 Chargement des modèles intelligents..."):
+        try:
+            unet_model, unet_device = load_unet_model()
+        except Exception as e:
+            st.error(f"❌ Erreur de chargement U-Net: {e}")
+            st.stop()
+
+        try:
+            classifier_model, classifier_device = load_classifier_model()
+        except Exception as e:
+            st.error(f"❌ Erreur de chargement EfficientNet-B3: {e}")
+            st.stop()
+
+    with st.spinner("🔍 Analyse de l'image en cours..."):
+        # قراءة الصورة
+        img = np.array(Image.open(uploaded).convert('RGB'))
         
-        scan_placeholder = st.empty()
-        with scan_placeholder.container():
-            st.markdown(f"""
-            <div class="preview-container">
-                <h4 style="margin-top:0;">🔬 جاري المسح الضوئي...</h4>
-                <div class="scan-container">
-                    <img src="data:image/jpeg;base64,{img_b64}" style="width:100%; border-radius:16px;">
-                    <div class="scan-line"></div>
-                    <div class="scan-overlay"></div>
+        # ==================================================
+        # تم إزالة cv2.flip نهائياً (لم تعد الصورة تنقلب)
+        # ==================================================
+        
+        # تجزئة U-Net
+        transform_unet = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize((256, 256)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ])
+        
+        img_tensor = transform_unet(img).unsqueeze(0).to(unet_device)
+        
+        with torch.no_grad():
+            raw_mask = torch.sigmoid(unet_model(img_tensor)).squeeze().cpu().numpy()
+            raw_mask = (raw_mask > 0.5).astype(np.uint8) * 255
+            raw_mask = cv2.resize(raw_mask, (img.shape[1], img.shape[0]))
+        
+        # تحسين الماسك
+        cleaned_mask = clean_mask(raw_mask)
+        conjunctiva, final_mask, bbox = extract_best_conjunctiva(img, cleaned_mask)
+        
+        # تصنيف الأنيميا (بدون قلب النتيجة)
+        result, confidence, corrected_pred, raw_pred = predict_anemia(classifier_model, conjunctiva, classifier_device)
+        
+        # حساب النسب للمخطط
+        anemia_percent = corrected_pred * 100
+        non_anemia_percent = (1 - corrected_pred) * 100
+        
+        st.success("✅ Analyse terminée avec succès")
+
+        # عرض النتائج
+        st.markdown("## 📊 Résultats de l'analyse")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown("**🖼️ Image originale**")
+            st.image(img, use_container_width=True)
+        
+        with col2:
+            st.markdown("**🎭 Segmentation (U-Net)**")
+            st.image(final_mask, use_container_width=True, clamp=True)
+        
+        with col3:
+            st.markdown("**👁️ Conjonctive extraite**")
+            st.image(conjunctiva, use_container_width=True)
+        
+        # إحصائيات
+        before_area = np.sum(raw_mask > 0) / 255
+        after_area = np.sum(final_mask > 0) / 255
+        reduction = ((before_area - after_area) / before_area * 100) if before_area > 0 else 0
+        
+        col_stat1, col_stat2 = st.columns(2)
+        with col_stat1:
+            st.metric("Surface segmentée", f"{after_area:.0f} px²")
+        with col_stat2:
+            st.metric("Nettoyage", f"{reduction:.1f}% d'artefacts")
+        
+        # نتيجة التشخيص
+        st.markdown("---")
+        st.markdown("## 🩺 Diagnostic (EfficientNet-B3)")
+        
+        col_result, col_conf = st.columns(2)
+        
+        with col_result:
+            if result == "Anemic":
+                st.markdown("""
+                <div class="result-anemia">
+                    <h2 style="color: #dc2626; font-size: 32px;">🩸 Anémie</h2>
+                    <p style="font-size: 18px;"><b>Anémie détectée</b></p>
+                    <p style="font-size: 14px; color: #666;">يوجد فقر دم</p>
                 </div>
-                <p style="text-align:center; color:#64748b; margin-top:8px;">{t('analyzing')}</p>
-            </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <div class="result-non-anemia">
+                    <h2 style="color: #16a34a; font-size: 32px;">✅ Non Anémie</h2>
+                    <p style="font-size: 18px;"><b>Pas d'anémie détectée</b></p>
+                    <p style="font-size: 14px; color: #666;">لا يوجد فقر دم</p>
+                </div>
+                """, unsafe_allow_html=True)
         
-        # Simulate scan time + loading models
-        with st.spinner(t("loading_models")):
-            unet_model, unet_device, clf_model, clf_device = load_models()
+        with col_conf:
+            st.metric("Niveau de confiance", f"{confidence:.1f}%")
+            st.progress(int(confidence))
         
-        # Progress bar for the scan
-        progress_bar = st.progress(0)
-        for i in range(10):
-            time.sleep(0.06)
-            progress_bar.progress((i+1)*10)
+        # مخطط الأعمدة
+        st.markdown("### 📈 Niveau d'anémie")
         
-        # 2. Real processing
-        with st.spinner(t("analyzing")):
-            img = np.array(img_pil)
-            # تم إزالة `cv2.flip` لتجنب التشويش (النموذج لم يُدرّب عليه)
-            
-            transform_unet = transforms.Compose([
-                transforms.ToPILImage(),
-                transforms.Resize((256,256)),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225])
-            ])
-            tensor = transform_unet(img).unsqueeze(0).to(unet_device)
-            with torch.no_grad():
-                raw_mask = torch.sigmoid(unet_model(tensor)).squeeze().cpu().numpy()
-                raw_mask = (raw_mask > 0.5).astype(np.uint8) * 255
-                raw_mask = cv2.resize(raw_mask, (img.shape[1], img.shape[0]))
-
-            conj_enhanced, final_mask, bbox = extract_best_conjunctiva(img, raw_mask)
-
-            # استدعاء الدالة المعدلة
-            result, confidence, corrected_pred, raw_pred = predict_anemia(clf_model, conj_enhanced, clf_device)
-
-            anemia_pct = corrected_pred * 100
-            non_pct = (1 - corrected_pred) * 100
-
-            progress_bar.empty()
-            
-            # Remove scan placeholder
-            scan_placeholder.empty()
-            
-            st.success(t("analysis_done"))
-
-            # ===== RESULTS DASHBOARD =====
-            st.markdown(f'<div class="section-title">{t("results_title")}</div>', unsafe_allow_html=True)
-            
-            # New layout: Conjunctiva BIG, Original + Mask small
-            col_left, col_right = st.columns([2, 1])
-            with col_left:
-                st.markdown(f"**👁️ {t('result_conjunctiva')}**")
-                st.image(conj_enhanced, use_container_width=True)
-            with col_right:
-                st.markdown(f"**{t('result_original')}**")
-                st.image(img, use_container_width=True)
-                st.markdown(f"**{t('result_mask')}**")
-                st.image(final_mask, use_container_width=True, clamp=True)
-
-            # Metrics
-            before = np.sum(raw_mask > 0) / 255
-            after = np.sum(final_mask > 0) / 255
-            reduction = ((before - after) / before * 100) if before > 0 else 0
-
-            m1, m2 = st.columns(2)
-            with m1:
-                st.metric(t("metric_surface"), f"{after:.0f} px²")
-            with m2:
-                st.metric(t("metric_cleaning"), f"{reduction:.1f}%")
-
-            # DIAGNOSTIC
-            st.markdown(f'<div class="section-title">{t("diagnostic_title")}</div>', unsafe_allow_html=True)
-            col_res, col_conf = st.columns(2)
-            with col_res:
-                if result == "Anemic":
-                    st.markdown(f"""
-                    <div class="result-card positive">
-                        <h2>{t('diagnostic_anemic')}</h2>
-                        <div class="confidence">{t('diagnostic_confidence')} : <strong>{confidence:.1f}%</strong></div>
-                        <div class="sub">{t('diagnostic_anemic_desc')}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                else:
-                    st.markdown(f"""
-                    <div class="result-card negative">
-                        <h2>{t('diagnostic_non_anemic')}</h2>
-                        <div class="confidence">{t('diagnostic_confidence')} : <strong>{confidence:.1f}%</strong></div>
-                        <div class="sub">{t('diagnostic_non_anemic_desc')}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-            with col_conf:
-                st.metric(t("diagnostic_confidence"), f"{confidence:.1f}%")
-                st.progress(int(confidence))
-
-            # CHART
-            st.markdown(f'<div class="section-title">{t("chart_title")}</div>', unsafe_allow_html=True)
-            fig, ax = plt.subplots(figsize=(8,5))
-            cats = [t('chart_non'), t('chart_anemic')]
-            vals = [non_pct, anemia_pct]
-            colors = ['#10b981', '#dc2626']
-            bars = ax.bar(cats, vals, color=colors, width=0.5, edgecolor='white', linewidth=2)
-            ax.set_ylim(0,100)
-            ax.set_ylabel('Pourcentage (%)')
-            ax.set_title(t('chart_title'), fontweight='bold')
-            ax.grid(True, alpha=0.3, axis='y')
-            for bar, v in zip(bars, vals):
-                ax.text(bar.get_x()+bar.get_width()/2, v+2, f'{v:.1f}%', ha='center', fontweight='bold', fontsize=14)
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
-            st.pyplot(fig)
-
-            # HISTORY
-            entry = {
-                t("history_date"): datetime.now().strftime("%Y-%m-%d %H:%M"),
-                t("history_diagnostic"): result,
-                t("history_confidence"): f"{confidence:.1f}%",
-                t("history_prob"): f"{anemia_pct:.1f}%"
-            }
-            st.session_state.history.append(entry)
-            if len(st.session_state.history) > 10:
-                st.session_state.history.pop(0)
-
-            if st.session_state.history:
-                st.markdown(f'<div class="section-title">{t("history_title")}</div>', unsafe_allow_html=True)
-                df = pd.DataFrame(st.session_state.history)
-                st.dataframe(df, use_container_width=True, hide_index=True)
-
-            # TECH DETAILS
-            with st.expander(t("tech_details")):
-                st.write(f"**{t('tech_model_seg')}:** U‑Net (ResNet34)")
-                st.write(f"**{t('tech_model_clf')}:** EfficientNet‑B3")
-                st.write(f"**{t('tech_device')}:** {'GPU' if clf_device.type == 'cuda' else 'CPU'}")
-                st.write(f"**{t('tech_sigmoid')}:** {raw_pred:.4f}")
-                st.write(f"**{t('tech_prob_anemic')}:** {anemia_pct:.1f}%")
-                st.write(f"**{t('tech_prob_non')}:** {non_pct:.1f}%")
-                st.write(f"**{t('tech_preprocess')}:** CLAHE + Filtrage + Netteté")
-                st.write(f"**{t('tech_decision')}:** {t('tech_decision_value')}")
-
-            # DISCLAIMER
-            st.markdown(f"""
-            <div class="disclaimer">
-                <strong>{t('disclaimer')}</strong><br>
-                {t('disclaimer_text')}<br>
-                {t('disclaimer_consult')}
-            </div>
-            """, unsafe_allow_html=True)
-
-# ========== FEATURES GRID ==========
-st.markdown("""
-<div class="features-grid">
-    <div class="feature-card">
-        <div class="icon">⚡</div>
-        <h4>""" + t('feature_1_title') + """</h4>
-        <p>""" + t('feature_1_desc') + """</p>
-    </div>
-    <div class="feature-card">
-        <div class="icon">📤</div>
-        <h4>""" + t('feature_2_title') + """</h4>
-        <p>""" + t('feature_2_desc') + """</p>
-    </div>
-    <div class="feature-card">
-        <div class="icon">✅</div>
-        <h4>""" + t('feature_3_title') + """</h4>
-        <p>""" + t('feature_3_desc') + """</p>
-    </div>
-    <div class="feature-card">
-        <div class="icon">🔒</div>
-        <h4>""" + t('feature_4_title') + """</h4>
-        <p>""" + t('feature_4_desc') + """</p>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-# ========== HOW IT WORKS ==========
-st.markdown(f"""
-<div class="how-section">
-    <h3>{t('how_title')}</h3>
-    <div class="how-steps">
-        <div class="how-step">
-            <div class="step-num">1</div>
-            <h5>{t('how_step1')}</h5>
-            <p>{t('how_step1_desc')}</p>
+        fig, ax = plt.subplots(figsize=(8, 5))
+        
+        categories = ['Non anemic', 'Anemic']
+        values = [non_anemia_percent, anemia_percent]
+        colors = ['#10b981', '#dc2626']
+        
+        bars = ax.bar(categories, values, color=colors, width=0.5, edgecolor='white', linewidth=2)
+        ax.set_ylim([0, 100])
+        ax.set_ylabel('Pourcentage (%)', fontsize=12)
+        ax.set_title('Probabilité d\'anémie (sans correction)', fontsize=14, fontweight='bold')
+        ax.set_facecolor('#f8f9fa')
+        ax.grid(True, alpha=0.3, axis='y')
+        
+        for bar, val in zip(bars, values):
+            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2, 
+                    f'{val:.1f}%', ha='center', fontweight='bold', fontsize=14, 
+                    color='#8b0000' if val == anemia_percent else '#166534')
+        
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        
+        st.pyplot(fig)
+        
+        # معلومات إضافية
+        with st.expander("📈 Détails techniques"):
+            st.write(f"**Diagnostic:** {result}")
+            st.write(f"**Niveau de confiance:** {confidence:.2f}%")
+            st.write(f"**Valeur brute (sigmoid originale):** {raw_pred:.4f}")
+            st.write(f"**Valeur utilisée pour la décision:** {corrected_pred:.4f}")
+            st.write(f"**Règle de correction:** Aucune (valeur brute utilisée directement)")
+            st.write(f"**Anémie (probabilité):** {anemia_percent:.1f}%")
+            st.write(f"**Non Anémie (probabilité):** {non_anemia_percent:.1f}%")
+            st.write(f"**Appareil utilisé:** {'GPU' if classifier_device.type == 'cuda' else 'CPU'}")
+            st.write(f"**Modèle de segmentation:** U-Net (ResNet34)")
+            st.write(f"**Modèle de classification:** EfficientNet-B3")
+            st.write(f"**Prétraitement classification:** Resize(224) + Normalization ImageNet")
+        
+        # تنويه طبي
+        st.markdown("""
+        <div class="disclaimer">
+            ⚠️ <b>Avertissement médical / تنويه طبي</b><br>
+            Ce résultat est fourni à titre indicatif et ne remplace pas un avis médical professionnel.<br>
+            Veuillez consulter un médecin pour un diagnostic fiable.
         </div>
-        <div class="how-step">
-            <div class="step-num">2</div>
-            <h5>{t('how_step2')}</h5>
-            <p>{t('how_step2_desc')}</p>
-        </div>
-        <div class="how-step">
-            <div class="step-num">3</div>
-            <h5>{t('how_step3')}</h5>
-            <p>{t('how_step3_desc')}</p>
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
-# ========== TRUST BADGES ==========
-st.markdown(f"""
-<div class="trust-section">
-    <div class="trust-item"><span class="icon">🔒</span> {t('trust_1')}</div>
-    <div class="trust-item"><span class="icon">❤️</span> {t('trust_2')}</div>
-    <div class="trust-item"><span class="icon">⭐</span> {t('trust_3')}</div>
-    <div class="trust-item"><span class="icon">📱</span> {t('version')}</div>
-    <div class="trust-item"><span class="icon">🎯</span> {t('accuracy')}</div>
-</div>
-""", unsafe_allow_html=True)
-
-# ========== BOTTOM INFO ==========
-st.markdown(f"""
-<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:1.5rem 0;">
-    <div class="feature-card">
-        <div class="icon">⚡</div>
-        <h4>{t('fast')}</h4>
-        <p>{t('fast_desc')}</p>
+else:
+    st.markdown("""
+    <div class="fade-in-up" style="text-align: center; padding: 40px; background: white; border-radius: 24px; margin: 20px 0;">
+        <div class="upload-icon" style="font-size: 48px; margin-bottom: 20px;">📸</div>
+        <h3>Bienvenue sur AnemicCheck</h3>
+        <p>Sélectionnez une méthode d'acquisition ci-dessus pour commencer l'analyse</p>
     </div>
-    <div class="feature-card">
-        <div class="icon">🧠</div>
-        <h4>{t('smart')}</h4>
-        <p>{t('smart_desc')}</p>
-    </div>
-    <div class="feature-card">
-        <div class="icon">🔒</div>
-        <h4>{t('secure')}</h4>
-        <p>{t('secure_desc')}</p>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+    
+    with st.expander("ℹ️ Guide d'utilisation"):
+        st.markdown("""
+        **Comment fonctionne l'application ?**
+        
+        1. **U-Net** : Segmentation avancée pour extraire la conjonctive
+        2. **EfficientNet-B3** : Classification pour détecter l'anémie
+        
+        **Conseils pour une analyse optimale :**
+        - 📷 Utilisez une image claire et bien éclairée
+        - 👁️ Assurez-vous que l'œil est bien visible
+        - 🩸 Les résultats sont à titre indicatif
+        
+        **Technologies utilisées :**
+        - PyTorch pour l'IA
+        - Streamlit pour l'interface
+        - OpenCV pour le traitement d'image
+        """)
