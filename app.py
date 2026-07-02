@@ -362,11 +362,7 @@ def t(key):
 st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
         --bg-primary: #F0F4FE;
@@ -382,14 +378,14 @@ st.markdown("""
         --primary-600: #2563EB;
         --primary-400: #5B8DEF;
         --primary-100: #E0E7FF;
-        --teal: #0EA5A4;
+        --teal: #0E5A54;
         --teal-100: #D4F5F5;
         --success: #10A85A;
         --success-100: #E2F6E9;
         --danger: #E23F4E;
         --danger-100: #FDE8EA;
         --amber: #DE9A1F;
-        --amber-100: #FDF3DF;
+        --amber-100: #DFD3FD;      /* Using the purple from your image */
         --shadow-sm: 0 2px 8px rgba(10,36,99,0.06);
         --shadow-md: 0 8px 30px rgba(10,36,99,0.10);
         --shadow-lg: 0 24px 60px rgba(10,36,99,0.15);
@@ -411,7 +407,7 @@ st.markdown("""
         font-weight: 700;
     }
 
-    /* ===== ANIMATED BACKGROUND ===== */
+    /* --- ANIMATED BACKGROUND --- */
     .stApp::before {
         content: '';
         position: fixed;
@@ -430,7 +426,7 @@ st.markdown("""
         100% { transform: translate(3%, -2%) rotate(2deg); }
     }
 
-    /* ===== SIDEBAR ===== */
+    /* --- SIDEBAR --- */
     section[data-testid="stSidebar"] {
         background: linear-gradient(145deg, #0B1B3F 0%, #0A2463 100%);
         border-right: none;
@@ -450,7 +446,6 @@ st.markdown("""
         margin: 1.2rem 0;
     }
 
-    /* ===== SIDEBAR NAV ===== */
     .sidebar-glass {
         background: rgba(255,255,255,0.05);
         border: 1px solid rgba(255,255,255,0.08);
@@ -539,7 +534,7 @@ st.markdown("""
         text-transform: uppercase;
     }
 
-    /* ===== TOP NAVBAR ===== */
+    /* --- TOP NAVBAR --- */
     .navbar {
         background: var(--glass-bg);
         backdrop-filter: blur(18px) saturate(180%);
@@ -640,7 +635,7 @@ st.markdown("""
         display: block;
     }
 
-    /* ===== HERO ===== */
+    /* --- HERO --- */
     .hero {
         position: relative;
         background: linear-gradient(135deg, #0A2463 0%, #1D4ED8 60%, #2563EB 100%);
@@ -811,7 +806,7 @@ st.markdown("""
         background: rgba(255,255,255,0.25);
     }
 
-    /* ===== SECTIONS ===== */
+    /* --- SECTIONS --- */
     .section-title {
         font-size: 22px;
         font-weight: 800;
@@ -878,7 +873,7 @@ st.markdown("""
         line-height: 1.5;
     }
 
-    /* ===== HOW IT WORKS ===== */
+    /* --- HOW IT WORKS --- */
     .how-section {
         background: var(--bg-surface);
         backdrop-filter: blur(8px);
@@ -956,7 +951,7 @@ st.markdown("""
         margin: 0;
     }
 
-    /* ===== TRUST BADGES ===== */
+    /* --- TRUST BADGES --- */
     .trust-section {
         display: flex;
         justify-content: center;
@@ -980,7 +975,7 @@ st.markdown("""
         font-size: 20px;
     }
 
-    /* ===== UPLOAD CARD ===== */
+    /* --- UPLOAD CARD --- */
     .upload-card {
         background: var(--bg-surface);
         backdrop-filter: blur(8px);
@@ -1022,7 +1017,7 @@ st.markdown("""
         margin: 0;
     }
 
-    /* ===== PREVIEW ===== */
+    /* --- PREVIEW --- */
     .preview-container {
         background: var(--bg-surface);
         backdrop-filter: blur(8px);
@@ -1050,7 +1045,7 @@ st.markdown("""
         box-shadow: var(--shadow-sm);
     }
 
-    /* ===== RESULT CARDS ===== */
+    /* --- RESULT CARDS --- */
     .result-card {
         border-radius: var(--radius-lg);
         padding: 1.8rem 2rem;
@@ -1109,24 +1104,24 @@ st.markdown("""
         margin-top: 2px;
     }
 
-    /* ===== DISCLAIMER ===== */
+    /* --- DISCLAIMER --- */
     .disclaimer {
-        background: var(--amber-100);
+        background: var(--amber-100);   /* now uses the purple from your image */
         border-radius: var(--radius-md);
         padding: 1.2rem 1.6rem;
         border: 1px solid rgba(222,154,31,0.15);
         border-left: 5px solid var(--amber);
         margin-top: 2rem;
         font-size: 13.5px;
-        color: #6B4E12;
+        color: #3D2A5C;  /* adjusted for purple background */
         line-height: 1.7;
         animation: fadeUp 0.5s ease;
     }
     .disclaimer strong {
-        color: #573B08;
+        color: #2A1A40;
     }
 
-    /* ===== STATS BAR ===== */
+    /* --- STATS BAR --- */
     .stats-bar {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -1162,7 +1157,7 @@ st.markdown("""
         margin-top: 4px;
     }
 
-    /* ===== FOOTER ===== */
+    /* --- FOOTER --- */
     .app-footer {
         margin-top: 3rem;
         padding: 1.8rem 0;
@@ -1180,7 +1175,7 @@ st.markdown("""
         text-decoration: underline;
     }
 
-    /* ===== WIDGETS OVERRIDES ===== */
+    /* --- WIDGET OVERRIDES --- */
     .stButton > button {
         background: linear-gradient(135deg, var(--primary-600), var(--primary-900));
         color: white;
@@ -1244,7 +1239,7 @@ st.markdown("""
         display: none;
     }
 
-    /* ===== ANIMATIONS ===== */
+    /* --- ANIMATIONS --- */
     @keyframes fadeUp {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
