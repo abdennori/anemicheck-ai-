@@ -11,6 +11,7 @@ import base64
 import os
 import time
 import pandas as pd
+import io
 from datetime import datetime
 from model_loader import load_unet_model, load_classifier_model
 
@@ -547,22 +548,18 @@ st.markdown("""
         transform: translateY(-3px);
         box-shadow: 0 10px 24px rgba(30,58,138,0.1);
     }
-    .top-badge-card.disabled {
-        opacity: 0.8;
-        cursor: not-allowed;
-        filter: grayscale(0.2);
-    }
     .top-badge-card .tb-icon {
         width: 40px;
         height: 40px;
         min-width: 40px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        background: linear-gradient(135deg, #F59E0B, #D97706);
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
         font-size: 18px;
+        box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
     }
     .top-badge-card .tb-title {
         font-weight: 700;
@@ -577,14 +574,14 @@ st.markdown("""
         position: absolute;
         top: -6px;
         right: -6px;
-        background: #f59e0b;
+        background: #F59E0B;
         color: #fff;
         font-size: 9px;
         font-weight: 700;
         padding: 2px 10px;
         border-radius: 30px;
         letter-spacing: 0.5px;
-        box-shadow: 0 2px 8px rgba(245,158,11,0.3);
+        box-shadow: 0 2px 8px rgba(245,158,11,0.4);
         animation: pulse-badge 1.5s ease-in-out infinite;
     }
     @keyframes pulse-badge {
@@ -594,13 +591,13 @@ st.markdown("""
     
     /* ===== SIDEBAR ===== */
     .sidebar-glass {
-        background: rgba(255,255,255,0.6);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        background: rgba(255,255,255,0.65);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
         border-radius: 24px;
         padding: 1.5rem;
         border: 1px solid rgba(255,255,255,0.3);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.06);
         margin-bottom: 1.5rem;
         animation: fadeUp 0.8s ease;
     }
@@ -627,13 +624,13 @@ st.markdown("""
         transition: all 0.3s ease;
     }
     .sidebar-glass .nav-item.active {
-        background: rgba(37,99,235,0.12);
-        color: #2563eb;
+        background: rgba(245,158,11,0.12);
+        color: #D97706;
         font-weight: 600;
-        border: 1px solid rgba(37,99,235,0.15);
+        border: 1px solid rgba(245,158,11,0.2);
     }
     .sidebar-glass .nav-item:hover {
-        background: rgba(37,99,235,0.04);
+        background: rgba(245,158,11,0.04);
     }
     .sidebar-glass p, .sidebar-glass li {
         color: #334155;
@@ -650,7 +647,7 @@ st.markdown("""
     }
     .sidebar-glass .qr-container img {
         border-radius: 16px;
-        border: 1px solid rgba(225,29,72,0.15);
+        border: 1px solid rgba(245,158,11,0.15);
         background: white;
         padding: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.04);
@@ -664,10 +661,13 @@ st.markdown("""
     
     /* ===== HERO ===== */
     .hero {
-        background: linear-gradient(120deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
+        background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
         border-radius: 32px;
-        padding: 2rem 1.5rem;
+        padding: 3rem 2.5rem;
         margin-bottom: 2rem;
+        min-height: 65vh;
+        display: flex;
+        align-items: center;
         box-shadow: 0 16px 40px rgba(30,58,138,0.25);
         animation: fadeUp 0.8s ease;
         transition: all 0.3s ease;
@@ -679,7 +679,7 @@ st.markdown("""
         box-shadow: 0 20px 48px rgba(30,58,138,0.32);
     }
     .hero .icon {
-        font-size: 36px;
+        font-size: 40px;
         animation: float 3s ease-in-out infinite;
         display: inline-block;
     }
@@ -688,17 +688,17 @@ st.markdown("""
         50% { transform: translateY(-10px); }
     }
     .hero h1 {
-        font-size: 28px;
+        font-size: 34px;
         font-weight: 800;
         color: #ffffff;
         margin: 0.5rem 0 0.2rem;
         line-height: 1.3;
     }
     .hero h1 span {
-        color: #34d399;
+        color: #FCD34D;
     }
     .hero p {
-        font-size: 15px;
+        font-size: 16px;
         color: #dbeafe;
         margin: 0.5rem 0 1.4rem;
         max-width: 480px;
@@ -718,7 +718,7 @@ st.markdown("""
         filter: drop-shadow(0 12px 28px rgba(0,0,0,0.25));
         transition: transform 0.3s ease;
         width: 100%;
-        max-width: 280px;
+        max-width: 320px;
         object-fit: contain;
     }
     .doctor-image:hover {
@@ -732,10 +732,11 @@ st.markdown("""
         flex-wrap: wrap-reverse;
         position: relative;
         z-index: 2;
+        width: 100%;
     }
     .hero-text {
         flex: 1;
-        min-width: 240px;
+        min-width: 280px;
     }
     .hero-visual {
         position: relative;
@@ -743,21 +744,21 @@ st.markdown("""
         display: flex;
         align-items: center;
         justify-content: center;
-        min-width: 200px;
+        min-width: 260px;
     }
     .hero-visual .glow {
         position: absolute;
-        width: 220px;
-        height: 220px;
+        width: 280px;
+        height: 280px;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
+        background: radial-gradient(circle, rgba(245,158,11,0.15), transparent 70%);
     }
     .hero-heartbeat {
         position: absolute;
         top: 50%;
         left: -10%;
         width: 60%;
-        opacity: 0.55;
+        opacity: 0.4;
         transform: translateY(-50%);
         z-index: 1;
     }
@@ -765,21 +766,26 @@ st.markdown("""
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: #ffffff;
-        color: #1d4ed8 !important;
+        background: linear-gradient(135deg, #F59E0B, #D97706);
+        color: #ffffff !important;
         font-weight: 700;
-        font-size: 14px;
-        padding: 10px 24px;
+        font-size: 16px;
+        padding: 14px 34px;
         border-radius: 40px;
         text-decoration: none !important;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        box-shadow: 0 8px 24px rgba(245,158,11,0.4);
         transition: all 0.3s ease;
+        border: none;
     }
     .hero-cta:hover {
-        transform: scale(1.03);
-        box-shadow: 0 12px 28px rgba(0,0,0,0.2);
+        transform: scale(1.04);
+        box-shadow: 0 12px 32px rgba(245,158,11,0.5);
     }
     @media (max-width: 700px) {
+        .hero {
+            padding: 2rem 1.5rem;
+            min-height: auto;
+        }
         .hero-content {
             flex-direction: column;
             text-align: center;
@@ -788,19 +794,61 @@ st.markdown("""
             min-width: auto;
         }
         .hero h1 {
-            font-size: 24px;
+            font-size: 26px;
         }
         .hero p {
             max-width: 100%;
         }
         .hero-cta {
             justify-content: center;
+            width: 100%;
         }
         .doctor-image {
             max-width: 200px;
         }
     }
     
+    /* ===== SCANNING EFFECT ===== */
+    .scan-container {
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .scan-container img {
+        width: 100%;
+        display: block;
+        border-radius: 16px;
+    }
+    .scan-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: #dc2626;
+        box-shadow: 0 0 20px #dc2626, 0 0 60px #dc2626;
+        animation: scanMove 2s ease-in-out infinite;
+        z-index: 10;
+        border-radius: 2px;
+    }
+    @keyframes scanMove {
+        0% { top: 0; opacity: 1; }
+        50% { top: 100%; opacity: 0.8; }
+        100% { top: 0; opacity: 1; }
+    }
+    .scan-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.02);
+        pointer-events: none;
+        border-radius: 16px;
+        border: 2px solid rgba(220, 38, 38, 0.3);
+    }
+
     /* ===== FEATURES ===== */
     .features-grid {
         display: grid;
@@ -809,22 +857,18 @@ st.markdown("""
         margin: 1.5rem 0;
     }
     @media (max-width: 768px) {
-        .features-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
+        .features-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 480px) {
-        .features-grid {
-            grid-template-columns: 1fr;
-        }
+        .features-grid { grid-template-columns: 1fr; }
     }
     .feature-card {
-        background: rgba(255,255,255,0.6);
+        background: rgba(255,255,255,0.7);
         backdrop-filter: blur(8px);
         border-radius: 20px;
         padding: 1.5rem;
         text-align: center;
-        border: 1px solid rgba(255,255,255,0.3);
+        border: 1px solid rgba(255,255,255,0.5);
         transition: all 0.3s ease;
         box-shadow: 0 4px 16px rgba(0,0,0,0.04);
         animation: fadeUp 0.8s ease;
@@ -832,10 +876,9 @@ st.markdown("""
     .feature-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+        border-color: rgba(245,158,11,0.2);
     }
-    .feature-card .icon {
-        font-size: 32px;
-    }
+    .feature-card .icon { font-size: 32px; }
     .feature-card h4 {
         color: #0f172a;
         font-weight: 700;
@@ -850,12 +893,12 @@ st.markdown("""
     
     /* ===== HOW IT WORKS ===== */
     .how-section {
-        background: rgba(255,255,255,0.6);
+        background: rgba(255,255,255,0.7);
         backdrop-filter: blur(8px);
         border-radius: 24px;
         padding: 2rem;
         margin: 1.5rem 0;
-        border: 1px solid rgba(255,255,255,0.3);
+        border: 1px solid rgba(255,255,255,0.5);
         animation: fadeUp 0.8s ease;
     }
     .how-section h3 {
@@ -871,9 +914,7 @@ st.markdown("""
         gap: 20px;
     }
     @media (max-width: 768px) {
-        .how-steps {
-            grid-template-columns: 1fr;
-        }
+        .how-steps { grid-template-columns: 1fr; }
     }
     .how-step {
         text-align: center;
@@ -881,10 +922,10 @@ st.markdown("""
         animation: fadeUp 0.8s ease;
     }
     .how-step .step-num {
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        background: linear-gradient(135deg, #F59E0B, #D97706);
         color: white;
-        width: 40px;
-        height: 40px;
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -893,9 +934,10 @@ st.markdown("""
         font-size: 18px;
         margin: 0 auto 10px;
         transition: transform 0.3s;
+        box-shadow: 0 4px 12px rgba(245,158,11,0.3);
     }
     .how-step:hover .step-num {
-        transform: scale(1.1);
+        transform: scale(1.1) rotate(5deg);
     }
     .how-step h5 {
         color: #0f172a;
@@ -917,7 +959,7 @@ st.markdown("""
         flex-wrap: wrap;
         margin: 1.5rem 0;
         padding: 1.5rem;
-        background: rgba(255,255,255,0.5);
+        background: rgba(255,255,255,0.6);
         backdrop-filter: blur(4px);
         border-radius: 20px;
         animation: fadeUp 1s ease;
@@ -930,34 +972,32 @@ st.markdown("""
         color: #0f172a;
         font-size: 15px;
     }
-    .trust-item .icon {
-        font-size: 24px;
-    }
+    .trust-item .icon { font-size: 24px; }
     
     /* ===== RESULT CARDS ===== */
     .result-card {
         border-radius: 24px;
         padding: 1.8rem;
-        margin-top: 1.5rem;
+        margin-top: 0.5rem;
         border-left: 6px solid #e11d48;
         animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
         transition: all 0.3s ease;
-    }
-    @keyframes popIn {
-        from { opacity: 0; transform: scale(0.9); }
-        to { opacity: 1; transform: scale(1); }
+        border: 1px solid rgba(255,255,255,0.3);
+        backdrop-filter: blur(4px);
     }
     .result-card.positive {
-        background: rgba(254, 242, 242, 0.8);
+        background: rgba(254, 242, 242, 0.85);
         border-left-color: #dc2626;
+        box-shadow: 0 0 30px rgba(220, 38, 38, 0.08);
     }
     .result-card.negative {
-        background: rgba(240, 253, 244, 0.8);
+        background: rgba(240, 253, 244, 0.85);
         border-left-color: #16a34a;
+        box-shadow: 0 0 30px rgba(22, 163, 74, 0.08);
     }
     .result-card h2 {
-        font-size: 28px;
+        font-size: 30px;
         font-weight: 700;
         margin: 0 0 6px;
     }
@@ -976,18 +1016,23 @@ st.markdown("""
         from { opacity: 0; transform: translateY(30px); }
         to { opacity: 1; transform: translateY(0); }
     }
+    @keyframes popIn {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
     .section-title {
         font-size: 22px;
         font-weight: 700;
         color: #0f172a;
         margin: 2rem 0 1rem;
         padding-bottom: 8px;
-        border-bottom: 3px solid #2563eb;
+        border-bottom: 3px solid #F59E0B;
         display: inline-block;
         animation: fadeUp 0.6s ease;
     }
     .stImage img { border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
     
+    /* ===== METRICS ===== */
     [data-testid="stMetricValue"] {
         font-size: 28px !important;
         font-weight: 700 !important;
@@ -1001,50 +1046,59 @@ st.markdown("""
         border: 1px solid rgba(255,255,255,0.3);
     }
     
+    /* ===== PROGRESS BAR (GRADIENT) ===== */
+    .stProgress > div > div > div > div {
+        background: linear-gradient(90deg, #10b981, #F59E0B, #dc2626) !important;
+        height: 12px !important;
+        border-radius: 20px !important;
+        transition: width 0.8s ease !important;
+    }
+    .stProgress > div > div {
+        background: #e2e8f0 !important;
+        border-radius: 20px !important;
+        height: 12px !important;
+    }
+    
+    /* ===== BUTTONS ===== */
     #MainMenu, footer, .stDeployButton { display: none; }
     
     .stButton > button {
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        background: linear-gradient(135deg, #F59E0B, #D97706);
         color: white;
         border: none;
         border-radius: 40px;
-        padding: 12px 28px;
-        font-weight: 600;
+        padding: 14px 32px;
+        font-weight: 700;
+        font-size: 16px;
         transition: 0.3s;
         width: 100%;
-        box-shadow: 0 4px 16px rgba(37,99,235,0.25);
+        box-shadow: 0 4px 16px rgba(245,158,11,0.35);
         animation: fadeUp 0.6s ease;
     }
     .stButton > button:hover {
         transform: scale(1.02);
-        box-shadow: 0 8px 24px rgba(37,99,235,0.35);
-    }
-    
-    .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #2563eb, #60a5fa);
-        border-radius: 10px;
-        transition: width 0.5s ease;
+        box-shadow: 0 8px 24px rgba(245,158,11,0.5);
     }
     
     /* ===== UPLOAD ===== */
     .upload-card {
-        background: rgba(255,255,255,0.6);
+        background: rgba(255,255,255,0.7);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border-radius: 28px;
         padding: 2rem 1.5rem;
         text-align: center;
-        border: 2px dashed rgba(37,99,235,0.25);
+        border: 2px dashed rgba(245,158,11,0.3);
         transition: all 0.4s ease;
         margin-bottom: 2rem;
         box-shadow: 0 8px 32px rgba(0,0,0,0.04);
         animation: fadeUp 0.8s ease;
     }
     .upload-card:hover {
-        border-color: #2563eb;
-        background: rgba(255,255,255,0.8);
+        border-color: #F59E0B;
+        background: rgba(255,255,255,0.85);
         transform: translateY(-4px);
-        box-shadow: 0 16px 48px rgba(37,99,235,0.1);
+        box-shadow: 0 16px 48px rgba(245,158,11,0.08);
     }
     .upload-card .icon {
         font-size: 48px;
@@ -1064,25 +1118,25 @@ st.markdown("""
     
     /* ===== PREVIEW ===== */
     .preview-container {
-        background: rgba(255,255,255,0.6);
+        background: rgba(255,255,255,0.7);
         backdrop-filter: blur(8px);
         border-radius: 24px;
         padding: 1.5rem;
-        border: 1px solid rgba(255,255,255,0.3);
+        border: 1px solid rgba(255,255,255,0.4);
         box-shadow: 0 8px 32px rgba(0,0,0,0.04);
         margin: 1.5rem 0;
         animation: fadeUp 0.6s ease;
     }
     .preview-container img {
         border-radius: 16px;
-        max-height: 300px;
+        max-height: 350px;
         object-fit: contain;
         width: 100%;
     }
     
     /* ===== DISCLAIMER ===== */
     .disclaimer {
-        background: rgba(254, 252, 232, 0.8);
+        background: rgba(254, 252, 232, 0.85);
         backdrop-filter: blur(4px);
         border-radius: 16px;
         padding: 1rem 1.5rem;
@@ -1095,7 +1149,7 @@ st.markdown("""
     }
     
     .doctor-btn {
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        background: linear-gradient(135deg, #F59E0B, #D97706);
         color: white;
         border: none;
         border-radius: 40px;
@@ -1103,30 +1157,30 @@ st.markdown("""
         font-weight: 600;
         font-size: 15px;
         cursor: not-allowed;
-        opacity: 0.6;
+        opacity: 0.7;
         width: 100%;
         text-align: center;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(37,99,235,0.2);
+        box-shadow: 0 4px 12px rgba(245,158,11,0.2);
         margin-top: 10px;
     }
     .doctor-btn:hover {
-        opacity: 0.8;
+        opacity: 0.9;
         transform: scale(1.02);
     }
     .coming-badge {
-        background: #f59e0b;
+        background: linear-gradient(135deg, #F59E0B, #D97706);
         color: white;
         font-size: 11px;
         font-weight: 700;
-        padding: 2px 12px;
+        padding: 2px 14px;
         border-radius: 30px;
         margin-left: 8px;
         letter-spacing: 0.5px;
         animation: pulse-badge 1.5s ease-in-out infinite;
     }
     
-    /* تحسينات إضافية للهواتف */
+    /* ===== RESPONSIVE TWEAKS ===== */
     @media (max-width: 640px) {
         .header-left h1 { font-size: 18px; }
         .header-left .subtitle { font-size: 11px; }
@@ -1135,7 +1189,7 @@ st.markdown("""
         .top-badge-card .tb-icon { width: 34px; height: 34px; min-width: 34px; font-size: 15px; }
         .top-badge-card .tb-title { font-size: 12px; }
         .top-badge-card .tb-desc { font-size: 10px; }
-        .hero { padding: 1.5rem 1rem; }
+        .hero { padding: 1.5rem 1rem; min-height: auto; }
         .hero h1 { font-size: 22px; }
         .hero p { font-size: 14px; }
         .feature-card { padding: 1rem; }
@@ -1144,7 +1198,7 @@ st.markdown("""
         .sidebar-glass { padding: 1rem; }
         .result-card { padding: 1.2rem; }
         .result-card h2 { font-size: 24px; }
-        .stButton > button { padding: 10px 20px; font-size: 14px; }
+        .stButton > button { padding: 12px 20px; font-size: 14px; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -1163,6 +1217,12 @@ def get_file_base64(names):
                 return base64.b64encode(f.read()).decode()
     return None
 
+def image_to_base64(img):
+    """Convert PIL Image to base64 string"""
+    buffered = io.BytesIO()
+    img.save(buffered, format="JPEG")
+    return base64.b64encode(buffered.getvalue()).decode()
+
 logo = get_file_base64(["logo.png", "logo.jpg", "logo.jpeg", "LOGO.png"])
 logo_icon = get_file_base64(["logo_icon.png", "logo-icon.png"]) or logo
 
@@ -1175,7 +1235,6 @@ with st.sidebar:
         </div>
         """, unsafe_allow_html=True)
 
-    # Sélecteur de langue
     lang_map = {
         "ar": "🇸🇦 العربية",
         "fr": "🇫🇷 Français",
@@ -1193,7 +1252,6 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # ===== قائمة ثابتة =====
     st.markdown(f"""
     <div class="sidebar-glass">
         <h4>📋 القائمة / Menu</h4>
@@ -1201,9 +1259,8 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
-    # QR Code
     APP_URL = "https://hwaxrexkahkxaazwwjjr3d.streamlit.app/"
-    qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&color=2563eb&data={APP_URL}"
+    qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&color=F59E0B&data={APP_URL}"
     
     st.markdown(f"""
     <div class="sidebar-glass">
@@ -1215,7 +1272,6 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
-    # Conseils santé
     st.markdown(f"""
     <div class="sidebar-glass">
         <h4>{t('sidebar_health_title')}</h4>
@@ -1228,7 +1284,6 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
-    # Consultation médecin
     st.markdown(f"""
     <div class="sidebar-glass">
         <h4>{t('sidebar_doctor_title')} <span class="coming-badge">{t('sidebar_doctor_soon')}</span></h4>
@@ -1242,7 +1297,6 @@ with st.sidebar:
     st.caption(t('sidebar_version'))
 
 # ========== PAGE PRINCIPALE ==========
-# Header avec badges
 logo_html = f'<div class="header-logo-badge"><img src="data:image/png;base64,{logo_icon}"></div>' if logo_icon else '<div class="header-logo-badge" style="font-size:26px;">🧬</div>'
 
 st.markdown(f"""
@@ -1262,7 +1316,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ========== TOP QUICK BADGES ==========
+# ========== TOP BADGES ==========
 st.markdown(f"""
 <div class="top-badges">
     <div class="top-badge-card">
@@ -1285,7 +1339,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ========== HERO SECTION AVEC IMAGE DU MÉDECIN ==========
+# ========== HERO ==========
 doctor_local = get_file_base64(["doctor.png", "doctor.jpg", "doctor.jpeg"])
 if doctor_local:
     doctor_img_url = f"data:image/png;base64,{doctor_local}"
@@ -1295,7 +1349,7 @@ heartbeat_svg = (
     "data:image/svg+xml;utf8,"
     "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60'>"
     "<polyline points='0,30 60,30 80,10 100,50 120,5 140,55 160,30 220,30 240,15 260,45 280,30 400,30' "
-    "fill='none' stroke='white' stroke-width='3'/></svg>"
+    "fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='3'/></svg>"
 )
 
 st.markdown(f"""
@@ -1307,7 +1361,7 @@ st.markdown(f"""
             <h1>{t('hero_title')}</h1>
             <p>{t('hero_desc')}</p>
             <a href="#upload-zone" class="hero-cta">➜ {t('hero_cta')}</a>
-            <div style="margin-top:14px;">
+            <div style="margin-top:16px;">
                 <span class="hero-badge">✅ {t('hero_badge')}</span>
             </div>
         </div>
@@ -1319,7 +1373,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ========== ZONE UPLOAD ==========
+# ========== UPLOAD ==========
 st.markdown(f"""
 <div class="upload-card" id="upload-zone">
     <div class="icon">📸</div>
@@ -1421,26 +1475,50 @@ def load_models():
 
 # ========== TRAITEMENT ==========
 if uploaded is not None:
-    st.markdown(f"""
-    <div class="preview-container">
-        <h4 style="margin-top:0;">{t('preview_title')}</h4>
-    """, unsafe_allow_html=True)
-    col_preview, _ = st.columns([1, 1])
-    with col_preview:
-        st.image(uploaded, use_container_width=True, caption=t('preview_caption'))
-    st.markdown("</div>", unsafe_allow_html=True)
+    # Preview container
+    preview_placeholder = st.empty()
+    with preview_placeholder.container():
+        st.markdown(f"""
+        <div class="preview-container">
+            <h4 style="margin-top:0;">{t('preview_title')}</h4>
+        """, unsafe_allow_html=True)
+        col_preview, _ = st.columns([1, 1])
+        with col_preview:
+            st.image(uploaded, use_container_width=True, caption=t('preview_caption'))
+        st.markdown("</div>", unsafe_allow_html=True)
     
     if st.button(t("analyze_btn"), use_container_width=True):
+        # 1. Show Scanning Effect
+        img_pil = Image.open(uploaded).convert('RGB')
+        img_b64 = image_to_base64(img_pil)
+        
+        scan_placeholder = st.empty()
+        with scan_placeholder.container():
+            st.markdown(f"""
+            <div class="preview-container">
+                <h4 style="margin-top:0;">🔬 جاري المسح الضوئي...</h4>
+                <div class="scan-container">
+                    <img src="data:image/jpeg;base64,{img_b64}" style="width:100%; border-radius:16px;">
+                    <div class="scan-line"></div>
+                    <div class="scan-overlay"></div>
+                </div>
+                <p style="text-align:center; color:#64748b; margin-top:8px;">{t('analyzing')}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Simulate scan time + loading models
         with st.spinner(t("loading_models")):
             unet_model, unet_device, clf_model, clf_device = load_models()
-
+        
+        # Progress bar for the scan
         progress_bar = st.progress(0)
         for i in range(10):
-            time.sleep(0.05)
+            time.sleep(0.06)
             progress_bar.progress((i+1)*10)
-
+        
+        # 2. Real processing
         with st.spinner(t("analyzing")):
-            img = np.array(Image.open(uploaded).convert('RGB'))
+            img = np.array(img_pil)
             img = cv2.flip(img, 1)
 
             transform_unet = transforms.Compose([
@@ -1463,22 +1541,27 @@ if uploaded is not None:
             non_pct = (1 - raw_pred) * 100
 
             progress_bar.empty()
+            
+            # Remove scan placeholder
+            scan_placeholder.empty()
+            
             st.success(t("analysis_done"))
 
-            # --- IMAGES ---
+            # ===== RESULTS DASHBOARD =====
             st.markdown(f'<div class="section-title">{t("results_title")}</div>', unsafe_allow_html=True)
-            col1, col2, col3 = st.columns(3)
-            with col1:
+            
+            # New layout: Conjunctiva BIG, Original + Mask small
+            col_left, col_right = st.columns([2, 1])
+            with col_left:
+                st.markdown(f"**👁️ {t('result_conjunctiva')}**")
+                st.image(conj_enhanced, use_container_width=True)
+            with col_right:
                 st.markdown(f"**{t('result_original')}**")
                 st.image(img, use_container_width=True)
-            with col2:
                 st.markdown(f"**{t('result_mask')}**")
                 st.image(final_mask, use_container_width=True, clamp=True)
-            with col3:
-                st.markdown(f"**{t('result_conjunctiva')}**")
-                st.image(conj_enhanced, use_container_width=True)
 
-            # --- MÉTRIQUES ---
+            # Metrics
             before = np.sum(raw_mask > 0) / 255
             after = np.sum(final_mask > 0) / 255
             reduction = ((before - after) / before * 100) if before > 0 else 0
@@ -1489,7 +1572,7 @@ if uploaded is not None:
             with m2:
                 st.metric(t("metric_cleaning"), f"{reduction:.1f}%")
 
-            # --- DIAGNOSTIC ---
+            # DIAGNOSTIC
             st.markdown(f'<div class="section-title">{t("diagnostic_title")}</div>', unsafe_allow_html=True)
             col_res, col_conf = st.columns(2)
             with col_res:
@@ -1513,7 +1596,7 @@ if uploaded is not None:
                 st.metric(t("diagnostic_confidence"), f"{confidence:.1f}%")
                 st.progress(int(confidence))
 
-            # --- GRAPHIQUE ---
+            # CHART
             st.markdown(f'<div class="section-title">{t("chart_title")}</div>', unsafe_allow_html=True)
             fig, ax = plt.subplots(figsize=(8,5))
             cats = [t('chart_non'), t('chart_anemic')]
@@ -1530,7 +1613,7 @@ if uploaded is not None:
             ax.spines['right'].set_visible(False)
             st.pyplot(fig)
 
-            # --- HISTORIQUE ---
+            # HISTORY
             entry = {
                 t("history_date"): datetime.now().strftime("%Y-%m-%d %H:%M"),
                 t("history_diagnostic"): result,
@@ -1546,7 +1629,7 @@ if uploaded is not None:
                 df = pd.DataFrame(st.session_state.history)
                 st.dataframe(df, use_container_width=True, hide_index=True)
 
-            # --- DÉTAILS TECHNIQUES ---
+            # TECH DETAILS
             with st.expander(t("tech_details")):
                 st.write(f"**{t('tech_model_seg')}:** U‑Net (ResNet34)")
                 st.write(f"**{t('tech_model_clf')}:** EfficientNet‑B3")
@@ -1557,7 +1640,7 @@ if uploaded is not None:
                 st.write(f"**{t('tech_preprocess')}:** CLAHE + Filtrage + Netteté")
                 st.write(f"**{t('tech_decision')}:** {t('tech_decision_value')}")
 
-            # --- AVERTISSEMENT ---
+            # DISCLAIMER
             st.markdown(f"""
             <div class="disclaimer">
                 <strong>{t('disclaimer')}</strong><br>
