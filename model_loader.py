@@ -61,23 +61,18 @@ def load_classifier_model():
     _require_file(config.CLASSIFIER_WEIGHTS_PATH, "EfficientNet-B3")
 
     model = models.efficientnet_b3(weights=None)
-    model.classifier[1] = nn.Linear(model.classifier[1].in_features, 1)
+    # تصحيح: الملف المدرَّب فيه classifier.1 بمخرجين (Anemic / Non Anemic,
+    # Softmax) وليس مخرج واحد. البنية هنا يجب أن تطابق الملف تماماً.
+    model.classifier[1] = nn.Linear(model.classifier[1].in_features, 2)
 
     checkpoint = torch.load(
         config.CLASSIFIER_WEIGHTS_PATH, map_location=device, weights_only=True
     )
 
-    # Defensive: tolerate checkpoints saved with a different final-layer
-    # shape (e.g. multi-class head) by dropping just that layer's weights
-    # and letting the freshly-initialized nn.Linear above take over.
-    checkpoint.pop("classifier.1.weight", None)
-    checkpoint.pop("classifier.1.bias", None)
-
-    missing, unexpected = model.load_state_dict(checkpoint, strict=False)
-    if missing:
-        logger.warning("Classifier checkpoint missing keys: %s", missing)
-    if unexpected:
-        logger.warning("Classifier checkpoint had unexpected keys: %s", unexpected)
+    # strict=True الآن مقصود: أي اختلاف مستقبلي بين البنية والملف
+    # (حتى في طبقة واحدة) يجب أن يوقف التطبيق بخطأ واضح، لا أن يمرّ بصمت
+    # ويترك طبقة التصنيف عشوائية غير مدربة كما كان يحدث سابقاً.
+    model.load_state_dict(checkpoint, strict=True)
 
     model.to(device)
     model.eval()
