@@ -1149,6 +1149,77 @@ st.markdown("""
         animation: pulse-badge 1.5s ease-in-out infinite;
     }
     
+    /* ===================================================== */
+    /* ==== انيميشن النبض للأزرار (التعديل الجديد) ==== */
+    /* ===================================================== */
+    @keyframes medical-pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+            transform: scale(1);
+        }
+        50% {
+            box-shadow: 0 0 0 12px rgba(245, 158, 11, 0);
+            transform: scale(1.02);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+            transform: scale(1);
+        }
+    }
+    /* الزر النشط (primary) ياخذ انيميشن النبض */
+    div[data-testid="column"] button[kind="primary"] {
+        animation: medical-pulse 1.8s ease-in-out infinite !important;
+        position: relative;
+        overflow: hidden;
+    }
+    /* تنسيقات الأزرار داخل الأعمدة */
+    div[data-testid="column"] button {
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        border-radius: 40px !important;
+        font-weight: 600 !important;
+        padding: 14px 0 !important;
+        font-size: 16px !important;
+        letter-spacing: 0.5px;
+        cursor: pointer !important;
+    }
+    div[data-testid="column"] button:hover {
+        transform: translateY(-3px) scale(1.02) !important;
+        box-shadow: 0 12px 28px rgba(245, 158, 11, 0.3) !important;
+    }
+    div[data-testid="column"] button[kind="secondary"]:hover {
+        border-color: #F59E0B !important;
+        background: rgba(245, 158, 11, 0.08) !important;
+    }
+    /* أيقونة النبض (Heartbeat) فوق الأزرار */
+    .heartbeat-icon {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        font-size: 28px;
+        margin: -0.5rem 0 0.5rem 0;
+        color: #dc2626;
+        animation: heartbeat-float 1.5s ease-in-out infinite;
+    }
+    @keyframes heartbeat-float {
+        0%, 100% { transform: scale(1); }
+        14% { transform: scale(1.2); }
+        28% { transform: scale(1); }
+        42% { transform: scale(1.2); }
+        70% { transform: scale(1); }
+    }
+    .heartbeat-icon span {
+        font-size: 16px;
+        color: #0f172a;
+        font-weight: 700;
+        background: rgba(255,255,255,0.8);
+        padding: 4px 16px;
+        border-radius: 30px;
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(220, 38, 38, 0.15);
+    }
+    /* ===================================================== */
+
     @media (max-width: 640px) {
         .header-left h1 { font-size: 18px; }
         .header-left .subtitle { font-size: 11px; }
@@ -1167,6 +1238,9 @@ st.markdown("""
         .result-card { padding: 1.2rem; }
         .result-card h2 { font-size: 24px; }
         .stButton > button { padding: 12px 20px; font-size: 14px; }
+        div[data-testid="column"] button { padding: 12px 0 !important; font-size: 14px !important; }
+        .heartbeat-icon { font-size: 22px; flex-wrap: wrap; }
+        .heartbeat-icon span { font-size: 13px; padding: 2px 12px; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -1176,6 +1250,8 @@ if 'language' not in st.session_state:
     st.session_state.language = "fr"
 if 'history' not in st.session_state:
     st.session_state.history = []
+if 'upload_mode' not in st.session_state:
+    st.session_state.upload_mode = "file"  # الوضع الافتراضي
 
 # ========== HEADER ==========
 def get_file_base64(names):
@@ -1341,7 +1417,9 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ========== UPLOAD ==========
+# ================================================================
+# ========== UPLOAD (القسم المعدل بالأزرار والأنيميشن) ==========
+# ================================================================
 st.markdown(f"""
 <div class="upload-card" id="upload-zone">
     <div class="icon">📸</div>
@@ -1350,28 +1428,40 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-col1, col2 = st.columns([1, 2])
-with col1:
-    option = st.radio(
-        t("upload_method_file"),
-        [t("upload_method_file"), t("upload_method_camera")],
-        horizontal=True,
-        label_visibility="collapsed"
+# ---- علامة النبض الجديدة فوق الأزرار ----
+st.markdown("""
+<div class="heartbeat-icon">
+    💓 <span>❝ نبض التشخيص / Diagnostic Pulse ❞</span> 💓
+</div>
+""", unsafe_allow_html=True)
+
+# أزرار اختيار الوضع مع انيميشن نبض
+col_btn1, col_btn2 = st.columns(2)
+with col_btn1:
+    if st.button("📁 " + t("upload_method_file"), use_container_width=True,
+                 type="primary" if st.session_state.upload_mode == "file" else "secondary"):
+        st.session_state.upload_mode = "file"
+        st.rerun()
+with col_btn2:
+    if st.button("📷 " + t("upload_method_camera"), use_container_width=True,
+                 type="primary" if st.session_state.upload_mode == "camera" else "secondary"):
+        st.session_state.upload_mode = "camera"
+        st.rerun()
+
+# عرض أداة الرفع المناسبة
+if st.session_state.upload_mode == "file":
+    uploaded = st.file_uploader(
+        t("upload_file_label"),
+        type=["jpg","png","jpeg"],
+        label_visibility="collapsed",
+        key="file_uploader"
     )
-with col2:
-    if option == t("upload_method_file"):
-        uploaded = st.file_uploader(
-            t("upload_file_label"),
-            type=["jpg","png","jpeg"],
-            label_visibility="collapsed",
-            key="file_uploader"
-        )
-    else:
-        uploaded = st.camera_input(
-            t("upload_camera_label"),
-            label_visibility="collapsed",
-            key="camera_input"
-        )
+else:
+    uploaded = st.camera_input(
+        t("upload_camera_label"),
+        label_visibility="collapsed",
+        key="camera_input"
+    )
 
 # ========== FONCTIONS ==========
 def clean_mask(mask, min_area=500):
@@ -1420,7 +1510,7 @@ def extract_best_conjunctiva(img, mask):
     return enhanced, mask, None
 
 # ================================================================
-# ===== دالة التصنيف المعدلة (مثل الموجودة في ملفك الجديد) =====
+# ===== دالة التصنيف المعدلة =====
 # ================================================================
 def predict_anemia(model, image, device):
     """
@@ -1506,7 +1596,6 @@ if uploaded is not None:
         # 2. Real processing
         with st.spinner(t("analyzing")):
             img = np.array(img_pil)
-            # تم إزالة `cv2.flip` لتجنب التشويش (النموذج لم يُدرّب عليه)
             
             transform_unet = transforms.Compose([
                 transforms.ToPILImage(),
@@ -1522,7 +1611,6 @@ if uploaded is not None:
 
             conj_enhanced, final_mask, bbox = extract_best_conjunctiva(img, raw_mask)
 
-            # استدعاء الدالة المعدلة
             result, confidence, corrected_pred, raw_pred = predict_anemia(clf_model, conj_enhanced, clf_device)
 
             anemia_pct = corrected_pred * 100
@@ -1538,7 +1626,6 @@ if uploaded is not None:
             # ===== RESULTS DASHBOARD =====
             st.markdown(f'<div class="section-title">{t("results_title")}</div>', unsafe_allow_html=True)
             
-            # New layout: Conjunctiva BIG, Original + Mask small
             col_left, col_right = st.columns([2, 1])
             with col_left:
                 st.markdown(f"**👁️ {t('result_conjunctiva')}**")
