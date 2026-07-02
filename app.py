@@ -1419,43 +1419,40 @@ def extract_best_conjunctiva(img, mask):
     enhanced = enhance_conjunctiva(conj)
     return enhanced, mask, None
 
-# ==========================================================
-# 🩺 الدالة المعدلة التي تحل مشكلة التنبؤ الدائم بـ "أنيميا"
-# ==========================================================
+# ================================================================
+# ===== دالة التصنيف المعدلة (مثل الموجودة في ملفك الجديد) =====
+# ================================================================
 def predict_anemia(model, image, device):
-    # 1. التحقق من أن الصورة ليست فارغة أو صغيرة جداً
-    if isinstance(image, np.ndarray):
-        if image.size == 0 or image.shape[0] < 10 or image.shape[1] < 10:
-            return "Non Anemic", 0.0, 0.0
-        
-        # إزالة الخلفية السوداء الزائدة (إن وجدت) عن طريق قص الصورة حول المحتوى الفعلي
-        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-        coords = cv2.findNonZero(gray)
-        if coords is not None:
-            x, y, w, h = cv2.boundingRect(coords)
-            # نتأكد أن القص لا يخرج عن حدود الصورة
-            if w > 20 and h > 20:
-                image = image[y:y+h, x:x+w]
-    
-    # 2. تطبيق التحويلات الصحيحة (وهنا الحل السحري!)
+    """
+    هذه الدالة مطابقة للدالة الموجودة في ملف app.py الجديد.
+    تقوم بتطبيع الصورة (ImageNet) ثم عكس النتيجة لأن النموذج يعطي نتائج مقلوبة.
+    """
     transform = transforms.Compose([
-        transforms.ToPILImage(),
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
-        # هذان السطران كانا مفقودين مما يتسبب في نتائج خاطئة دائماً
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
+    
+    if isinstance(image, np.ndarray):
+        image = Image.fromarray(image)
     
     tensor = transform(image).unsqueeze(0).to(device)
     
     with torch.no_grad():
-        out = model(tensor)
-        pred = torch.sigmoid(out).item()
+        output = model(tensor)
+        raw_pred = torch.sigmoid(output).item()
     
-    if pred >= 0.5:
-        return "Anemic", pred * 100, pred
+    # عكس النتيجة (تصحيح) لأن النموذج معكوس
+    corrected_pred = 1 - raw_pred
+    
+    if corrected_pred >= 0.5:
+        result = "Anemic"
+        confidence = corrected_pred * 100
     else:
-        return "Non Anemic", (1 - pred) * 100, pred
+        result = "Non Anemic"
+        confidence = (1 - corrected_pred) * 100
+    
+    return result, confidence, corrected_pred, raw_pred
 
 @st.cache_resource
 def load_models():
@@ -1509,9 +1506,8 @@ if uploaded is not None:
         # 2. Real processing
         with st.spinner(t("analyzing")):
             img = np.array(img_pil)
-            # تم إزالة `cv2.flip(img, 1)` لأنها قد تشوه النموذج إذا لم يكن مدرباً عليها
-            # img = cv2.flip(img, 1) 
-
+            # تم إزالة `cv2.flip` لتجنب التشويش (النموذج لم يُدرّب عليه)
+            
             transform_unet = transforms.Compose([
                 transforms.ToPILImage(),
                 transforms.Resize((256,256)),
@@ -1526,10 +1522,11 @@ if uploaded is not None:
 
             conj_enhanced, final_mask, bbox = extract_best_conjunctiva(img, raw_mask)
 
-            result, confidence, raw_pred = predict_anemia(clf_model, conj_enhanced, clf_device)
+            # استدعاء الدالة المعدلة
+            result, confidence, corrected_pred, raw_pred = predict_anemia(clf_model, conj_enhanced, clf_device)
 
-            anemia_pct = raw_pred * 100
-            non_pct = (1 - raw_pred) * 100
+            anemia_pct = corrected_pred * 100
+            non_pct = (1 - corrected_pred) * 100
 
             progress_bar.empty()
             
