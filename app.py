@@ -1420,38 +1420,54 @@ def extract_best_conjunctiva(img, mask):
     return enhanced, mask, None
 
 # ================================================================
-# ===== دالة التصنيف المعدلة (مثل الموجودة في ملفك الجديد) =====
+# ===== دالة التصنيف المصححة (Softmax مع 2 مخرجات - EfficientNet-B3) =====
 # ================================================================
+# ملاحظة هامة: فحص ملف efficientnet_b3.pth أظهر أن الطبقة الأخيرة
+# classifier.1 هي Linear(1536 -> 2)، أي أن النموذج مدرّب بمخرجين (Softmax)
+# وليس مخرجاً واحداً (Sigmoid). الكود القديم كان يستعمل sigmoid().item()
+# وهذا غير متوافق مع هذا الملف إطلاقاً. تم تصحيح الدالة بالكامل هنا.
+#
+# ترتيب الأصناف (class order):
+# ImageFolder/torchvision يرتب المجلدات أبجدياً افتراضياً، لذا الافتراض هنا هو:
+#   index 0 -> "Anemic"      (A تأتي قبل N أبجدياً)
+#   index 1 -> "Non Anemic"
+# يجب التحقق من هذا الترتيب فعلياً بصورة معروفة النتيجة قبل الاعتماد الكامل.
+CLASS_NAMES = ["Anemic", "Non Anemic"]
+
 def predict_anemia(model, image, device):
     """
-    هذه الدالة مطابقة للدالة الموجودة في ملف app.py الجديد.
-    تقوم بتطبيع الصورة (ImageNet) ثم عكس النتيجة لأن النموذج يعطي نتائج مقلوبة.
+    تصنيف صورة الملتحمة المستخرجة إلى Anemic / Non Anemic
+    باستخدام Softmax على مخرجين (يطابق معمارية classifier.1 = Linear(1536, 2)).
     """
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
-    
+
     if isinstance(image, np.ndarray):
         image = Image.fromarray(image)
-    
+
     tensor = transform(image).unsqueeze(0).to(device)
-    
+
     with torch.no_grad():
-        output = model(tensor)
-        raw_pred = torch.sigmoid(output).item()
-    
-    # عكس النتيجة (تصحيح) لأن النموذج معكوس
-    corrected_pred = 1 - raw_pred
-    
-    if corrected_pred >= 0.5:
+        output = model(tensor)                            # shape: [1, 2]
+        probs = torch.softmax(output, dim=1).squeeze(0)    # [p_anemic, p_non_anemic]
+
+    prob_anemic = probs[0].item()
+    prob_non_anemic = probs[1].item()
+
+    if prob_anemic >= prob_non_anemic:
         result = "Anemic"
-        confidence = corrected_pred * 100
+        confidence = prob_anemic * 100
     else:
         result = "Non Anemic"
-        confidence = (1 - corrected_pred) * 100
-    
+        confidence = prob_non_anemic * 100
+
+    # نرجع raw_pred/corrected_pred لتوافق باقي الكود (الرسم البياني، الجدول التقني)
+    corrected_pred = prob_anemic
+    raw_pred = prob_anemic
+
     return result, confidence, corrected_pred, raw_pred
 
 @st.cache_resource
@@ -1538,16 +1554,19 @@ if uploaded is not None:
             # ===== RESULTS DASHBOARD =====
             st.markdown(f'<div class="section-title">{t("results_title")}</div>', unsafe_allow_html=True)
             
-            # New layout: Conjunctiva BIG, Original + Mask small
-            col_left, col_right = st.columns([2, 1])
-            with col_left:
-                st.markdown(f"**👁️ {t('result_conjunctiva')}**")
-                st.image(conj_enhanced, use_container_width=True)
-            with col_right:
-                st.markdown(f"**{t('result_original')}**")
-                st.image(img, use_container_width=True)
-                st.markdown(f"**{t('result_mask')}**")
-                st.image(final_mask, use_container_width=True, clamp=True)
+            # عرض الملتحمة المستخرجة فقط (بناءً على طلبك) - بلا الصورة الأصلية ولا القناع
+            st.markdown(f"**👁️ {t('result_conjunctiva')}**")
+            st.image(conj_enhanced, use_container_width=True)
+
+            # الصورة الأصلية والقناع يبقيان متاحين في التفاصيل التقنية لمن أراد التحقق
+            with st.expander(f"🔍 {t('result_original')} / {t('result_mask')}"):
+                col_o, col_m = st.columns(2)
+                with col_o:
+                    st.markdown(f"**{t('result_original')}**")
+                    st.image(img, use_container_width=True)
+                with col_m:
+                    st.markdown(f"**{t('result_mask')}**")
+                    st.image(final_mask, use_container_width=True, clamp=True)
 
             # Metrics
             before = np.sum(raw_mask > 0) / 255
@@ -1622,7 +1641,7 @@ if uploaded is not None:
                 st.write(f"**{t('tech_model_seg')}:** U‑Net (ResNet34)")
                 st.write(f"**{t('tech_model_clf')}:** EfficientNet‑B3")
                 st.write(f"**{t('tech_device')}:** {'GPU' if clf_device.type == 'cuda' else 'CPU'}")
-                st.write(f"**{t('tech_sigmoid')}:** {raw_pred:.4f}")
+                st.write(f"**{t('tech_sigmoid')} (Softmax):** {raw_pred:.4f}")
                 st.write(f"**{t('tech_prob_anemic')}:** {anemia_pct:.1f}%")
                 st.write(f"**{t('tech_prob_non')}:** {non_pct:.1f}%")
                 st.write(f"**{t('tech_preprocess')}:** CLAHE + Filtrage + Netteté")
