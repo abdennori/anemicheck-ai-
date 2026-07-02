@@ -103,6 +103,8 @@ LANGUAGES = {
         "history_diagnostic": "التشخيص",
         "history_confidence": "الثقة",
         "history_prob": "احتمال فقر الدم",
+        "history_empty": "📭 لا توجد تحليلات سابقة بعد",
+        "history_empty_desc": "قم بإجراء أول تحليل لك الآن!",
         "tech_details": "📘 التفاصيل التقنية",
         "tech_model_seg": "نموذج التجزئة",
         "tech_model_clf": "نموذج التصنيف",
@@ -132,6 +134,7 @@ LANGUAGES = {
         "sidebar_doctor_soon": "🔜 متاح في التحديث القادم",
         "sidebar_version": "AnemiCheck v2.0 • الذكاء الاصطناعي الطبي",
         "nav_home": "🏠 الرئيسية",
+        "nav_history": "📋 سجل التحليلات",
     },
     "fr": {
         "app_title": "AnemiCheck AI",
@@ -211,6 +214,8 @@ LANGUAGES = {
         "history_diagnostic": "Diagnostic",
         "history_confidence": "Confiance",
         "history_prob": "Probabilité Anémie",
+        "history_empty": "📭 Aucun historique",
+        "history_empty_desc": "Effectuez votre première analyse maintenant !",
         "tech_details": "📘 Détails techniques",
         "tech_model_seg": "Modèle de segmentation",
         "tech_model_clf": "Modèle de classification",
@@ -240,6 +245,7 @@ LANGUAGES = {
         "sidebar_doctor_soon": "🔜 Bientôt disponible",
         "sidebar_version": "AnemiCheck v2.0 • IA médicale",
         "nav_home": "🏠 Accueil",
+        "nav_history": "📋 Historique",
     },
     "en": {
         "app_title": "AnemiCheck AI",
@@ -319,6 +325,8 @@ LANGUAGES = {
         "history_diagnostic": "Diagnosis",
         "history_confidence": "Confidence",
         "history_prob": "Anemia Probability",
+        "history_empty": "📭 No history yet",
+        "history_empty_desc": "Perform your first analysis now!",
         "tech_details": "📘 Technical Details",
         "tech_model_seg": "Segmentation Model",
         "tech_model_clf": "Classification Model",
@@ -348,6 +356,7 @@ LANGUAGES = {
         "sidebar_doctor_soon": "🔜 Coming soon",
         "sidebar_version": "AnemiCheck v2.0 • Medical AI",
         "nav_home": "🏠 Home",
+        "nav_history": "📋 History",
     }
 }
 
@@ -1150,7 +1159,7 @@ st.markdown("""
     }
     
     /* ===================================================== */
-    /* ==== انيميشن النبض للأزرار (التعديل الجديد) ==== */
+    /* ==== انيميشن النبض للأزرار ==== */
     /* ===================================================== */
     @keyframes medical-pulse {
         0% {
@@ -1166,13 +1175,11 @@ st.markdown("""
             transform: scale(1);
         }
     }
-    /* الزر النشط (primary) ياخذ انيميشن النبض */
     div[data-testid="column"] button[kind="primary"] {
         animation: medical-pulse 1.8s ease-in-out infinite !important;
         position: relative;
         overflow: hidden;
     }
-    /* تنسيقات الأزرار داخل الأعمدة */
     div[data-testid="column"] button {
         transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
         border-radius: 40px !important;
@@ -1190,7 +1197,6 @@ st.markdown("""
         border-color: #F59E0B !important;
         background: rgba(245, 158, 11, 0.08) !important;
     }
-    /* أيقونة النبض (Heartbeat) فوق الأزرار */
     .heartbeat-icon {
         display: flex;
         justify-content: center;
@@ -1218,7 +1224,46 @@ st.markdown("""
         backdrop-filter: blur(4px);
         border: 1px solid rgba(220, 38, 38, 0.15);
     }
-    /* ===================================================== */
+
+    /* ===== تنسيق راديو التنقل في القائمة الجانبية ===== */
+    div[data-testid="stRadio"] > div {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    div[data-testid="stRadio"] label {
+        background: rgba(255,255,255,0.5);
+        padding: 10px 14px !important;
+        border-radius: 12px !important;
+        border: 1px solid transparent;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        color: #334155;
+        cursor: pointer;
+    }
+    div[data-testid="stRadio"] label:hover {
+        background: rgba(245,158,11,0.04);
+        border-color: rgba(245,158,11,0.2);
+    }
+    div[data-testid="stRadio"] label[data-baseweb="radio"] > div:first-child {
+        display: none !important;
+    }
+    div[data-testid="stRadio"] label[data-baseweb="radio"] > div:last-child {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+    /* العنصر النشط */
+    div[data-testid="stRadio"] label[data-testid="stRadioLabel"]:has(input:checked) {
+        background: rgba(245,158,11,0.12) !important;
+        color: #D97706 !important;
+        font-weight: 600 !important;
+        border: 1px solid rgba(245,158,11,0.2) !important;
+        box-shadow: 0 2px 8px rgba(245,158,11,0.08);
+    }
+    /* إخفاء الدائرة الصغيرة للراديو */
+    div[data-testid="stRadio"] label input {
+        display: none !important;
+    }
 
     @media (max-width: 640px) {
         .header-left h1 { font-size: 18px; }
@@ -1241,6 +1286,7 @@ st.markdown("""
         div[data-testid="column"] button { padding: 12px 0 !important; font-size: 14px !important; }
         .heartbeat-icon { font-size: 22px; flex-wrap: wrap; }
         .heartbeat-icon span { font-size: 13px; padding: 2px 12px; }
+        div[data-testid="stRadio"] label { padding: 8px 12px !important; font-size: 14px; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -1251,7 +1297,10 @@ if 'language' not in st.session_state:
 if 'history' not in st.session_state:
     st.session_state.history = []
 if 'upload_mode' not in st.session_state:
-    st.session_state.upload_mode = "file"  # الوضع الافتراضي
+    st.session_state.upload_mode = "file"
+# ===== NEW: متغير الصفحة (افتراضي: الرئيسية) =====
+if 'page' not in st.session_state:
+    st.session_state.page = "home"
 
 # ========== HEADER ==========
 def get_file_base64(names):
@@ -1270,7 +1319,7 @@ def image_to_base64(img):
 logo = get_file_base64(["logo.png", "logo.jpg", "logo.jpeg", "LOGO.png"])
 logo_icon = get_file_base64(["logo_icon.png", "logo-icon.png"]) or logo
 
-# ========== SIDEBAR ==========
+# ========== SIDEBAR (القائمة الجانبية) ==========
 with st.sidebar:
     if logo:
         st.markdown(f"""
@@ -1296,13 +1345,29 @@ with st.sidebar:
     
     st.markdown("---")
     
+    # ===== NEW: قائمة التنقل بين الصفحات (باستخدام radio) =====
     st.markdown(f"""
     <div class="sidebar-glass">
         <h4>📋 القائمة / Menu</h4>
-        <div class="nav-item active">🏠 {t('nav_home')}</div>
     </div>
     """, unsafe_allow_html=True)
     
+    # استخدام radio بدلاً من العنصر الثابت
+    nav_choice = st.radio(
+        "##",  # تسمية مخفية
+        options=[t("nav_home"), t("nav_history")],
+        index=0 if st.session_state.page == "home" else 1,
+        label_visibility="collapsed",
+        key="nav_radio"
+    )
+    
+    # تحديث حالة الصفحة بناءً على اختيار المستخدم
+    if nav_choice == t("nav_home"):
+        st.session_state.page = "home"
+    else:
+        st.session_state.page = "history"
+    
+    # ===== باقي عناصر القائمة الجانبية (QR, نصائح, دكتور) =====
     APP_URL = "https://hwaxrexkahkxaazwwjjr3d.streamlit.app/"
     qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&color=F59E0B&data={APP_URL}"
     
@@ -1418,7 +1483,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ================================================================
-# ========== UPLOAD (القسم المعدل بالأزرار والأنيميشن) ==========
+# ========== UPLOAD (أزرار مع نبض) ==========
 # ================================================================
 st.markdown(f"""
 <div class="upload-card" id="upload-zone">
@@ -1428,14 +1493,14 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ---- علامة النبض الجديدة فوق الأزرار ----
+# ---- علامة النبض فوق الأزرار ----
 st.markdown("""
 <div class="heartbeat-icon">
     💓 <span>❝ نبض التشخيص / Diagnostic Pulse ❞</span> 💓
 </div>
 """, unsafe_allow_html=True)
 
-# أزرار اختيار الوضع مع انيميشن نبض
+# أزرار اختيار الوضع
 col_btn1, col_btn2 = st.columns(2)
 with col_btn1:
     if st.button("📁 " + t("upload_method_file"), use_container_width=True,
@@ -1463,7 +1528,7 @@ else:
         key="camera_input"
     )
 
-# ========== FONCTIONS ==========
+# ========== FONCTIONS (نماذج ومعالجة) ==========
 def clean_mask(mask, min_area=500):
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cleaned = np.zeros_like(mask)
@@ -1509,14 +1574,7 @@ def extract_best_conjunctiva(img, mask):
     enhanced = enhance_conjunctiva(conj)
     return enhanced, mask, None
 
-# ================================================================
-# ===== دالة التصنيف المعدلة =====
-# ================================================================
 def predict_anemia(model, image, device):
-    """
-    هذه الدالة مطابقة للدالة الموجودة في ملف app.py الجديد.
-    تقوم بتطبيع الصورة (ImageNet) ثم عكس النتيجة لأن النموذج يعطي نتائج مقلوبة.
-    """
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -1532,7 +1590,6 @@ def predict_anemia(model, image, device):
         output = model(tensor)
         raw_pred = torch.sigmoid(output).item()
     
-    # عكس النتيجة (تصحيح) لأن النموذج معكوس
     corrected_pred = 1 - raw_pred
     
     if corrected_pred >= 0.5:
@@ -1550,258 +1607,294 @@ def load_models():
     clf, dev_clf = load_classifier_model()
     return unet, dev_unet, clf, dev_clf
 
-# ========== TRAITEMENT ==========
-if uploaded is not None:
-    # Preview container
-    preview_placeholder = st.empty()
-    with preview_placeholder.container():
-        st.markdown(f"""
-        <div class="preview-container">
-            <h4 style="margin-top:0;">{t('preview_title')}</h4>
-        """, unsafe_allow_html=True)
-        col_preview, _ = st.columns([1, 1])
-        with col_preview:
-            st.image(uploaded, use_container_width=True, caption=t('preview_caption'))
-        st.markdown("</div>", unsafe_allow_html=True)
+# ================================================================
+# ========== عرض المحتوى حسب الصفحة المختارة ==========
+# ================================================================
+
+if st.session_state.page == "home":
+    # ================================================================
+    # ========== الصفحة الرئيسية (الرفع والتحليل) ==========
+    # ================================================================
     
-    if st.button(t("analyze_btn"), use_container_width=True):
-        # 1. Show Scanning Effect
-        img_pil = Image.open(uploaded).convert('RGB')
-        img_b64 = image_to_base64(img_pil)
-        
-        scan_placeholder = st.empty()
-        with scan_placeholder.container():
+    if uploaded is not None:
+        # Preview container
+        preview_placeholder = st.empty()
+        with preview_placeholder.container():
             st.markdown(f"""
             <div class="preview-container">
-                <h4 style="margin-top:0;">🔬 جاري المسح الضوئي...</h4>
-                <div class="scan-container">
-                    <img src="data:image/jpeg;base64,{img_b64}" style="width:100%; border-radius:16px;">
-                    <div class="scan-line"></div>
-                    <div class="scan-overlay"></div>
+                <h4 style="margin-top:0;">{t('preview_title')}</h4>
+            """, unsafe_allow_html=True)
+            col_preview, _ = st.columns([1, 1])
+            with col_preview:
+                st.image(uploaded, use_container_width=True, caption=t('preview_caption'))
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        if st.button(t("analyze_btn"), use_container_width=True):
+            # 1. Show Scanning Effect
+            img_pil = Image.open(uploaded).convert('RGB')
+            img_b64 = image_to_base64(img_pil)
+            
+            scan_placeholder = st.empty()
+            with scan_placeholder.container():
+                st.markdown(f"""
+                <div class="preview-container">
+                    <h4 style="margin-top:0;">🔬 جاري المسح الضوئي...</h4>
+                    <div class="scan-container">
+                        <img src="data:image/jpeg;base64,{img_b64}" style="width:100%; border-radius:16px;">
+                        <div class="scan-line"></div>
+                        <div class="scan-overlay"></div>
+                    </div>
+                    <p style="text-align:center; color:#64748b; margin-top:8px;">{t('analyzing')}</p>
                 </div>
-                <p style="text-align:center; color:#64748b; margin-top:8px;">{t('analyzing')}</p>
+                """, unsafe_allow_html=True)
+            
+            # Simulate scan time + loading models
+            with st.spinner(t("loading_models")):
+                unet_model, unet_device, clf_model, clf_device = load_models()
+            
+            # Progress bar for the scan
+            progress_bar = st.progress(0)
+            for i in range(10):
+                time.sleep(0.06)
+                progress_bar.progress((i+1)*10)
+            
+            # 2. Real processing
+            with st.spinner(t("analyzing")):
+                img = np.array(img_pil)
+                
+                transform_unet = transforms.Compose([
+                    transforms.ToPILImage(),
+                    transforms.Resize((256,256)),
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225])
+                ])
+                tensor = transform_unet(img).unsqueeze(0).to(unet_device)
+                with torch.no_grad():
+                    raw_mask = torch.sigmoid(unet_model(tensor)).squeeze().cpu().numpy()
+                    raw_mask = (raw_mask > 0.5).astype(np.uint8) * 255
+                    raw_mask = cv2.resize(raw_mask, (img.shape[1], img.shape[0]))
+
+                conj_enhanced, final_mask, bbox = extract_best_conjunctiva(img, raw_mask)
+
+                result, confidence, corrected_pred, raw_pred = predict_anemia(clf_model, conj_enhanced, clf_device)
+
+                anemia_pct = corrected_pred * 100
+                non_pct = (1 - corrected_pred) * 100
+
+                progress_bar.empty()
+                
+                # Remove scan placeholder
+                scan_placeholder.empty()
+                
+                st.success(t("analysis_done"))
+
+                # ===== RESULTS DASHBOARD =====
+                st.markdown(f'<div class="section-title">{t("results_title")}</div>', unsafe_allow_html=True)
+                
+                col_left, col_right = st.columns([2, 1])
+                with col_left:
+                    st.markdown(f"**👁️ {t('result_conjunctiva')}**")
+                    st.image(conj_enhanced, use_container_width=True)
+                with col_right:
+                    st.markdown(f"**{t('result_original')}**")
+                    st.image(img, use_container_width=True)
+                    st.markdown(f"**{t('result_mask')}**")
+                    st.image(final_mask, use_container_width=True, clamp=True)
+
+                # Metrics
+                before = np.sum(raw_mask > 0) / 255
+                after = np.sum(final_mask > 0) / 255
+                reduction = ((before - after) / before * 100) if before > 0 else 0
+
+                m1, m2 = st.columns(2)
+                with m1:
+                    st.metric(t("metric_surface"), f"{after:.0f} px²")
+                with m2:
+                    st.metric(t("metric_cleaning"), f"{reduction:.1f}%")
+
+                # DIAGNOSTIC
+                st.markdown(f'<div class="section-title">{t("diagnostic_title")}</div>', unsafe_allow_html=True)
+                col_res, col_conf = st.columns(2)
+                with col_res:
+                    if result == "Anemic":
+                        st.markdown(f"""
+                        <div class="result-card positive">
+                            <h2>{t('diagnostic_anemic')}</h2>
+                            <div class="confidence">{t('diagnostic_confidence')} : <strong>{confidence:.1f}%</strong></div>
+                            <div class="sub">{t('diagnostic_anemic_desc')}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"""
+                        <div class="result-card negative">
+                            <h2>{t('diagnostic_non_anemic')}</h2>
+                            <div class="confidence">{t('diagnostic_confidence')} : <strong>{confidence:.1f}%</strong></div>
+                            <div class="sub">{t('diagnostic_non_anemic_desc')}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                with col_conf:
+                    st.metric(t("diagnostic_confidence"), f"{confidence:.1f}%")
+                    st.progress(int(confidence))
+
+                # CHART
+                st.markdown(f'<div class="section-title">{t("chart_title")}</div>', unsafe_allow_html=True)
+                fig, ax = plt.subplots(figsize=(8,5))
+                cats = [t('chart_non'), t('chart_anemic')]
+                vals = [non_pct, anemia_pct]
+                colors = ['#10b981', '#dc2626']
+                bars = ax.bar(cats, vals, color=colors, width=0.5, edgecolor='white', linewidth=2)
+                ax.set_ylim(0,100)
+                ax.set_ylabel('Pourcentage (%)')
+                ax.set_title(t('chart_title'), fontweight='bold')
+                ax.grid(True, alpha=0.3, axis='y')
+                for bar, v in zip(bars, vals):
+                    ax.text(bar.get_x()+bar.get_width()/2, v+2, f'{v:.1f}%', ha='center', fontweight='bold', fontsize=14)
+                ax.spines['top'].set_visible(False)
+                ax.spines['right'].set_visible(False)
+                st.pyplot(fig)
+
+                # ===== إضافة التحليل إلى السجل (حتى لو كنا في الصفحة الرئيسية) =====
+                entry = {
+                    t("history_date"): datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    t("history_diagnostic"): result,
+                    t("history_confidence"): f"{confidence:.1f}%",
+                    t("history_prob"): f"{anemia_pct:.1f}%"
+                }
+                st.session_state.history.append(entry)
+                if len(st.session_state.history) > 10:
+                    st.session_state.history.pop(0)
+
+                # TECH DETAILS
+                with st.expander(t("tech_details")):
+                    st.write(f"**{t('tech_model_seg')}:** U‑Net (ResNet34)")
+                    st.write(f"**{t('tech_model_clf')}:** EfficientNet‑B3")
+                    st.write(f"**{t('tech_device')}:** {'GPU' if clf_device.type == 'cuda' else 'CPU'}")
+                    st.write(f"**{t('tech_sigmoid')}:** {raw_pred:.4f}")
+                    st.write(f"**{t('tech_prob_anemic')}:** {anemia_pct:.1f}%")
+                    st.write(f"**{t('tech_prob_non')}:** {non_pct:.1f}%")
+                    st.write(f"**{t('tech_preprocess')}:** CLAHE + Filtrage + Netteté")
+                    st.write(f"**{t('tech_decision')}:** {t('tech_decision_value')}")
+
+                # DISCLAIMER
+                st.markdown(f"""
+                <div class="disclaimer">
+                    <strong>{t('disclaimer')}</strong><br>
+                    {t('disclaimer_text')}<br>
+                    {t('disclaimer_consult')}
+                </div>
+                """, unsafe_allow_html=True)
+
+    # ========== FEATURES GRID (تظهر فقط في الصفحة الرئيسية) ==========
+    st.markdown("""
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="icon">⚡</div>
+            <h4>""" + t('feature_1_title') + """</h4>
+            <p>""" + t('feature_1_desc') + """</p>
+        </div>
+        <div class="feature-card">
+            <div class="icon">📤</div>
+            <h4>""" + t('feature_2_title') + """</h4>
+            <p>""" + t('feature_2_desc') + """</p>
+        </div>
+        <div class="feature-card">
+            <div class="icon">✅</div>
+            <h4>""" + t('feature_3_title') + """</h4>
+            <p>""" + t('feature_3_desc') + """</p>
+        </div>
+        <div class="feature-card">
+            <div class="icon">🔒</div>
+            <h4>""" + t('feature_4_title') + """</h4>
+            <p>""" + t('feature_4_desc') + """</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ========== HOW IT WORKS ==========
+    st.markdown(f"""
+    <div class="how-section">
+        <h3>{t('how_title')}</h3>
+        <div class="how-steps">
+            <div class="how-step">
+                <div class="step-num">1</div>
+                <h5>{t('how_step1')}</h5>
+                <p>{t('how_step1_desc')}</p>
             </div>
-            """, unsafe_allow_html=True)
-        
-        # Simulate scan time + loading models
-        with st.spinner(t("loading_models")):
-            unet_model, unet_device, clf_model, clf_device = load_models()
-        
-        # Progress bar for the scan
-        progress_bar = st.progress(0)
-        for i in range(10):
-            time.sleep(0.06)
-            progress_bar.progress((i+1)*10)
-        
-        # 2. Real processing
-        with st.spinner(t("analyzing")):
-            img = np.array(img_pil)
-            
-            transform_unet = transforms.Compose([
-                transforms.ToPILImage(),
-                transforms.Resize((256,256)),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225])
-            ])
-            tensor = transform_unet(img).unsqueeze(0).to(unet_device)
-            with torch.no_grad():
-                raw_mask = torch.sigmoid(unet_model(tensor)).squeeze().cpu().numpy()
-                raw_mask = (raw_mask > 0.5).astype(np.uint8) * 255
-                raw_mask = cv2.resize(raw_mask, (img.shape[1], img.shape[0]))
-
-            conj_enhanced, final_mask, bbox = extract_best_conjunctiva(img, raw_mask)
-
-            result, confidence, corrected_pred, raw_pred = predict_anemia(clf_model, conj_enhanced, clf_device)
-
-            anemia_pct = corrected_pred * 100
-            non_pct = (1 - corrected_pred) * 100
-
-            progress_bar.empty()
-            
-            # Remove scan placeholder
-            scan_placeholder.empty()
-            
-            st.success(t("analysis_done"))
-
-            # ===== RESULTS DASHBOARD =====
-            st.markdown(f'<div class="section-title">{t("results_title")}</div>', unsafe_allow_html=True)
-            
-            col_left, col_right = st.columns([2, 1])
-            with col_left:
-                st.markdown(f"**👁️ {t('result_conjunctiva')}**")
-                st.image(conj_enhanced, use_container_width=True)
-            with col_right:
-                st.markdown(f"**{t('result_original')}**")
-                st.image(img, use_container_width=True)
-                st.markdown(f"**{t('result_mask')}**")
-                st.image(final_mask, use_container_width=True, clamp=True)
-
-            # Metrics
-            before = np.sum(raw_mask > 0) / 255
-            after = np.sum(final_mask > 0) / 255
-            reduction = ((before - after) / before * 100) if before > 0 else 0
-
-            m1, m2 = st.columns(2)
-            with m1:
-                st.metric(t("metric_surface"), f"{after:.0f} px²")
-            with m2:
-                st.metric(t("metric_cleaning"), f"{reduction:.1f}%")
-
-            # DIAGNOSTIC
-            st.markdown(f'<div class="section-title">{t("diagnostic_title")}</div>', unsafe_allow_html=True)
-            col_res, col_conf = st.columns(2)
-            with col_res:
-                if result == "Anemic":
-                    st.markdown(f"""
-                    <div class="result-card positive">
-                        <h2>{t('diagnostic_anemic')}</h2>
-                        <div class="confidence">{t('diagnostic_confidence')} : <strong>{confidence:.1f}%</strong></div>
-                        <div class="sub">{t('diagnostic_anemic_desc')}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                else:
-                    st.markdown(f"""
-                    <div class="result-card negative">
-                        <h2>{t('diagnostic_non_anemic')}</h2>
-                        <div class="confidence">{t('diagnostic_confidence')} : <strong>{confidence:.1f}%</strong></div>
-                        <div class="sub">{t('diagnostic_non_anemic_desc')}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-            with col_conf:
-                st.metric(t("diagnostic_confidence"), f"{confidence:.1f}%")
-                st.progress(int(confidence))
-
-            # CHART
-            st.markdown(f'<div class="section-title">{t("chart_title")}</div>', unsafe_allow_html=True)
-            fig, ax = plt.subplots(figsize=(8,5))
-            cats = [t('chart_non'), t('chart_anemic')]
-            vals = [non_pct, anemia_pct]
-            colors = ['#10b981', '#dc2626']
-            bars = ax.bar(cats, vals, color=colors, width=0.5, edgecolor='white', linewidth=2)
-            ax.set_ylim(0,100)
-            ax.set_ylabel('Pourcentage (%)')
-            ax.set_title(t('chart_title'), fontweight='bold')
-            ax.grid(True, alpha=0.3, axis='y')
-            for bar, v in zip(bars, vals):
-                ax.text(bar.get_x()+bar.get_width()/2, v+2, f'{v:.1f}%', ha='center', fontweight='bold', fontsize=14)
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
-            st.pyplot(fig)
-
-            # HISTORY
-            entry = {
-                t("history_date"): datetime.now().strftime("%Y-%m-%d %H:%M"),
-                t("history_diagnostic"): result,
-                t("history_confidence"): f"{confidence:.1f}%",
-                t("history_prob"): f"{anemia_pct:.1f}%"
-            }
-            st.session_state.history.append(entry)
-            if len(st.session_state.history) > 10:
-                st.session_state.history.pop(0)
-
-            if st.session_state.history:
-                st.markdown(f'<div class="section-title">{t("history_title")}</div>', unsafe_allow_html=True)
-                df = pd.DataFrame(st.session_state.history)
-                st.dataframe(df, use_container_width=True, hide_index=True)
-
-            # TECH DETAILS
-            with st.expander(t("tech_details")):
-                st.write(f"**{t('tech_model_seg')}:** U‑Net (ResNet34)")
-                st.write(f"**{t('tech_model_clf')}:** EfficientNet‑B3")
-                st.write(f"**{t('tech_device')}:** {'GPU' if clf_device.type == 'cuda' else 'CPU'}")
-                st.write(f"**{t('tech_sigmoid')}:** {raw_pred:.4f}")
-                st.write(f"**{t('tech_prob_anemic')}:** {anemia_pct:.1f}%")
-                st.write(f"**{t('tech_prob_non')}:** {non_pct:.1f}%")
-                st.write(f"**{t('tech_preprocess')}:** CLAHE + Filtrage + Netteté")
-                st.write(f"**{t('tech_decision')}:** {t('tech_decision_value')}")
-
-            # DISCLAIMER
-            st.markdown(f"""
-            <div class="disclaimer">
-                <strong>{t('disclaimer')}</strong><br>
-                {t('disclaimer_text')}<br>
-                {t('disclaimer_consult')}
+            <div class="how-step">
+                <div class="step-num">2</div>
+                <h5>{t('how_step2')}</h5>
+                <p>{t('how_step2_desc')}</p>
             </div>
-            """, unsafe_allow_html=True)
-
-# ========== FEATURES GRID ==========
-st.markdown("""
-<div class="features-grid">
-    <div class="feature-card">
-        <div class="icon">⚡</div>
-        <h4>""" + t('feature_1_title') + """</h4>
-        <p>""" + t('feature_1_desc') + """</p>
-    </div>
-    <div class="feature-card">
-        <div class="icon">📤</div>
-        <h4>""" + t('feature_2_title') + """</h4>
-        <p>""" + t('feature_2_desc') + """</p>
-    </div>
-    <div class="feature-card">
-        <div class="icon">✅</div>
-        <h4>""" + t('feature_3_title') + """</h4>
-        <p>""" + t('feature_3_desc') + """</p>
-    </div>
-    <div class="feature-card">
-        <div class="icon">🔒</div>
-        <h4>""" + t('feature_4_title') + """</h4>
-        <p>""" + t('feature_4_desc') + """</p>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-# ========== HOW IT WORKS ==========
-st.markdown(f"""
-<div class="how-section">
-    <h3>{t('how_title')}</h3>
-    <div class="how-steps">
-        <div class="how-step">
-            <div class="step-num">1</div>
-            <h5>{t('how_step1')}</h5>
-            <p>{t('how_step1_desc')}</p>
-        </div>
-        <div class="how-step">
-            <div class="step-num">2</div>
-            <h5>{t('how_step2')}</h5>
-            <p>{t('how_step2_desc')}</p>
-        </div>
-        <div class="how-step">
-            <div class="step-num">3</div>
-            <h5>{t('how_step3')}</h5>
-            <p>{t('how_step3_desc')}</p>
+            <div class="how-step">
+                <div class="step-num">3</div>
+                <h5>{t('how_step3')}</h5>
+                <p>{t('how_step3_desc')}</p>
+            </div>
         </div>
     </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-# ========== TRUST BADGES ==========
-st.markdown(f"""
-<div class="trust-section">
-    <div class="trust-item"><span class="icon">🔒</span> {t('trust_1')}</div>
-    <div class="trust-item"><span class="icon">❤️</span> {t('trust_2')}</div>
-    <div class="trust-item"><span class="icon">⭐</span> {t('trust_3')}</div>
-    <div class="trust-item"><span class="icon">📱</span> {t('version')}</div>
-    <div class="trust-item"><span class="icon">🎯</span> {t('accuracy')}</div>
-</div>
-""", unsafe_allow_html=True)
+    # ========== TRUST BADGES ==========
+    st.markdown(f"""
+    <div class="trust-section">
+        <div class="trust-item"><span class="icon">🔒</span> {t('trust_1')}</div>
+        <div class="trust-item"><span class="icon">❤️</span> {t('trust_2')}</div>
+        <div class="trust-item"><span class="icon">⭐</span> {t('trust_3')}</div>
+        <div class="trust-item"><span class="icon">📱</span> {t('version')}</div>
+        <div class="trust-item"><span class="icon">🎯</span> {t('accuracy')}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# ========== BOTTOM INFO ==========
-st.markdown(f"""
-<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:1.5rem 0;">
-    <div class="feature-card">
-        <div class="icon">⚡</div>
-        <h4>{t('fast')}</h4>
-        <p>{t('fast_desc')}</p>
+    # ========== BOTTOM INFO ==========
+    st.markdown(f"""
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:1.5rem 0;">
+        <div class="feature-card">
+            <div class="icon">⚡</div>
+            <h4>{t('fast')}</h4>
+            <p>{t('fast_desc')}</p>
+        </div>
+        <div class="feature-card">
+            <div class="icon">🧠</div>
+            <h4>{t('smart')}</h4>
+            <p>{t('smart_desc')}</p>
+        </div>
+        <div class="feature-card">
+            <div class="icon">🔒</div>
+            <h4>{t('secure')}</h4>
+            <p>{t('secure_desc')}</p>
+        </div>
     </div>
-    <div class="feature-card">
-        <div class="icon">🧠</div>
-        <h4>{t('smart')}</h4>
-        <p>{t('smart_desc')}</p>
-    </div>
-    <div class="feature-card">
-        <div class="icon">🔒</div>
-        <h4>{t('secure')}</h4>
-        <p>{t('secure_desc')}</p>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
+# ================================================================
+# ========== صفحة سجل التحليلات ==========
+# ================================================================
+elif st.session_state.page == "history":
+    st.markdown(f'<div class="section-title">{t("history_title")}</div>', unsafe_allow_html=True)
+    
+    if st.session_state.history:
+        # عرض الجدول في بطاقة أنيقة
+        st.markdown("""
+        <div style="background: rgba(255,255,255,0.7); backdrop-filter: blur(8px); border-radius: 24px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 8px 32px rgba(0,0,0,0.04);">
+        """, unsafe_allow_html=True)
+        
+        df = pd.DataFrame(st.session_state.history)
+        st.dataframe(df, use_container_width=True, hide_index=True)
+        
+        # إضافة زر لمسح التاريخ (اختياري)
+        if st.button("🗑️ مسح السجل / Clear History", use_container_width=True):
+            st.session_state.history = []
+            st.rerun()
+            
+        st.markdown("</div>", unsafe_allow_html=True)
+    else:
+        # رسالة ترحيب فارغة
+        st.markdown(f"""
+        <div style="text-align:center; padding: 4rem 1rem; background: rgba(255,255,255,0.6); border-radius: 32px; backdrop-filter: blur(4px); border: 2px dashed rgba(245,158,11,0.2);">
+            <div style="font-size: 64px; margin-bottom: 1rem;">📭</div>
+            <h3 style="color: #0f172a; font-weight: 700;">{t('history_empty')}</h3>
+            <p style="color: #64748b; font-size: 16px;">{t('history_empty_desc')}</p>
+            <br>
+            <a href="#upload-zone" class="hero-cta" style="display: inline-flex;">➜ {t('hero_cta')}</a>
+        </div>
+        """, unsafe_allow_html=True)
