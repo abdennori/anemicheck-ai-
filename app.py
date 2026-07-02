@@ -21,11 +21,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ========== ضبط اللغة الافتراضية للعربية (لتناسب الصورة) ==========
+# ========== ضبط اللغة الافتراضية للعربية ==========
 if 'language' not in st.session_state:
-    st.session_state.language = "ar"  # العربية افتراضياً
+    st.session_state.language = "ar"
 
-# ========== الترجمة (تم تصغيرها قليلاً مع إضافة الكلمات الجديدة) ==========
+# ========== الترجمة ==========
 LANGUAGES = {
     "ar": {
         "app_title": "AnemiCheck AI",
@@ -528,7 +528,7 @@ with col2:
         uploaded = st.camera_input("", label_visibility="collapsed", key="camera_input")
 
 # =============================================================
-# ===== دوال المعالجة (ممنوع اللمس - محفوظة كما هي) =====
+# ===== دوال المعالجة =====
 # =============================================================
 def extract_eyelid_region(img, mask, padding=15):
     if mask.dtype != np.uint8:
@@ -545,11 +545,6 @@ def extract_eyelid_region(img, mask, padding=15):
     return img, mask, None
 
 def predict_anemia(model, image, device, use_inversion=True, threshold=0.5):
-    """
-    تصنيف الصورة باستخدام النموذج.
-    - use_inversion: إذا كان True، نعكس النتيجة (1 - raw_pred) لأن النموذج معكوس.
-    - threshold: العتبة للفصل بين الفئتين (0.5 افتراضياً).
-    """
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -561,16 +556,14 @@ def predict_anemia(model, image, device, use_inversion=True, threshold=0.5):
     with torch.no_grad():
         raw_pred = torch.sigmoid(model(img_tensor)).item()
     
-    # تطبيق الانعكاس إذا طُلب
     if use_inversion:
         corrected_pred = 1 - raw_pred
     else:
         corrected_pred = raw_pred
     
-    # القرار بناءً على العتبة
     if corrected_pred >= threshold:
         result = "Anemic"
-        confidence = corrected_pred * 100  # نعبر عن الثقة كنسبة مئوية
+        confidence = corrected_pred * 100
     else:
         result = "Non Anemic"
         confidence = (1 - corrected_pred) * 100
@@ -605,7 +598,13 @@ if uploaded is not None:
         cropped_img, cropped_mask, bbox = extract_eyelid_region(img, raw_mask, padding=15)
         
         # تصنيف
-        result, confidence, corrected_pred, raw_pred = predict_anemia(clf_model, cropped_img, clf_device)
+        result, confidence, corrected_pred, raw_pred = predict_anemia(
+            clf_model, cropped_img, clf_device,
+            use_inversion=True,
+            threshold=0.5
+        )
+        
+        # ===== حساب النسب المئوية =====
         anemia_pct = corrected_pred * 100
         non_pct = (1 - corrected_pred) * 100
 
@@ -639,7 +638,7 @@ if uploaded is not None:
             ax.text(bar.get_x()+bar.get_width()/2, v+2, f'{v:.1f}%', ha='center', fontweight='bold')
         st.pyplot(fig)
 
-        # تفاصيل تقنية (بدون أسماء نماذج)
+        # تفاصيل تقنية
         with st.expander(t("tech_details")):
             st.write(f"**{t('tech_seg')}:** تجزئة بالذكاء الاصطناعي (Deep Learning)")
             st.write(f"**{t('tech_clf')}:** تصنيف بالشبكات العصبية العميقة")
