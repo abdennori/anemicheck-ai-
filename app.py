@@ -11,7 +11,6 @@ import base64
 import os
 import time
 import pandas as pd
-import io
 from datetime import datetime
 from model_loader import load_unet_model, load_classifier_model
 
@@ -35,16 +34,6 @@ LANGUAGES = {
         "hero_title": "طبيبك معك بأقل من دقيقتين",
         "hero_desc": "تحليل ذكي لصورة العين لكشف الأنيميا بدقة وسرعة عالية",
         "hero_badge": "100% نتائج دقيقة وآمنة",
-        "hero_cta": "ابدأ التحليل الآن",
-        "ai_dev_badge": "تم تطويره بواسطة الذكاء الاصطناعي",
-        "top_badge1_title": "مساعدة فورية",
-        "top_badge1_desc": "تواصل مع فريق الدعم",
-        "top_badge2_title": "مكالمة مجانية",
-        "top_badge2_desc": "🔜 قريباً",
-        "top_badge3_title": "خدمة متاحة 24/7",
-        "top_badge3_desc": "نحن هنا من أجلك دائماً",
-        "top_badge4_title": "آمن وموثوق",
-        "top_badge4_desc": "خصوصيتك محمية 100%",
         "feature_1_title": "نتيجة سريعة",
         "feature_1_desc": "احصل على النتيجة فوراً مع تقرير مفصل",
         "feature_2_title": "رفع الصورة",
@@ -132,6 +121,11 @@ LANGUAGES = {
         "sidebar_doctor_soon": "🔜 متاح في التحديث القادم",
         "sidebar_version": "AnemiCheck v2.0 • الذكاء الاصطناعي الطبي",
         "nav_home": "🏠 الرئيسية",
+        "nav_analyze": "🔬 تحليل صورة الدم",
+        "nav_history": "📊 النتائج السابقة",
+        "nav_info": "ℹ️ معلومات المرض",
+        "nav_health": "💡 نصائح صحية",
+        "nav_about": "📱 حول التطبيق",
     },
     "fr": {
         "app_title": "AnemiCheck AI",
@@ -143,16 +137,6 @@ LANGUAGES = {
         "hero_title": "Votre médecin en moins de deux minutes",
         "hero_desc": "Analyse intelligente de l'image oculaire pour détecter l'anémie avec précision et rapidité",
         "hero_badge": "100% de résultats précis et sécurisés",
-        "hero_cta": "Commencer l'analyse",
-        "ai_dev_badge": "Développé avec l'intelligence artificielle",
-        "top_badge1_title": "Aide immédiate",
-        "top_badge1_desc": "Contactez notre équipe",
-        "top_badge2_title": "Appel gratuit",
-        "top_badge2_desc": "🔜 Bientôt",
-        "top_badge3_title": "Service 24/7",
-        "top_badge3_desc": "Nous sommes toujours là",
-        "top_badge4_title": "Sûr et fiable",
-        "top_badge4_desc": "100% de confidentialité",
         "feature_1_title": "Résultat rapide",
         "feature_1_desc": "Obtenez le résultat immédiatement avec un rapport détaillé",
         "feature_2_title": "Téléchargement d'image",
@@ -240,6 +224,11 @@ LANGUAGES = {
         "sidebar_doctor_soon": "🔜 Bientôt disponible",
         "sidebar_version": "AnemiCheck v2.0 • IA médicale",
         "nav_home": "🏠 Accueil",
+        "nav_analyze": "🔬 Analyser l'image",
+        "nav_history": "📊 Historique",
+        "nav_info": "ℹ️ Infos maladie",
+        "nav_health": "💡 Conseils santé",
+        "nav_about": "📱 À propos",
     },
     "en": {
         "app_title": "AnemiCheck AI",
@@ -251,16 +240,6 @@ LANGUAGES = {
         "hero_title": "Your doctor in less than two minutes",
         "hero_desc": "Intelligent analysis of eye images to detect anemia with high accuracy and speed",
         "hero_badge": "100% accurate and secure results",
-        "hero_cta": "Start analysis now",
-        "ai_dev_badge": "Built with artificial intelligence",
-        "top_badge1_title": "Instant help",
-        "top_badge1_desc": "Chat with our support team",
-        "top_badge2_title": "Free call",
-        "top_badge2_desc": "🔜 Coming soon",
-        "top_badge3_title": "24/7 available",
-        "top_badge3_desc": "We are always here for you",
-        "top_badge4_title": "Safe & trusted",
-        "top_badge4_desc": "100% of your privacy protected",
         "feature_1_title": "Quick Result",
         "feature_1_desc": "Get instant results with a detailed report",
         "feature_2_title": "Upload Image",
@@ -348,6 +327,11 @@ LANGUAGES = {
         "sidebar_doctor_soon": "🔜 Coming soon",
         "sidebar_version": "AnemiCheck v2.0 • Medical AI",
         "nav_home": "🏠 Home",
+        "nav_analyze": "🔬 Analyze Image",
+        "nav_history": "📊 History",
+        "nav_info": "ℹ️ Disease Info",
+        "nav_health": "💡 Health Tips",
+        "nav_about": "📱 About",
     }
 }
 
@@ -364,7 +348,7 @@ st.markdown("""
     * { font-family: 'Inter', 'Tajawal', sans-serif; }
     
     .stApp {
-        background: linear-gradient(-45deg, #f4f7fb, #eaf1fb, #f1f5fb, #f4f7fb);
+        background: linear-gradient(-45deg, #f8fafc, #eef2ff, #f1f5f9, #f8fafc);
         background-size: 400% 400%;
         animation: gradientBG 15s ease infinite;
     }
@@ -374,18 +358,20 @@ st.markdown("""
         100% { background-position: 0% 50%; }
     }
     
+    /* ===== HEADER ===== */
     .header {
-        background: linear-gradient(120deg, #1e3a8a 0%, #1d4ed8 55%, #2563eb 100%);
-        padding: 0.8rem 1.5rem;
-        border-radius: 0 0 26px 26px;
-        box-shadow: 0 10px 32px rgba(30,58,138,0.25);
+        background: rgba(255,255,255,0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        padding: 0.8rem 2rem;
+        border-radius: 0 0 24px 24px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.06);
         margin-bottom: 1.5rem;
         display: flex;
-        flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
+        border: 1px solid rgba(255,255,255,0.3);
         animation: slideDown 0.6s ease;
-        gap: 12px;
     }
     @keyframes slideDown {
         from { opacity: 0; transform: translateY(-20px); }
@@ -395,191 +381,49 @@ st.markdown("""
         display: flex;
         align-items: center;
         gap: 12px;
-        order: 2;
     }
     .header-left h1 {
-        font-size: 22px;
+        font-size: 24px;
         font-weight: 800;
-        color: #ffffff;
+        color: #0f172a;
         margin: 0;
     }
-    .header-left h1 span { color: #7dd3fc; }
+    .header-left h1 span { color: #e11d48; }
     .header-left .subtitle {
-        font-size: 12px;
-        color: #dbeafe;
+        font-size: 13px;
+        color: #64748b;
         font-weight: 500;
     }
     .header-badges {
         display: flex;
-        align-items: center;
-        gap: 10px;
+        gap: 20px;
         flex-wrap: wrap;
-        order: 1;
-    }
-    .header-ai-badge {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #ffffff;
-        background: rgba(16,185,129,0.25);
-        border: 1px solid rgba(16,185,129,0.5);
-        padding: 5px 14px;
-        border-radius: 30px;
-    }
-    .header-logo-badge {
-        width: 48px;
-        height: 48px;
-        min-width: 48px;
-        border-radius: 14px;
-        background: #ffffff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.15);
-        overflow: hidden;
-    }
-    .header-logo-badge img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        padding: 4px;
-    }
-    .header-icon-btn {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.15);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #ffffff;
-        font-size: 15px;
-        position: relative;
-    }
-    .header-icon-btn .dot {
-        position: absolute;
-        top: 4px;
-        right: 4px;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #f87171;
-        border: 1.5px solid #1e3a8a;
     }
     .header-badge {
         display: flex;
         align-items: center;
         gap: 6px;
-        font-size: 11px;
+        font-size: 12px;
         color: #334155;
         background: rgba(255,255,255,0.5);
-        padding: 4px 12px;
+        padding: 4px 14px;
         border-radius: 30px;
         border: 1px solid rgba(255,255,255,0.3);
     }
     .header-badge strong {
-        color: #2563eb;
+        color: #e11d48;
         font-weight: 700;
-    }
-    @media (max-width: 700px) {
-        .header {
-            flex-direction: column;
-            align-items: stretch;
-            padding: 0.8rem 1rem;
-        }
-        .header-left {
-            order: 1;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .header-badges {
-            order: 2;
-            justify-content: center;
-        }
-        .header-left h1 { font-size: 20px; }
-    }
-
-    .top-badges {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 14px;
-        margin: 0 0 1.5rem;
-    }
-    @media (max-width: 768px) {
-        .top-badges { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 480px) {
-        .top-badges { grid-template-columns: 1fr; }
-    }
-    .top-badge-card {
-        background: rgba(255,255,255,0.75);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.4);
-        border-radius: 18px;
-        padding: 12px 14px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        box-shadow: 0 4px 16px rgba(30,58,138,0.05);
-        transition: all 0.3s ease;
-        position: relative;
-        min-height: 64px;
-    }
-    .top-badge-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 24px rgba(30,58,138,0.1);
-    }
-    .top-badge-card .tb-icon {
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #F59E0B, #D97706);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 18px;
-        box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
-    }
-    .top-badge-card .tb-title {
-        font-weight: 700;
-        font-size: 13px;
-        color: #0f172a;
-    }
-    .top-badge-card .tb-desc {
-        font-size: 11px;
-        color: #64748b;
-    }
-    .top-badge-card .tb-soon {
-        position: absolute;
-        top: -6px;
-        right: -6px;
-        background: #F59E0B;
-        color: #fff;
-        font-size: 9px;
-        font-weight: 700;
-        padding: 2px 10px;
-        border-radius: 30px;
-        letter-spacing: 0.5px;
-        box-shadow: 0 2px 8px rgba(245,158,11,0.4);
-        animation: pulse-badge 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse-badge {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
     }
     
+    /* ===== SIDEBAR ===== */
     .sidebar-glass {
-        background: rgba(255,255,255,0.65);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
+        background: rgba(255,255,255,0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
         border-radius: 24px;
         padding: 1.5rem;
         border: 1px solid rgba(255,255,255,0.3);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.04);
         margin-bottom: 1.5rem;
         animation: fadeUp 0.8s ease;
     }
@@ -606,13 +450,13 @@ st.markdown("""
         transition: all 0.3s ease;
     }
     .sidebar-glass .nav-item.active {
-        background: rgba(245,158,11,0.12);
-        color: #D97706;
+        background: rgba(225,29,72,0.12);
+        color: #e11d48;
         font-weight: 600;
-        border: 1px solid rgba(245,158,11,0.2);
+        border: 1px solid rgba(225,29,72,0.15);
     }
     .sidebar-glass .nav-item:hover {
-        background: rgba(245,158,11,0.04);
+        background: rgba(225,29,72,0.04);
     }
     .sidebar-glass p, .sidebar-glass li {
         color: #334155;
@@ -629,65 +473,61 @@ st.markdown("""
     }
     .sidebar-glass .qr-container img {
         border-radius: 16px;
-        border: 1px solid rgba(245,158,11,0.15);
+        border: 1px solid rgba(225,29,72,0.15);
         background: white;
         padding: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.04);
         transition: transform 0.3s ease;
-        max-width: 100%;
-        height: auto;
     }
     .sidebar-glass .qr-container img:hover {
         transform: scale(1.05);
     }
     
+    /* ===== HERO ===== */
     .hero {
-        background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
-        border-radius: 32px;
-        padding: 3rem 2.5rem;
+        background: rgba(255,255,255,0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 28px;
+        padding: 2.5rem 2rem;
         margin-bottom: 2rem;
-        min-height: 65vh;
-        display: flex;
-        align-items: center;
-        box-shadow: 0 16px 40px rgba(30,58,138,0.25);
+        border: 1px solid rgba(255,255,255,0.3);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.04);
         animation: fadeUp 0.8s ease;
         transition: all 0.3s ease;
-        text-align: right;
-        position: relative;
-        overflow: hidden;
+        text-align: center;
     }
     .hero:hover {
-        box-shadow: 0 20px 48px rgba(30,58,138,0.32);
+        box-shadow: 0 16px 48px rgba(225,29,72,0.08);
     }
     .hero .icon {
-        font-size: 40px;
+        font-size: 48px;
         animation: float 3s ease-in-out infinite;
-        display: inline-block;
+        display: block;
     }
     @keyframes float {
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-10px); }
     }
     .hero h1 {
-        font-size: 34px;
+        font-size: 32px;
         font-weight: 800;
-        color: #ffffff;
+        color: #0f172a;
         margin: 0.5rem 0 0.2rem;
-        line-height: 1.3;
     }
     .hero h1 span {
-        color: #FCD34D;
+        background: linear-gradient(135deg, #9f1239, #e11d48);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
     .hero p {
         font-size: 16px;
-        color: #dbeafe;
-        margin: 0.5rem 0 1.4rem;
-        max-width: 480px;
+        color: #64748b;
+        margin: 0.5rem 0 1.2rem;
     }
     .hero .hero-badge {
-        background: rgba(16,185,129,0.18);
-        color: #d1fae5;
-        border: 1px solid rgba(52,211,153,0.4);
+        background: rgba(225,29,72,0.08);
+        color: #e11d48;
         padding: 6px 18px;
         border-radius: 30px;
         font-size: 14px;
@@ -695,140 +535,30 @@ st.markdown("""
         display: inline-block;
     }
     .doctor-image {
-        border-radius: 24px;
-        filter: drop-shadow(0 12px 28px rgba(0,0,0,0.25));
+        border-radius: 50%;
+        box-shadow: 0 8px 32px rgba(225,29,72,0.15);
+        border: 3px solid rgba(225,29,72,0.1);
         transition: transform 0.3s ease;
-        width: 100%;
-        max-width: 320px;
-        object-fit: contain;
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
     }
     .doctor-image:hover {
-        transform: scale(1.02);
+        transform: scale(1.05);
     }
     .hero-content {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         gap: 30px;
-        flex-wrap: wrap-reverse;
-        position: relative;
-        z-index: 2;
-        width: 100%;
+        flex-wrap: wrap;
     }
     .hero-text {
         flex: 1;
-        min-width: 280px;
+        min-width: 250px;
     }
-    .hero-visual {
-        position: relative;
-        flex: 0 0 auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 260px;
-    }
-    .hero-visual .glow {
-        position: absolute;
-        width: 280px;
-        height: 280px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(245,158,11,0.15), transparent 70%);
-    }
-    .hero-heartbeat {
-        position: absolute;
-        top: 50%;
-        left: -10%;
-        width: 60%;
-        opacity: 0.4;
-        transform: translateY(-50%);
-        z-index: 1;
-    }
-    .hero-cta {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: linear-gradient(135deg, #F59E0B, #D97706);
-        color: #ffffff !important;
-        font-weight: 700;
-        font-size: 16px;
-        padding: 14px 34px;
-        border-radius: 40px;
-        text-decoration: none !important;
-        box-shadow: 0 8px 24px rgba(245,158,11,0.4);
-        transition: all 0.3s ease;
-        border: none;
-    }
-    .hero-cta:hover {
-        transform: scale(1.04);
-        box-shadow: 0 12px 32px rgba(245,158,11,0.5);
-    }
-    @media (max-width: 700px) {
-        .hero {
-            padding: 2rem 1.5rem;
-            min-height: auto;
-        }
-        .hero-content {
-            flex-direction: column;
-            text-align: center;
-        }
-        .hero-text {
-            min-width: auto;
-        }
-        .hero h1 {
-            font-size: 26px;
-        }
-        .hero p {
-            max-width: 100%;
-        }
-        .hero-cta {
-            justify-content: center;
-            width: 100%;
-        }
-        .doctor-image {
-            max-width: 200px;
-        }
-    }
-
-    .scan-container {
-        position: relative;
-        overflow: hidden;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    }
-    .scan-container img {
-        width: 100%;
-        display: block;
-        border-radius: 16px;
-    }
-    .scan-line {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 3px;
-        background: #dc2626;
-        box-shadow: 0 0 20px #dc2626, 0 0 60px #dc2626;
-        animation: scanMove 2s ease-in-out infinite;
-        z-index: 10;
-        border-radius: 2px;
-    }
-    @keyframes scanMove {
-        0% { top: 0; opacity: 1; }
-        50% { top: 100%; opacity: 0.8; }
-        100% { top: 0; opacity: 1; }
-    }
-    .scan-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.02);
-        pointer-events: none;
-        border-radius: 16px;
-        border: 2px solid rgba(220, 38, 38, 0.3);
-    }
-
+    
+    /* ===== FEATURES ===== */
     .features-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -836,28 +566,27 @@ st.markdown("""
         margin: 1.5rem 0;
     }
     @media (max-width: 768px) {
-        .features-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 480px) {
-        .features-grid { grid-template-columns: 1fr; }
+        .features-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
     .feature-card {
-        background: rgba(255,255,255,0.7);
+        background: rgba(255,255,255,0.6);
         backdrop-filter: blur(8px);
         border-radius: 20px;
         padding: 1.5rem;
         text-align: center;
-        border: 1px solid rgba(255,255,255,0.5);
+        border: 1px solid rgba(255,255,255,0.3);
         transition: all 0.3s ease;
         box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-        animation: fadeUp 0.8s ease;
     }
     .feature-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 12px 32px rgba(0,0,0,0.08);
-        border-color: rgba(245,158,11,0.2);
     }
-    .feature-card .icon { font-size: 32px; }
+    .feature-card .icon {
+        font-size: 32px;
+    }
     .feature-card h4 {
         color: #0f172a;
         font-weight: 700;
@@ -870,14 +599,14 @@ st.markdown("""
         margin: 0;
     }
     
+    /* ===== HOW IT WORKS ===== */
     .how-section {
-        background: rgba(255,255,255,0.7);
+        background: rgba(255,255,255,0.6);
         backdrop-filter: blur(8px);
         border-radius: 24px;
         padding: 2rem;
         margin: 1.5rem 0;
-        border: 1px solid rgba(255,255,255,0.5);
-        animation: fadeUp 0.8s ease;
+        border: 1px solid rgba(255,255,255,0.3);
     }
     .how-section h3 {
         color: #0f172a;
@@ -892,18 +621,19 @@ st.markdown("""
         gap: 20px;
     }
     @media (max-width: 768px) {
-        .how-steps { grid-template-columns: 1fr; }
+        .how-steps {
+            grid-template-columns: 1fr;
+        }
     }
     .how-step {
         text-align: center;
         padding: 0 10px;
-        animation: fadeUp 0.8s ease;
     }
     .how-step .step-num {
-        background: linear-gradient(135deg, #F59E0B, #D97706);
+        background: linear-gradient(135deg, #e11d48, #fb7185);
         color: white;
-        width: 44px;
-        height: 44px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -911,11 +641,6 @@ st.markdown("""
         font-weight: 700;
         font-size: 18px;
         margin: 0 auto 10px;
-        transition: transform 0.3s;
-        box-shadow: 0 4px 12px rgba(245,158,11,0.3);
-    }
-    .how-step:hover .step-num {
-        transform: scale(1.1) rotate(5deg);
     }
     .how-step h5 {
         color: #0f172a;
@@ -929,6 +654,7 @@ st.markdown("""
         margin: 0;
     }
     
+    /* ===== TRUST BADGES ===== */
     .trust-section {
         display: flex;
         justify-content: center;
@@ -936,10 +662,9 @@ st.markdown("""
         flex-wrap: wrap;
         margin: 1.5rem 0;
         padding: 1.5rem;
-        background: rgba(255,255,255,0.6);
+        background: rgba(255,255,255,0.5);
         backdrop-filter: blur(4px);
         border-radius: 20px;
-        animation: fadeUp 1s ease;
     }
     .trust-item {
         display: flex;
@@ -949,31 +674,34 @@ st.markdown("""
         color: #0f172a;
         font-size: 15px;
     }
-    .trust-item .icon { font-size: 24px; }
+    .trust-item .icon {
+        font-size: 24px;
+    }
     
+    /* ===== RESULT CARDS ===== */
     .result-card {
         border-radius: 24px;
         padding: 1.8rem;
-        margin-top: 0.5rem;
+        margin-top: 1.5rem;
         border-left: 6px solid #e11d48;
         animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.04);
         transition: all 0.3s ease;
-        border: 1px solid rgba(255,255,255,0.3);
-        backdrop-filter: blur(4px);
+    }
+    @keyframes popIn {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
     }
     .result-card.positive {
-        background: rgba(254, 242, 242, 0.85);
+        background: rgba(254, 242, 242, 0.8);
         border-left-color: #dc2626;
-        box-shadow: 0 0 30px rgba(220, 38, 38, 0.08);
     }
     .result-card.negative {
-        background: rgba(240, 253, 244, 0.85);
+        background: rgba(240, 253, 244, 0.8);
         border-left-color: #16a34a;
-        box-shadow: 0 0 30px rgba(22, 163, 74, 0.08);
     }
     .result-card h2 {
-        font-size: 30px;
+        font-size: 28px;
         font-weight: 700;
         margin: 0 0 6px;
     }
@@ -987,13 +715,10 @@ st.markdown("""
         color: #64748b;
     }
     
+    /* ===== GENERAL ===== */
     @keyframes fadeUp {
         from { opacity: 0; transform: translateY(30px); }
         to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes popIn {
-        from { opacity: 0; transform: scale(0.9); }
-        to { opacity: 1; transform: scale(1); }
     }
     .section-title {
         font-size: 22px;
@@ -1001,7 +726,7 @@ st.markdown("""
         color: #0f172a;
         margin: 2rem 0 1rem;
         padding-bottom: 8px;
-        border-bottom: 3px solid #F59E0B;
+        border-bottom: 3px solid #e11d48;
         display: inline-block;
         animation: fadeUp 0.6s ease;
     }
@@ -1020,56 +745,49 @@ st.markdown("""
         border: 1px solid rgba(255,255,255,0.3);
     }
     
-    .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #10b981, #F59E0B, #dc2626) !important;
-        height: 12px !important;
-        border-radius: 20px !important;
-        transition: width 0.8s ease !important;
-    }
-    .stProgress > div > div {
-        background: #e2e8f0 !important;
-        border-radius: 20px !important;
-        height: 12px !important;
-    }
-    
     #MainMenu, footer, .stDeployButton { display: none; }
     
     .stButton > button {
-        background: linear-gradient(135deg, #F59E0B, #D97706);
+        background: linear-gradient(135deg, #e11d48, #be123c);
         color: white;
         border: none;
         border-radius: 40px;
-        padding: 14px 32px;
-        font-weight: 700;
-        font-size: 16px;
+        padding: 12px 28px;
+        font-weight: 600;
         transition: 0.3s;
         width: 100%;
-        box-shadow: 0 4px 16px rgba(245,158,11,0.35);
-        animation: fadeUp 0.6s ease;
+        box-shadow: 0 4px 16px rgba(225,29,72,0.2);
     }
     .stButton > button:hover {
         transform: scale(1.02);
-        box-shadow: 0 8px 24px rgba(245,158,11,0.5);
+        box-shadow: 0 8px 24px rgba(225,29,72,0.3);
     }
     
+    .stProgress > div > div > div > div {
+        background: linear-gradient(90deg, #e11d48, #fb7185);
+        border-radius: 10px;
+        transition: width 0.5s ease;
+    }
+    
+    /* ===== UPLOAD ===== */
     .upload-card {
-        background: rgba(255,255,255,0.7);
+        background: rgba(255,255,255,0.6);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border-radius: 28px;
         padding: 2rem 1.5rem;
         text-align: center;
-        border: 2px dashed rgba(245,158,11,0.3);
+        border: 2px dashed rgba(225,29,72,0.2);
         transition: all 0.4s ease;
         margin-bottom: 2rem;
         box-shadow: 0 8px 32px rgba(0,0,0,0.04);
         animation: fadeUp 0.8s ease;
     }
     .upload-card:hover {
-        border-color: #F59E0B;
-        background: rgba(255,255,255,0.85);
+        border-color: #e11d48;
+        background: rgba(255,255,255,0.8);
         transform: translateY(-4px);
-        box-shadow: 0 16px 48px rgba(245,158,11,0.08);
+        box-shadow: 0 16px 48px rgba(225,29,72,0.08);
     }
     .upload-card .icon {
         font-size: 48px;
@@ -1087,25 +805,27 @@ st.markdown("""
         margin: 0;
     }
     
+    /* ===== PREVIEW ===== */
     .preview-container {
-        background: rgba(255,255,255,0.7);
+        background: rgba(255,255,255,0.6);
         backdrop-filter: blur(8px);
         border-radius: 24px;
         padding: 1.5rem;
-        border: 1px solid rgba(255,255,255,0.4);
+        border: 1px solid rgba(255,255,255,0.3);
         box-shadow: 0 8px 32px rgba(0,0,0,0.04);
         margin: 1.5rem 0;
         animation: fadeUp 0.6s ease;
     }
     .preview-container img {
         border-radius: 16px;
-        max-height: 350px;
+        max-height: 300px;
         object-fit: contain;
         width: 100%;
     }
     
+    /* ===== DISCLAIMER ===== */
     .disclaimer {
-        background: rgba(254, 252, 232, 0.85);
+        background: rgba(254, 252, 232, 0.8);
         backdrop-filter: blur(4px);
         border-radius: 16px;
         padding: 1rem 1.5rem;
@@ -1118,7 +838,7 @@ st.markdown("""
     }
     
     .doctor-btn {
-        background: linear-gradient(135deg, #F59E0B, #D97706);
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
         color: white;
         border: none;
         border-radius: 40px;
@@ -1126,121 +846,26 @@ st.markdown("""
         font-weight: 600;
         font-size: 15px;
         cursor: not-allowed;
-        opacity: 0.7;
+        opacity: 0.6;
         width: 100%;
         text-align: center;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(245,158,11,0.2);
+        box-shadow: 0 4px 12px rgba(37,99,235,0.2);
         margin-top: 10px;
     }
     .doctor-btn:hover {
-        opacity: 0.9;
+        opacity: 0.8;
         transform: scale(1.02);
     }
     .coming-badge {
-        background: linear-gradient(135deg, #F59E0B, #D97706);
+        background: #f59e0b;
         color: white;
         font-size: 11px;
         font-weight: 700;
-        padding: 2px 14px;
+        padding: 2px 12px;
         border-radius: 30px;
         margin-left: 8px;
         letter-spacing: 0.5px;
-        animation: pulse-badge 1.5s ease-in-out infinite;
-    }
-    
-    /* ===================================================== */
-    /* ==== انيميشن النبض للأزرار (التعديل الجديد) ==== */
-    /* ===================================================== */
-    @keyframes medical-pulse {
-        0% {
-            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
-            transform: scale(1);
-        }
-        50% {
-            box-shadow: 0 0 0 12px rgba(245, 158, 11, 0);
-            transform: scale(1.02);
-        }
-        100% {
-            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
-            transform: scale(1);
-        }
-    }
-    /* الزر النشط (primary) ياخذ انيميشن النبض */
-    div[data-testid="column"] button[kind="primary"] {
-        animation: medical-pulse 1.8s ease-in-out infinite !important;
-        position: relative;
-        overflow: hidden;
-    }
-    /* تنسيقات الأزرار داخل الأعمدة */
-    div[data-testid="column"] button {
-        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-        border-radius: 40px !important;
-        font-weight: 600 !important;
-        padding: 14px 0 !important;
-        font-size: 16px !important;
-        letter-spacing: 0.5px;
-        cursor: pointer !important;
-    }
-    div[data-testid="column"] button:hover {
-        transform: translateY(-3px) scale(1.02) !important;
-        box-shadow: 0 12px 28px rgba(245, 158, 11, 0.3) !important;
-    }
-    div[data-testid="column"] button[kind="secondary"]:hover {
-        border-color: #F59E0B !important;
-        background: rgba(245, 158, 11, 0.08) !important;
-    }
-    /* أيقونة النبض (Heartbeat) فوق الأزرار */
-    .heartbeat-icon {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-        font-size: 28px;
-        margin: -0.5rem 0 0.5rem 0;
-        color: #dc2626;
-        animation: heartbeat-float 1.5s ease-in-out infinite;
-    }
-    @keyframes heartbeat-float {
-        0%, 100% { transform: scale(1); }
-        14% { transform: scale(1.2); }
-        28% { transform: scale(1); }
-        42% { transform: scale(1.2); }
-        70% { transform: scale(1); }
-    }
-    .heartbeat-icon span {
-        font-size: 16px;
-        color: #0f172a;
-        font-weight: 700;
-        background: rgba(255,255,255,0.8);
-        padding: 4px 16px;
-        border-radius: 30px;
-        backdrop-filter: blur(4px);
-        border: 1px solid rgba(220, 38, 38, 0.15);
-    }
-    /* ===================================================== */
-
-    @media (max-width: 640px) {
-        .header-left h1 { font-size: 18px; }
-        .header-left .subtitle { font-size: 11px; }
-        .header-ai-badge { font-size: 10px; padding: 3px 10px; }
-        .top-badge-card { padding: 10px; gap: 8px; }
-        .top-badge-card .tb-icon { width: 34px; height: 34px; min-width: 34px; font-size: 15px; }
-        .top-badge-card .tb-title { font-size: 12px; }
-        .top-badge-card .tb-desc { font-size: 10px; }
-        .hero { padding: 1.5rem 1rem; min-height: auto; }
-        .hero h1 { font-size: 22px; }
-        .hero p { font-size: 14px; }
-        .feature-card { padding: 1rem; }
-        .feature-card .icon { font-size: 28px; }
-        .how-section { padding: 1.5rem; }
-        .sidebar-glass { padding: 1rem; }
-        .result-card { padding: 1.2rem; }
-        .result-card h2 { font-size: 24px; }
-        .stButton > button { padding: 12px 20px; font-size: 14px; }
-        div[data-testid="column"] button { padding: 12px 0 !important; font-size: 14px !important; }
-        .heartbeat-icon { font-size: 22px; flex-wrap: wrap; }
-        .heartbeat-icon span { font-size: 13px; padding: 2px 12px; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -1250,35 +875,20 @@ if 'language' not in st.session_state:
     st.session_state.language = "fr"
 if 'history' not in st.session_state:
     st.session_state.history = []
-if 'upload_mode' not in st.session_state:
-    st.session_state.upload_mode = "file"  # الوضع الافتراضي
 
 # ========== HEADER ==========
-def get_file_base64(names):
-    for name in names:
+def get_logo_base64():
+    for name in ["logo.png", "logo.jpg", "logo.jpeg", "LOGO.png"]:
         if os.path.exists(name):
             with open(name, "rb") as f:
                 return base64.b64encode(f.read()).decode()
     return None
 
-def image_to_base64(img):
-    """Convert PIL Image to base64 string"""
-    buffered = io.BytesIO()
-    img.save(buffered, format="JPEG")
-    return base64.b64encode(buffered.getvalue()).decode()
-
-logo = get_file_base64(["logo.png", "logo.jpg", "logo.jpeg", "LOGO.png"])
-logo_icon = get_file_base64(["logo_icon.png", "logo-icon.png"]) or logo
+logo = get_logo_base64()
 
 # ========== SIDEBAR ==========
 with st.sidebar:
-    if logo:
-        st.markdown(f"""
-        <div style="text-align:center; margin-bottom:1rem;">
-            <img src="data:image/png;base64,{logo}" style="max-width:170px; width:100%;">
-        </div>
-        """, unsafe_allow_html=True)
-
+    # Sélecteur de langue
     lang_map = {
         "ar": "🇸🇦 العربية",
         "fr": "🇫🇷 Français",
@@ -1296,15 +906,22 @@ with st.sidebar:
     
     st.markdown("---")
     
+    # ===== قائمة ثابتة =====
     st.markdown(f"""
     <div class="sidebar-glass">
         <h4>📋 القائمة / Menu</h4>
         <div class="nav-item active">🏠 {t('nav_home')}</div>
+        <div class="nav-item">🔬 {t('nav_analyze')}</div>
+        <div class="nav-item">📊 {t('nav_history')}</div>
+        <div class="nav-item">ℹ️ {t('nav_info')}</div>
+        <div class="nav-item">💡 {t('nav_health')}</div>
+        <div class="nav-item">📱 {t('nav_about')}</div>
     </div>
     """, unsafe_allow_html=True)
     
+    # QR Code
     APP_URL = "https://hwaxrexkahkxaazwwjjr3d.streamlit.app/"
-    qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&color=F59E0B&data={APP_URL}"
+    qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&color=e11d48&data={APP_URL}"
     
     st.markdown(f"""
     <div class="sidebar-glass">
@@ -1316,6 +933,7 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
+    # Conseils santé
     st.markdown(f"""
     <div class="sidebar-glass">
         <h4>{t('sidebar_health_title')}</h4>
@@ -1328,6 +946,7 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
+    # Consultation médecin
     st.markdown(f"""
     <div class="sidebar-glass">
         <h4>{t('sidebar_doctor_title')} <span class="coming-badge">{t('sidebar_doctor_soon')}</span></h4>
@@ -1341,127 +960,93 @@ with st.sidebar:
     st.caption(t('sidebar_version'))
 
 # ========== PAGE PRINCIPALE ==========
-logo_html = f'<div class="header-logo-badge"><img src="data:image/png;base64,{logo_icon}"></div>' if logo_icon else '<div class="header-logo-badge" style="font-size:26px;">🧬</div>'
-
-st.markdown(f"""
-<div class="header">
-    <div class="header-badges">
-        <div class="header-icon-btn">🔔<span class="dot"></span></div>
-        <div class="header-badge" style="background:rgba(255,255,255,0.15); color:#fff; border-color:rgba(255,255,255,0.25);">🌐 {lang_map[st.session_state.language]}</div>
-        <div class="header-ai-badge">✅ {t('ai_dev_badge')}</div>
-    </div>
-    <div class="header-left">
-        <div>
-            <h1>{t('app_title')}</h1>
-            <div class="subtitle">{t('app_subtitle')}</div>
+# Header avec badges
+if logo:
+    st.markdown(f"""
+    <div class="header">
+        <div class="header-left">
+            <img src="data:image/png;base64,{logo}" style="height:42px;">
+            <div>
+                <h1>{t('app_title')}</h1>
+                <div class="subtitle">{t('app_subtitle')}</div>
+            </div>
         </div>
-        {logo_html}
+        <div class="header-badges">
+            <div class="header-badge">🔒 <strong>{t('badge_private')}</strong> {t('badge_private_desc')}</div>
+            <div class="header-badge">⏰ <strong>{t('badge_available')}</strong> {t('badge_available_desc')}</div>
+        </div>
     </div>
-</div>
-""", unsafe_allow_html=True)
-
-# ========== TOP BADGES ==========
-st.markdown(f"""
-<div class="top-badges">
-    <div class="top-badge-card">
-        <div class="tb-icon">🎧</div>
-        <div><div class="tb-title">{t('top_badge1_title')}</div><div class="tb-desc">{t('top_badge1_desc')}</div></div>
-    </div>
-    <div class="top-badge-card disabled">
-        <span class="tb-soon">🔜 {t('sidebar_doctor_soon')}</span>
-        <div class="tb-icon">📞</div>
-        <div><div class="tb-title">{t('top_badge2_title')}</div><div class="tb-desc">{t('top_badge2_desc')}</div></div>
-    </div>
-    <div class="top-badge-card">
-        <div class="tb-icon">🕐</div>
-        <div><div class="tb-title">{t('top_badge3_title')}</div><div class="tb-desc">{t('top_badge3_desc')}</div></div>
-    </div>
-    <div class="top-badge-card">
-        <div class="tb-icon">🛡️</div>
-        <div><div class="tb-title">{t('top_badge4_title')}</div><div class="tb-desc">{t('top_badge4_desc')}</div></div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-# ========== HERO ==========
-doctor_local = get_file_base64(["doctor.png", "doctor.jpg", "doctor.jpeg"])
-if doctor_local:
-    doctor_img_url = f"data:image/png;base64,{doctor_local}"
+    """, unsafe_allow_html=True)
 else:
-    doctor_img_url = "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"
-heartbeat_svg = (
-    "data:image/svg+xml;utf8,"
-    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60'>"
-    "<polyline points='0,30 60,30 80,10 100,50 120,5 140,55 160,30 220,30 240,15 260,45 280,30 400,30' "
-    "fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='3'/></svg>"
-)
+    st.markdown(f"""
+    <div class="header">
+        <div class="header-left">
+            <div style="font-size:36px;">🩸</div>
+            <div>
+                <h1>{t('app_title')}</h1>
+                <div class="subtitle">{t('app_subtitle')}</div>
+            </div>
+        </div>
+        <div class="header-badges">
+            <div class="header-badge">🔒 <strong>{t('badge_private')}</strong> {t('badge_private_desc')}</div>
+            <div class="header-badge">⏰ <strong>{t('badge_available')}</strong> {t('badge_available_desc')}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ========== HERO SECTION AVEC IMAGE DU MÉDECIN ==========
+# Utilisation d'une icône de médecin (Flaticon)
+doctor_img_url = "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"
 
 st.markdown(f"""
-<div class="hero" id="hero-top">
-    <img src="{heartbeat_svg}" class="hero-heartbeat" alt="">
+<div class="hero">
     <div class="hero-content">
+        <div>
+            <img src="{doctor_img_url}" class="doctor-image" alt="Médecin / Doctor">
+        </div>
         <div class="hero-text">
             <span class="icon">🩺</span>
             <h1>{t('hero_title')}</h1>
             <p>{t('hero_desc')}</p>
-            <a href="#upload-zone" class="hero-cta">➜ {t('hero_cta')}</a>
-            <div style="margin-top:16px;">
+            <div style="margin-top:10px;">
                 <span class="hero-badge">✅ {t('hero_badge')}</span>
             </div>
-        </div>
-        <div class="hero-visual">
-            <div class="glow"></div>
-            <img src="{doctor_img_url}" class="doctor-image" alt="Médecin / Doctor">
         </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# ================================================================
-# ========== UPLOAD (القسم المعدل بالأزرار والأنيميشن) ==========
-# ================================================================
+# ========== ZONE UPLOAD ==========
 st.markdown(f"""
-<div class="upload-card" id="upload-zone">
+<div class="upload-card">
     <div class="icon">📸</div>
     <h3>{t('upload_title')}</h3>
     <p>{t('upload_desc')}</p>
 </div>
 """, unsafe_allow_html=True)
 
-# ---- علامة النبض الجديدة فوق الأزرار ----
-st.markdown("""
-<div class="heartbeat-icon">
-    💓 <span>❝ نبض التشخيص / Diagnostic Pulse ❞</span> 💓
-</div>
-""", unsafe_allow_html=True)
-
-# أزرار اختيار الوضع مع انيميشن نبض
-col_btn1, col_btn2 = st.columns(2)
-with col_btn1:
-    if st.button("📁 " + t("upload_method_file"), use_container_width=True,
-                 type="primary" if st.session_state.upload_mode == "file" else "secondary"):
-        st.session_state.upload_mode = "file"
-        st.rerun()
-with col_btn2:
-    if st.button("📷 " + t("upload_method_camera"), use_container_width=True,
-                 type="primary" if st.session_state.upload_mode == "camera" else "secondary"):
-        st.session_state.upload_mode = "camera"
-        st.rerun()
-
-# عرض أداة الرفع المناسبة
-if st.session_state.upload_mode == "file":
-    uploaded = st.file_uploader(
-        t("upload_file_label"),
-        type=["jpg","png","jpeg"],
-        label_visibility="collapsed",
-        key="file_uploader"
+col1, col2 = st.columns([1, 2])
+with col1:
+    option = st.radio(
+        t("upload_method_file"),
+        [t("upload_method_file"), t("upload_method_camera")],
+        horizontal=True,
+        label_visibility="collapsed"
     )
-else:
-    uploaded = st.camera_input(
-        t("upload_camera_label"),
-        label_visibility="collapsed",
-        key="camera_input"
-    )
+with col2:
+    if option == t("upload_method_file"):
+        uploaded = st.file_uploader(
+            t("upload_file_label"),
+            type=["jpg","png","jpeg"],
+            label_visibility="collapsed",
+            key="file_uploader"
+        )
+    else:
+        uploaded = st.camera_input(
+            t("upload_camera_label"),
+            label_visibility="collapsed",
+            key="camera_input"
+        )
 
 # ========== FONCTIONS ==========
 def clean_mask(mask, min_area=500):
@@ -1509,40 +1094,21 @@ def extract_best_conjunctiva(img, mask):
     enhanced = enhance_conjunctiva(conj)
     return enhanced, mask, None
 
-# ================================================================
-# ===== دالة التصنيف المعدلة =====
-# ================================================================
 def predict_anemia(model, image, device):
-    """
-    هذه الدالة مطابقة للدالة الموجودة في ملف app.py الجديد.
-    تقوم بتطبيع الصورة (ImageNet) ثم عكس النتيجة لأن النموذج يعطي نتائج مقلوبة.
-    """
     transform = transforms.Compose([
-        transforms.Resize((224, 224)),
+        transforms.Resize((224,224)),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
-    
     if isinstance(image, np.ndarray):
         image = Image.fromarray(image)
-    
     tensor = transform(image).unsqueeze(0).to(device)
-    
     with torch.no_grad():
-        output = model(tensor)
-        raw_pred = torch.sigmoid(output).item()
-    
-    # عكس النتيجة (تصحيح) لأن النموذج معكوس
-    corrected_pred = 1 - raw_pred
-    
-    if corrected_pred >= 0.5:
-        result = "Anemic"
-        confidence = corrected_pred * 100
+        out = model(tensor)
+        pred = torch.sigmoid(out).item()
+    if pred >= 0.5:
+        return "Anemic", pred * 100, pred
     else:
-        result = "Non Anemic"
-        confidence = (1 - corrected_pred) * 100
-    
-    return result, confidence, corrected_pred, raw_pred
+        return "Non Anemic", (1 - pred) * 100, pred
 
 @st.cache_resource
 def load_models():
@@ -1552,51 +1118,28 @@ def load_models():
 
 # ========== TRAITEMENT ==========
 if uploaded is not None:
-    # Preview container
-    preview_placeholder = st.empty()
-    with preview_placeholder.container():
-        st.markdown(f"""
-        <div class="preview-container">
-            <h4 style="margin-top:0;">{t('preview_title')}</h4>
-        """, unsafe_allow_html=True)
-        col_preview, _ = st.columns([1, 1])
-        with col_preview:
-            st.image(uploaded, use_container_width=True, caption=t('preview_caption'))
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown(f"""
+    <div class="preview-container">
+        <h4 style="margin-top:0;">{t('preview_title')}</h4>
+    """, unsafe_allow_html=True)
+    col_preview, _ = st.columns([1, 1])
+    with col_preview:
+        st.image(uploaded, use_container_width=True, caption=t('preview_caption'))
+    st.markdown("</div>", unsafe_allow_html=True)
     
     if st.button(t("analyze_btn"), use_container_width=True):
-        # 1. Show Scanning Effect
-        img_pil = Image.open(uploaded).convert('RGB')
-        img_b64 = image_to_base64(img_pil)
-        
-        scan_placeholder = st.empty()
-        with scan_placeholder.container():
-            st.markdown(f"""
-            <div class="preview-container">
-                <h4 style="margin-top:0;">🔬 جاري المسح الضوئي...</h4>
-                <div class="scan-container">
-                    <img src="data:image/jpeg;base64,{img_b64}" style="width:100%; border-radius:16px;">
-                    <div class="scan-line"></div>
-                    <div class="scan-overlay"></div>
-                </div>
-                <p style="text-align:center; color:#64748b; margin-top:8px;">{t('analyzing')}</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Simulate scan time + loading models
         with st.spinner(t("loading_models")):
             unet_model, unet_device, clf_model, clf_device = load_models()
-        
-        # Progress bar for the scan
+
         progress_bar = st.progress(0)
         for i in range(10):
-            time.sleep(0.06)
+            time.sleep(0.05)
             progress_bar.progress((i+1)*10)
-        
-        # 2. Real processing
+
         with st.spinner(t("analyzing")):
-            img = np.array(img_pil)
-            
+            img = np.array(Image.open(uploaded).convert('RGB'))
+            img = cv2.flip(img, 1)
+
             transform_unet = transforms.Compose([
                 transforms.ToPILImage(),
                 transforms.Resize((256,256)),
@@ -1611,32 +1154,28 @@ if uploaded is not None:
 
             conj_enhanced, final_mask, bbox = extract_best_conjunctiva(img, raw_mask)
 
-            result, confidence, corrected_pred, raw_pred = predict_anemia(clf_model, conj_enhanced, clf_device)
+            result, confidence, raw_pred = predict_anemia(clf_model, conj_enhanced, clf_device)
 
-            anemia_pct = corrected_pred * 100
-            non_pct = (1 - corrected_pred) * 100
+            anemia_pct = raw_pred * 100
+            non_pct = (1 - raw_pred) * 100
 
             progress_bar.empty()
-            
-            # Remove scan placeholder
-            scan_placeholder.empty()
-            
             st.success(t("analysis_done"))
 
-            # ===== RESULTS DASHBOARD =====
+            # --- IMAGES ---
             st.markdown(f'<div class="section-title">{t("results_title")}</div>', unsafe_allow_html=True)
-            
-            col_left, col_right = st.columns([2, 1])
-            with col_left:
-                st.markdown(f"**👁️ {t('result_conjunctiva')}**")
-                st.image(conj_enhanced, use_container_width=True)
-            with col_right:
+            col1, col2, col3 = st.columns(3)
+            with col1:
                 st.markdown(f"**{t('result_original')}**")
                 st.image(img, use_container_width=True)
+            with col2:
                 st.markdown(f"**{t('result_mask')}**")
                 st.image(final_mask, use_container_width=True, clamp=True)
+            with col3:
+                st.markdown(f"**{t('result_conjunctiva')}**")
+                st.image(conj_enhanced, use_container_width=True)
 
-            # Metrics
+            # --- MÉTRIQUES ---
             before = np.sum(raw_mask > 0) / 255
             after = np.sum(final_mask > 0) / 255
             reduction = ((before - after) / before * 100) if before > 0 else 0
@@ -1647,7 +1186,7 @@ if uploaded is not None:
             with m2:
                 st.metric(t("metric_cleaning"), f"{reduction:.1f}%")
 
-            # DIAGNOSTIC
+            # --- DIAGNOSTIC ---
             st.markdown(f'<div class="section-title">{t("diagnostic_title")}</div>', unsafe_allow_html=True)
             col_res, col_conf = st.columns(2)
             with col_res:
@@ -1671,7 +1210,7 @@ if uploaded is not None:
                 st.metric(t("diagnostic_confidence"), f"{confidence:.1f}%")
                 st.progress(int(confidence))
 
-            # CHART
+            # --- GRAPHIQUE ---
             st.markdown(f'<div class="section-title">{t("chart_title")}</div>', unsafe_allow_html=True)
             fig, ax = plt.subplots(figsize=(8,5))
             cats = [t('chart_non'), t('chart_anemic')]
@@ -1688,7 +1227,7 @@ if uploaded is not None:
             ax.spines['right'].set_visible(False)
             st.pyplot(fig)
 
-            # HISTORY
+            # --- HISTORIQUE ---
             entry = {
                 t("history_date"): datetime.now().strftime("%Y-%m-%d %H:%M"),
                 t("history_diagnostic"): result,
@@ -1704,7 +1243,7 @@ if uploaded is not None:
                 df = pd.DataFrame(st.session_state.history)
                 st.dataframe(df, use_container_width=True, hide_index=True)
 
-            # TECH DETAILS
+            # --- DÉTAILS TECHNIQUES ---
             with st.expander(t("tech_details")):
                 st.write(f"**{t('tech_model_seg')}:** U‑Net (ResNet34)")
                 st.write(f"**{t('tech_model_clf')}:** EfficientNet‑B3")
@@ -1715,7 +1254,7 @@ if uploaded is not None:
                 st.write(f"**{t('tech_preprocess')}:** CLAHE + Filtrage + Netteté")
                 st.write(f"**{t('tech_decision')}:** {t('tech_decision_value')}")
 
-            # DISCLAIMER
+            # --- AVERTISSEMENT ---
             st.markdown(f"""
             <div class="disclaimer">
                 <strong>{t('disclaimer')}</strong><br>
