@@ -132,11 +132,6 @@ LANGUAGES = {
         "sidebar_doctor_soon": "🔜 متاح في التحديث القادم",
         "sidebar_version": "AnemiCheck v2.0 • الذكاء الاصطناعي الطبي",
         "nav_home": "🏠 الرئيسية",
-        "nav_analyze": "🔬 تحليل صورة الدم",
-        "nav_history": "📊 النتائج السابقة",
-        "nav_info": "ℹ️ معلومات المرض",
-        "nav_health": "💡 نصائح صحية",
-        "nav_about": "📱 حول التطبيق",
     },
     "fr": {
         "app_title": "AnemiCheck AI",
@@ -245,11 +240,6 @@ LANGUAGES = {
         "sidebar_doctor_soon": "🔜 Bientôt disponible",
         "sidebar_version": "AnemiCheck v2.0 • IA médicale",
         "nav_home": "🏠 Accueil",
-        "nav_analyze": "🔬 Analyser l'image",
-        "nav_history": "📊 Historique",
-        "nav_info": "ℹ️ Infos maladie",
-        "nav_health": "💡 Conseils santé",
-        "nav_about": "📱 À propos",
     },
     "en": {
         "app_title": "AnemiCheck AI",
@@ -358,11 +348,6 @@ LANGUAGES = {
         "sidebar_doctor_soon": "🔜 Coming soon",
         "sidebar_version": "AnemiCheck v2.0 • Medical AI",
         "nav_home": "🏠 Home",
-        "nav_analyze": "🔬 Analyze Image",
-        "nav_history": "📊 History",
-        "nav_info": "ℹ️ Disease Info",
-        "nav_health": "💡 Health Tips",
-        "nav_about": "📱 About",
     }
 }
 
@@ -389,7 +374,6 @@ st.markdown("""
         100% { background-position: 0% 50%; }
     }
     
-    /* ===== HEADER ===== */
     .header {
         background: linear-gradient(120deg, #1e3a8a 0%, #1d4ed8 55%, #2563eb 100%);
         padding: 0.8rem 1.5rem;
@@ -517,7 +501,6 @@ st.markdown("""
         .header-left h1 { font-size: 20px; }
     }
 
-    /* ===== TOP QUICK BADGES ===== */
     .top-badges {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -589,7 +572,6 @@ st.markdown("""
         50% { transform: scale(1.05); }
     }
     
-    /* ===== SIDEBAR ===== */
     .sidebar-glass {
         background: rgba(255,255,255,0.65);
         backdrop-filter: blur(14px);
@@ -659,7 +641,6 @@ st.markdown("""
         transform: scale(1.05);
     }
     
-    /* ===== HERO ===== */
     .hero {
         background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
         border-radius: 32px;
@@ -807,8 +788,7 @@ st.markdown("""
             max-width: 200px;
         }
     }
-    
-    /* ===== SCANNING EFFECT ===== */
+
     .scan-container {
         position: relative;
         overflow: hidden;
@@ -849,7 +829,6 @@ st.markdown("""
         border: 2px solid rgba(220, 38, 38, 0.3);
     }
 
-    /* ===== FEATURES ===== */
     .features-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -891,7 +870,6 @@ st.markdown("""
         margin: 0;
     }
     
-    /* ===== HOW IT WORKS ===== */
     .how-section {
         background: rgba(255,255,255,0.7);
         backdrop-filter: blur(8px);
@@ -951,7 +929,6 @@ st.markdown("""
         margin: 0;
     }
     
-    /* ===== TRUST BADGES ===== */
     .trust-section {
         display: flex;
         justify-content: center;
@@ -974,7 +951,6 @@ st.markdown("""
     }
     .trust-item .icon { font-size: 24px; }
     
-    /* ===== RESULT CARDS ===== */
     .result-card {
         border-radius: 24px;
         padding: 1.8rem;
@@ -1011,7 +987,6 @@ st.markdown("""
         color: #64748b;
     }
     
-    /* ===== GENERAL ===== */
     @keyframes fadeUp {
         from { opacity: 0; transform: translateY(30px); }
         to { opacity: 1; transform: translateY(0); }
@@ -1032,7 +1007,6 @@ st.markdown("""
     }
     .stImage img { border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
     
-    /* ===== METRICS ===== */
     [data-testid="stMetricValue"] {
         font-size: 28px !important;
         font-weight: 700 !important;
@@ -1046,7 +1020,6 @@ st.markdown("""
         border: 1px solid rgba(255,255,255,0.3);
     }
     
-    /* ===== PROGRESS BAR (GRADIENT) ===== */
     .stProgress > div > div > div > div {
         background: linear-gradient(90deg, #10b981, #F59E0B, #dc2626) !important;
         height: 12px !important;
@@ -1059,7 +1032,6 @@ st.markdown("""
         height: 12px !important;
     }
     
-    /* ===== BUTTONS ===== */
     #MainMenu, footer, .stDeployButton { display: none; }
     
     .stButton > button {
@@ -1080,7 +1052,6 @@ st.markdown("""
         box-shadow: 0 8px 24px rgba(245,158,11,0.5);
     }
     
-    /* ===== UPLOAD ===== */
     .upload-card {
         background: rgba(255,255,255,0.7);
         backdrop-filter: blur(12px);
@@ -1116,7 +1087,6 @@ st.markdown("""
         margin: 0;
     }
     
-    /* ===== PREVIEW ===== */
     .preview-container {
         background: rgba(255,255,255,0.7);
         backdrop-filter: blur(8px);
@@ -1134,7 +1104,6 @@ st.markdown("""
         width: 100%;
     }
     
-    /* ===== DISCLAIMER ===== */
     .disclaimer {
         background: rgba(254, 252, 232, 0.85);
         backdrop-filter: blur(4px);
@@ -1180,7 +1149,6 @@ st.markdown("""
         animation: pulse-badge 1.5s ease-in-out infinite;
     }
     
-    /* ===== RESPONSIVE TWEAKS ===== */
     @media (max-width: 640px) {
         .header-left h1 { font-size: 18px; }
         .header-left .subtitle { font-size: 11px; }
@@ -1451,17 +1419,39 @@ def extract_best_conjunctiva(img, mask):
     enhanced = enhance_conjunctiva(conj)
     return enhanced, mask, None
 
+# ==========================================================
+# 🩺 الدالة المعدلة التي تحل مشكلة التنبؤ الدائم بـ "أنيميا"
+# ==========================================================
 def predict_anemia(model, image, device):
-    transform = transforms.Compose([
-        transforms.Resize((224,224)),
-        transforms.ToTensor(),
-    ])
+    # 1. التحقق من أن الصورة ليست فارغة أو صغيرة جداً
     if isinstance(image, np.ndarray):
-        image = Image.fromarray(image)
+        if image.size == 0 or image.shape[0] < 10 or image.shape[1] < 10:
+            return "Non Anemic", 0.0, 0.0
+        
+        # إزالة الخلفية السوداء الزائدة (إن وجدت) عن طريق قص الصورة حول المحتوى الفعلي
+        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        coords = cv2.findNonZero(gray)
+        if coords is not None:
+            x, y, w, h = cv2.boundingRect(coords)
+            # نتأكد أن القص لا يخرج عن حدود الصورة
+            if w > 20 and h > 20:
+                image = image[y:y+h, x:x+w]
+    
+    # 2. تطبيق التحويلات الصحيحة (وهنا الحل السحري!)
+    transform = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        # هذان السطران كانا مفقودين مما يتسبب في نتائج خاطئة دائماً
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+    
     tensor = transform(image).unsqueeze(0).to(device)
+    
     with torch.no_grad():
         out = model(tensor)
         pred = torch.sigmoid(out).item()
+    
     if pred >= 0.5:
         return "Anemic", pred * 100, pred
     else:
@@ -1519,7 +1509,8 @@ if uploaded is not None:
         # 2. Real processing
         with st.spinner(t("analyzing")):
             img = np.array(img_pil)
-            img = cv2.flip(img, 1)
+            # تم إزالة `cv2.flip(img, 1)` لأنها قد تشوه النموذج إذا لم يكن مدرباً عليها
+            # img = cv2.flip(img, 1) 
 
             transform_unet = transforms.Compose([
                 transforms.ToPILImage(),
