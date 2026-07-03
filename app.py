@@ -1562,6 +1562,8 @@ def extract_best_conjunctiva(img, mask):
     enhanced = enhance_conjunctiva(conj)
     return enhanced, mask, None
 
+CLASS_NAMES = ["Anemic", "Non Anemic"]
+
 def predict_anemia(model, image, device):
     transform = transforms.Compose([
         transforms.Resize((224,224)),
@@ -1571,12 +1573,12 @@ def predict_anemia(model, image, device):
         image = Image.fromarray(image)
     tensor = transform(image).unsqueeze(0).to(device)
     with torch.no_grad():
-        out = model(tensor)
-        pred = torch.sigmoid(out).item()
-    if pred >= 0.5:
-        return "Anemic", pred * 100, pred
-    else:
-        return "Non Anemic", (1 - pred) * 100, pred
+        out = model(tensor)                      # shape [1, 2]
+        probs = torch.softmax(out, dim=1)[0]      # softmax over the 2 logits
+        pred_idx = torch.argmax(probs).item()
+        confidence = probs[pred_idx].item() * 100
+    label = CLASS_NAMES[pred_idx]
+    return label, confidence, probs.tolist()
 
 @st.cache_resource
 def load_models():
@@ -1622,10 +1624,10 @@ if uploaded is not None:
 
             conj_enhanced, final_mask, bbox = extract_best_conjunctiva(img, raw_mask)
 
-            result, confidence, raw_pred = predict_anemia(clf_model, conj_enhanced, clf_device)
+            result, confidence, probs = predict_anemia(clf_model, conj_enhanced, clf_device)
 
-            anemia_pct = raw_pred * 100
-            non_pct = (1 - raw_pred) * 100
+            anemia_pct = probs[0] * 100
+            non_pct = probs[1] * 100
 
             progress_bar.empty()
             st.success(t("analysis_done"))
@@ -1723,7 +1725,7 @@ if uploaded is not None:
                 st.write(f"**{t('tech_model_seg')}:** U‑Net (ResNet34)")
                 st.write(f"**{t('tech_model_clf')}:** EfficientNet‑B3")
                 st.write(f"**{t('tech_device')}:** {'GPU' if clf_device.type == 'cuda' else 'CPU'}")
-                st.write(f"**{t('tech_sigmoid')}:** {raw_pred:.4f}")
+                st.write(f"**{t('tech_sigmoid')}:** [Anemic: {probs[0]:.4f}, Non Anemic: {probs[1]:.4f}]")
                 st.write(f"**{t('tech_prob_anemic')}:** {anemia_pct:.1f}%")
                 st.write(f"**{t('tech_prob_non')}:** {non_pct:.1f}%")
                 st.write(f"**{t('tech_preprocess')}:** CLAHE + Filtrage + Netteté")
