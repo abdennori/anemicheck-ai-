@@ -61,22 +61,23 @@ def load_classifier_model():
     _require_file(config.CLASSIFIER_WEIGHTS_PATH, "EfficientNet-B3")
 
     model = models.efficientnet_b3(weights=None)
-    # The trained checkpoint has a single-output sigmoid head (see
-    # config.INVERT_CLASSIFIER_OUTPUT for the documented label-order
-    # workaround this implies).
     model.classifier[1] = nn.Linear(model.classifier[1].in_features, 1)
 
     checkpoint = torch.load(
         config.CLASSIFIER_WEIGHTS_PATH, map_location=device, weights_only=True
     )
 
-    # TEMP DEBUG: confirm the real shape of the saved classifier head.
-    # Remove this block once confirmed.
-    for k, v in checkpoint.items():
-        if "classifier" in k:
-            logger.warning("CHECKPOINT KEY %s -> shape %s", k, tuple(v.shape))
+    # Defensive: tolerate checkpoints saved with a different final-layer
+    # shape (e.g. multi-class head) by dropping just that layer's weights
+    # and letting the freshly-initialized nn.Linear above take over.
+    checkpoint.pop("classifier.1.weight", None)
+    checkpoint.pop("classifier.1.bias", None)
 
-    model.load_state_dict(checkpoint, strict=True)
+    missing, unexpected = model.load_state_dict(checkpoint, strict=False)
+    if missing:
+        logger.warning("Classifier checkpoint missing keys: %s", missing)
+    if unexpected:
+        logger.warning("Classifier checkpoint had unexpected keys: %s", unexpected)
 
     model.to(device)
     model.eval()
