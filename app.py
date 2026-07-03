@@ -10,7 +10,7 @@ from albumentations.pytorch import ToTensorV2
 import matplotlib.pyplot as plt
 import base64
 import os
-
+from model_loader import load_unet_model, load_classifier_model
 # ========== إعداد الصفحة ==========
 st.set_page_config(
     page_title="AnemicCheck - Détection d'Anémie",
@@ -355,53 +355,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ========== تحميل النماذج ==========
-@st.cache_resource
-def load_unet_model():
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    import segmentation_models_pytorch as smp
-    
-    unet = smp.Unet(encoder_name="resnet34", encoder_weights=None, in_channels=3, classes=1)
-    unet.load_state_dict(torch.load("unet_model.pth", map_location=device))
-    unet.to(device)
-    unet.eval()
-    
-    return unet, device
-
-@st.cache_resource
-def load_classifier_model():
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    
-    model = models.efficientnet_b3(pretrained=False)
-    model.classifier[1] = nn.Linear(model.classifier[1].in_features, 1)
-    
-    checkpoint = torch.load("efficientnet_b3.pth", map_location=device)
-    
-    if 'classifier.1.weight' in checkpoint:
-        del checkpoint['classifier.1.weight']
-    if 'classifier.1.bias' in checkpoint:
-        del checkpoint['classifier.1.bias']
-    
-    model.load_state_dict(checkpoint, strict=False)
-    model.to(device)
-    model.eval()
-    
-    return model, device
-
-# تحميل النماذج
-with st.spinner("🔃 Chargement des modèles intelligents..."):
-    try:
-        unet_model, unet_device = load_unet_model()
-    except Exception as e:
-        st.error(f"❌ Erreur de chargement U-Net: {e}")
-        st.stop()
-
-    try:
-        classifier_model, classifier_device = load_classifier_model()
-    except Exception as e:
-        st.error(f"❌ Erreur de chargement EfficientNet-B3: {e}")
-        st.stop()
-
-st.success("✅ Modèles chargés avec succès")
+unet, device = load_unet_model()
+classifier, _ = load_classifier_model()
 
 # ========== دالة تنظيف الماسك ==========
 def clean_mask(mask, min_area=500):
