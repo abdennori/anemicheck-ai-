@@ -1,4 +1,4 @@
-import streamlit as st
+﻿import streamlit as st
 import torch
 import cv2
 import numpy as np
@@ -1298,11 +1298,6 @@ with st.sidebar:
     <div class="sidebar-glass">
         <h4>📋 القائمة / Menu</h4>
         <div class="nav-item active">🏠 {t('nav_home')}</div>
-        <div class="nav-item">🔬 {t('nav_analyze')}</div>
-        <div class="nav-item">📊 {t('nav_history')}</div>
-        <div class="nav-item">ℹ️ {t('nav_info')}</div>
-        <div class="nav-item">💡 {t('nav_health')}</div>
-        <div class="nav-item">📱 {t('nav_about')}</div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1516,7 +1511,7 @@ with col2:
             key="camera_input"
         )
 
-# ========== FONCTIONS (inchangées) ==========
+# ========== FONCTIONS (modifiées) ==========
 def clean_mask(mask, min_area=500):
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cleaned = np.zeros_like(mask)
@@ -1528,20 +1523,7 @@ def clean_mask(mask, min_area=500):
     cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_OPEN, kernel)
     return cleaned
 
-def enhance_conjunctiva(image):
-    if len(image.shape) == 3:
-        lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
-        l, a, b = cv2.split(lab)
-        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
-        l_enh = clahe.apply(l)
-        l_enh = cv2.GaussianBlur(l_enh, (3,3), 0)
-        kernel = np.array([[-1,-1,-1],[-1,9,-1],[-1,-1,-1]])
-        l_enh = cv2.filter2D(l_enh, -1, kernel)
-        lab_enh = cv2.merge((l_enh, a, b))
-        enhanced = cv2.cvtColor(lab_enh, cv2.COLOR_LAB2RGB)
-        return enhanced
-    return image
-
+# ===================== الدالة المعدلة (بدون تحسين) =====================
 def extract_best_conjunctiva(img, mask):
     mask = clean_mask(mask)
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -1555,12 +1537,11 @@ def extract_best_conjunctiva(img, mask):
         h = min(img.shape[0] - y, h + 2*pad)
         if w > 0 and h > 0:
             cropped = img[y:y+h, x:x+w]
-            enhanced = enhance_conjunctiva(cropped)
             mask_cropped = mask[y:y+h, x:x+w]
-            return enhanced, mask_cropped, (x, y, w, h)
+            return cropped, mask_cropped, (x, y, w, h)
     conj = cv2.bitwise_and(img, img, mask=mask)
-    enhanced = enhance_conjunctiva(conj)
-    return enhanced, mask, None
+    return conj, mask, None
+# =====================================================================
 
 def predict_anemia(model, image, device):
     transform = transforms.Compose([
