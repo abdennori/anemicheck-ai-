@@ -13,6 +13,7 @@ import time
 import pandas as pd
 from datetime import datetime
 from model_loader import load_unet_model, load_classifier_model
+import config
 
 # ========== إعداد الصفحة ==========
 st.set_page_config(
@@ -1562,8 +1563,6 @@ def extract_best_conjunctiva(img, mask):
     enhanced = enhance_conjunctiva(conj)
     return enhanced, mask, None
 
-CLASS_NAMES = ["Anemic", "Non Anemic"]
-
 def predict_anemia(model, image, device):
     transform = transforms.Compose([
         transforms.Resize((224,224)),
@@ -1573,12 +1572,19 @@ def predict_anemia(model, image, device):
         image = Image.fromarray(image)
     tensor = transform(image).unsqueeze(0).to(device)
     with torch.no_grad():
-        out = model(tensor)                      # shape [1, 2]
-        probs = torch.softmax(out, dim=1)[0]      # softmax over the 2 logits
-        pred_idx = torch.argmax(probs).item()
-        confidence = probs[pred_idx].item() * 100
-    label = CLASS_NAMES[pred_idx]
-    return label, confidence, probs.tolist()
+        out = model(tensor)                 # shape [1, 1]
+        raw_sigmoid = torch.sigmoid(out).item()
+
+    # See config.INVERT_CLASSIFIER_OUTPUT: the training run's label
+    # convention is flipped (high raw score = healthy), so this flag
+    # corrects it into the intended "high score = anemic" convention.
+    p_anemic = (1 - raw_sigmoid) if config.INVERT_CLASSIFIER_OUTPUT else raw_sigmoid
+    p_non = 1 - p_anemic
+
+    label = "Anemic" if p_anemic >= 0.5 else "Non Anemic"
+    confidence = max(p_anemic, p_non) * 100
+    probs = [p_anemic, p_non]
+    return label, confidence, probs
 
 @st.cache_resource
 def load_models():
