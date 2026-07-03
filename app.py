@@ -126,12 +126,6 @@ LANGUAGES = {
         "nav_info": "ℹ️ معلومات المرض",
         "nav_health": "💡 نصائح صحية",
         "nav_about": "📱 حول التطبيق",
-        "stats_title": "لماذا AnemiCheck؟",
-        "stat_accuracy": "دقة تصل إلى 96%",
-        "stat_patients": "أكثر من 5,000 مريض",
-        "stat_hospitals": "معتمد في 30+ مستشفى",
-        "stat_seconds": "تحليل في أقل من 30 ثانية",
-        "footer_text": "© 2026 AnemiCheck – الذكاء الاصطناعي من أجل صحة أفضل",
     },
     "fr": {
         "app_title": "AnemiCheck AI",
@@ -235,12 +229,6 @@ LANGUAGES = {
         "nav_info": "ℹ️ Infos maladie",
         "nav_health": "💡 Conseils santé",
         "nav_about": "📱 À propos",
-        "stats_title": "Pourquoi AnemiCheck ?",
-        "stat_accuracy": "Précision jusqu'à 96%",
-        "stat_patients": "5 000+ patients",
-        "stat_hospitals": "Approuvé dans 30+ hôpitaux",
-        "stat_seconds": "Analyse en moins de 30 s",
-        "footer_text": "© 2026 AnemiCheck – L'IA pour une meilleure santé",
     },
     "en": {
         "app_title": "AnemiCheck AI",
@@ -344,12 +332,6 @@ LANGUAGES = {
         "nav_info": "ℹ️ Disease Info",
         "nav_health": "💡 Health Tips",
         "nav_about": "📱 About",
-        "stats_title": "Why AnemiCheck?",
-        "stat_accuracy": "Accuracy up to 96%",
-        "stat_patients": "5,000+ patients",
-        "stat_hospitals": "Trusted in 30+ hospitals",
-        "stat_seconds": "Analysis in under 30s",
-        "footer_text": "© 2026 AnemiCheck – AI for better health",
     }
 }
 
@@ -358,904 +340,534 @@ def t(key):
     lang = st.session_state.get("language", "fr")
     return LANGUAGES.get(lang, LANGUAGES["fr"]).get(key, key)
 
-# ========== CSS MODERN (exact variables from image.png) ==========
+# ========== CSS ==========
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-        --bg-primary: #F0F4FE;
-        --bg-surface: rgba(255,255,255,0.85);
-        --glass-bg: rgba(255,255,255,0.6);
-        --glass-border: rgba(255,255,255,0.3);
-        --ink: #0B1A33;
-        --slate: #2C3E5A;
-        --slate-soft: #6B7F99;
-        --line: #E2E8F0;
-        --primary-900: #0A2463;
-        --primary-700: #1D4ED8;
-        --primary-600: #2563EB;
-        --primary-400: #5B8DEF;
-        --primary-100: #E0E7FF;
-        --teal: #0E5A54;        /* corrected from #0E5A4 */
-        --teal-100: #D4F5F5;
-        --success: #10A85A;
-        --success-100: #E2F6E9;
-        --danger: #E23F4E;       /* corrected from #E23FAE */
-        --danger-100: #FDE8EA;
-        --amber: #DE9A1F;
-        --amber-100: #DFD3FD;    /* as in image */
-        --shadow-sm: 0 2px 8px rgba(10,36,99,0.06);
-        --shadow-md: 0 8px 30px rgba(10,36,99,0.10);
-        --shadow-lg: 0 24px 60px rgba(10,36,99,0.15);
-        --radius-sm: 12px;
-        --radius-md: 18px;
-        --radius-lg: 24px;
-        --radius-xl: 32px;
-        --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;700;800&display=swap');
+    
+    * { font-family: 'Inter', 'Tajawal', sans-serif; }
+    
+    .stApp {
+        background: linear-gradient(-45deg, #f8fafc, #eef2ff, #f1f5f9, #f8fafc);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
     }
-
-    html, body, .stApp {
-        background: var(--bg-primary);
-        font-family: 'Inter', 'Tajawal', sans-serif;
-        color: var(--ink);
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
     }
-
-    h1, h2, h3, h4, h5, .brand-font {
-        font-family: 'Plus Jakarta Sans', 'Tajawal', sans-serif;
-        font-weight: 700;
+    
+    /* ===== HEADER ===== */
+    .header {
+        background: rgba(255,255,255,0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        padding: 0.8rem 2rem;
+        border-radius: 0 0 24px 24px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: 1px solid rgba(255,255,255,0.3);
+        animation: slideDown 0.6s ease;
     }
-
-    /* --- ANIMATED BACKGROUND --- */
-    .stApp::before {
-        content: '';
-        position: fixed;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle at 20% 30%, rgba(37,99,235,0.03) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 70%, rgba(14,165,164,0.04) 0%, transparent 50%);
-        z-index: -1;
-        animation: floatBg 20s ease-in-out infinite alternate;
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
-
-    @keyframes floatBg {
-        0% { transform: translate(0, 0) rotate(0deg); }
-        100% { transform: translate(3%, -2%) rotate(2deg); }
-    }
-
-    /* --- SIDEBAR --- */
-    section[data-testid="stSidebar"] {
-        background: linear-gradient(145deg, #0B1B3F 0%, #0A2463 100%);
-        border-right: none;
-        box-shadow: 6px 0 30px rgba(10,36,99,0.2);
-        backdrop-filter: blur(8px);
-    }
-    section[data-testid="stSidebar"] * {
-        color: #E8EFFE !important;
-    }
-    section[data-testid="stSidebar"] [data-baseweb="select"] > div {
-        background: rgba(255,255,255,0.08);
-        border-radius: var(--radius-sm);
-        border: 1px solid rgba(255,255,255,0.12);
-    }
-    section[data-testid="stSidebar"] hr {
-        border-color: rgba(255,255,255,0.08);
-        margin: 1.2rem 0;
-    }
-
-    .sidebar-glass {
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: var(--radius-md);
-        padding: 1.2rem 1rem;
-        margin-bottom: 1.2rem;
-        backdrop-filter: blur(4px);
-        animation: fadeUp 0.6s ease;
-    }
-    .sidebar-glass h4 {
-        font-weight: 700;
-        margin-bottom: 0.8rem;
-        font-size: 13px;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        color: #AFC2F2 !important;
-    }
-    .sidebar-glass .nav-item {
-        padding: 10px 14px;
-        border-radius: 10px;
-        margin: 4px 0;
+    .header-left {
         display: flex;
         align-items: center;
         gap: 12px;
-        font-weight: 500;
-        font-size: 14px;
-        background: transparent;
-        border-left: 3px solid transparent;
-        transition: var(--transition);
-        cursor: default;
     }
-    .sidebar-glass .nav-item.active {
-        background: rgba(255,255,255,0.12);
-        border-left: 3px solid var(--teal);
+    .header-left h1 {
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+    }
+    .header-left h1 span { color: #e11d48; }
+    .header-left .subtitle {
+        font-size: 13px;
+        color: #64748b;
+        font-weight: 500;
+    }
+    .header-badges {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    .header-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #334155;
+        background: rgba(255,255,255,0.5);
+        padding: 4px 14px;
+        border-radius: 30px;
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+    .header-badge strong {
+        color: #e11d48;
         font-weight: 700;
     }
+    
+    /* ===== SIDEBAR ===== */
+    .sidebar-glass {
+        background: rgba(255,255,255,0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 24px;
+        padding: 1.5rem;
+        border: 1px solid rgba(255,255,255,0.3);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+        margin-bottom: 1.5rem;
+        animation: fadeUp 0.8s ease;
+    }
+    .sidebar-glass h4 {
+        color: #0f172a;
+        font-weight: 700;
+        margin-bottom: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 15px;
+    }
+    .sidebar-glass .nav-item {
+        padding: 10px 14px;
+        border-radius: 12px;
+        margin: 4px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 500;
+        color: #334155;
+        background: rgba(255,255,255,0.5);
+        cursor: default;
+        transition: all 0.3s ease;
+    }
+    .sidebar-glass .nav-item.active {
+        background: rgba(225,29,72,0.12);
+        color: #e11d48;
+        font-weight: 600;
+        border: 1px solid rgba(225,29,72,0.15);
+    }
     .sidebar-glass .nav-item:hover {
-        background: rgba(255,255,255,0.08);
+        background: rgba(225,29,72,0.04);
     }
     .sidebar-glass p, .sidebar-glass li {
-        font-size: 13.5px;
-        line-height: 1.7;
-        color: #D3DEF7 !important;
+        color: #334155;
+        font-size: 14px;
+        line-height: 1.6;
     }
     .sidebar-glass ul {
         padding-left: 1.2rem;
-        margin: 0;
     }
     .sidebar-glass .qr-container {
         display: flex;
         justify-content: center;
-        margin: 0.6rem 0;
+        margin: 0.8rem 0;
     }
     .sidebar-glass .qr-container img {
         border-radius: 16px;
+        border: 1px solid rgba(225,29,72,0.15);
         background: white;
-        padding: 6px;
-        box-shadow: var(--shadow-sm);
+        padding: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        transition: transform 0.3s ease;
     }
-    .doctor-btn {
-        background: rgba(255,255,255,0.1);
-        border: 1px solid rgba(255,255,255,0.18);
-        color: #fff !important;
-        border-radius: 30px;
-        padding: 11px 20px;
-        font-weight: 600;
-        font-size: 13.5px;
-        cursor: not-allowed;
-        width: 100%;
-        text-align: center;
-        margin-top: 8px;
-        transition: var(--transition);
-    }
-    .doctor-btn:hover {
-        background: rgba(255,255,255,0.18);
-    }
-    .coming-badge {
-        background: var(--teal);
-        color: #06312F !important;
-        font-size: 10px;
-        font-weight: 800;
-        padding: 2px 10px;
-        border-radius: 30px;
-        margin-left: 6px;
-        letter-spacing: 0.4px;
-        text-transform: uppercase;
-    }
-
-    /* --- TOP NAVBAR --- */
-    .navbar {
-        background: var(--glass-bg);
-        backdrop-filter: blur(18px) saturate(180%);
-        -webkit-backdrop-filter: blur(18px) saturate(180%);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--radius-lg);
-        padding: 0.7rem 1.6rem;
-        margin-bottom: 1.6rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        flex-wrap: wrap;
-        box-shadow: var(--shadow-sm);
-        animation: fadeUp 0.5s ease;
-    }
-    .navbar-brand {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-    }
-    .navbar-brand .mark {
-        width: 46px;
-        height: 46px;
-        border-radius: 14px;
-        background: linear-gradient(135deg, var(--primary-600), var(--primary-900));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        box-shadow: var(--shadow-sm);
-        flex-shrink: 0;
-        color: white;
-    }
-    .navbar-brand img.mark-img {
-        width: 46px;
-        height: 46px;
-        border-radius: 14px;
-        object-fit: cover;
-        box-shadow: var(--shadow-sm);
-    }
-    .navbar-brand h1 {
-        font-size: 20px;
-        font-weight: 800;
-        color: var(--ink);
-        margin: 0;
-        letter-spacing: -0.01em;
-        line-height: 1.2;
-    }
-    .navbar-brand .subtitle {
-        font-size: 12px;
-        color: var(--slate-soft);
-        font-weight: 500;
-        margin-top: 2px;
-    }
-    .navbar-badges {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-    .navbar-chip {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: var(--primary-100);
-        border: 1px solid rgba(37,99,235,0.10);
-        padding: 6px 14px 6px 10px;
-        border-radius: 40px;
-        transition: var(--transition);
-    }
-    .navbar-chip:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-sm);
-    }
-    .navbar-chip .chip-ic {
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        background: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        box-shadow: var(--shadow-sm);
-    }
-    .navbar-chip .chip-text {
-        line-height: 1.2;
-    }
-    .navbar-chip .chip-title {
-        font-size: 12.5px;
-        font-weight: 700;
-        color: var(--primary-900);
-        display: block;
-    }
-    .navbar-chip .chip-sub {
-        font-size: 10.5px;
-        color: var(--slate-soft);
-        display: block;
-    }
-
-    /* --- HERO --- */
-    .hero {
-        position: relative;
-        background: linear-gradient(135deg, #0A2463 0%, #1D4ED8 60%, #2563EB 100%);
-        border-radius: var(--radius-xl);
-        padding: 2.4rem 2.2rem;
-        margin-bottom: 2rem;
-        overflow: hidden;
-        box-shadow: var(--shadow-lg);
-        animation: fadeUp 0.7s ease;
-    }
-    .hero::before {
-        content: '';
-        position: absolute;
-        top: -30%;
-        right: -10%;
-        width: 400px;
-        height: 400px;
-        background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
-        border-radius: 50%;
-    }
-    .hero::after {
-        content: '';
-        position: absolute;
-        bottom: -20%;
-        left: 5%;
-        width: 280px;
-        height: 280px;
-        background: radial-gradient(circle, rgba(14,165,164,0.15) 0%, transparent 70%);
-        border-radius: 50%;
-    }
-    .hero-content {
-        position: relative;
-        z-index: 2;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 32px;
-        flex-wrap: wrap;
-    }
-    .hero-visual {
-        position: relative;
-        flex-shrink: 0;
-        width: 180px;
-        height: 180px;
-        margin: 0 auto;
-    }
-    .hero-visual .ring {
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
-        border: 2.5px solid rgba(255,255,255,0.4);
-        animation: pulseRing 2.8s ease-out infinite;
-    }
-    .doctor-image {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 4px solid rgba(255,255,255,0.9);
-        box-shadow: 0 18px 40px rgba(0,0,0,0.25);
-        animation: floatY 4s ease-in-out infinite;
-        position: relative;
-        z-index: 2;
-    }
-    .hero-visual .sparkle {
-        position: absolute;
-        bottom: 2px;
-        right: -4px;
-        z-index: 3;
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.20);
-        backdrop-filter: blur(6px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        box-shadow: var(--shadow-sm);
-    }
-    .hero-pulse {
-        flex: 1;
-        min-width: 140px;
-        opacity: 0.8;
-        display: none;
-    }
-    .hero-pulse svg path {
-        stroke-dasharray: 12 8;
-        animation: dashMove 6s linear infinite;
-    }
-    .hero-text {
-        flex: 1.3;
-        min-width: 240px;
-        text-align: center;
-    }
-    .hero-text h1 {
-        font-size: 34px;
-        font-weight: 800;
-        color: #fff;
-        margin: 0 0 6px;
-        line-height: 1.2;
-    }
-    .hero-text h1 span {
-        background: linear-gradient(120deg, #6EF3D6, #7FD8FF);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    .hero-text p {
-        font-size: 15.5px;
-        color: rgba(255,255,255,0.85);
-        margin: 0 0 18px;
-        max-width: 460px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-    .hero-badge {
-        background: rgba(255,255,255,0.12);
-        border: 1px solid rgba(255,255,255,0.25);
-        color: #fff;
-        padding: 7px 18px;
-        border-radius: 30px;
-        font-size: 13px;
-        font-weight: 600;
-        display: inline-block;
-        backdrop-filter: blur(4px);
-    }
-    .hero-cta {
-        margin-top: 14px;
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-    .hero-cta .btn-primary {
-        background: white;
-        color: var(--primary-900);
-        border: none;
-        padding: 12px 36px;
-        border-radius: 40px;
-        font-weight: 700;
-        font-size: 16px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-        transition: var(--transition);
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-    }
-    .hero-cta .btn-primary:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 14px 32px rgba(0,0,0,0.25);
-    }
-    .hero-cta .btn-secondary {
-        background: rgba(255,255,255,0.15);
-        color: white;
-        border: 1px solid rgba(255,255,255,0.3);
-        padding: 12px 28px;
-        border-radius: 40px;
-        font-weight: 600;
-        font-size: 16px;
-        transition: var(--transition);
-        cursor: pointer;
-        backdrop-filter: blur(4px);
-    }
-    .hero-cta .btn-secondary:hover {
-        background: rgba(255,255,255,0.25);
-    }
-
-    /* --- SECTIONS --- */
-    .section-title {
-        font-size: 22px;
-        font-weight: 800;
-        color: var(--ink);
-        margin: 2.2rem 0 1.2rem;
-        padding-left: 16px;
-        border-left: 5px solid var(--primary-600);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        animation: fadeUp 0.4s ease;
-    }
-
-    .card-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 18px;
-        margin: 1.2rem 0;
-    }
-
-    .feature-card {
-        background: var(--bg-surface);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255,255,255,0.6);
-        border-radius: var(--radius-md);
-        padding: 1.6rem 1.2rem;
-        text-align: center;
-        transition: var(--transition);
-        box-shadow: var(--shadow-sm);
-    }
-    .feature-card:hover {
-        transform: translateY(-6px);
-        box-shadow: var(--shadow-md);
-        border-color: rgba(37,99,235,0.15);
-    }
-    .feature-card .icon-circle {
-        width: 52px;
-        height: 52px;
-        border-radius: 16px;
-        background: var(--primary-100);
-        color: var(--primary-700);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        margin: 0 auto 12px;
-        transition: var(--transition);
-    }
-    .feature-card:hover .icon-circle {
-        background: var(--primary-700);
-        color: white;
+    .sidebar-glass .qr-container img:hover {
         transform: scale(1.05);
     }
+    
+    /* ===== HERO ===== */
+    .hero {
+        background: rgba(255,255,255,0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 28px;
+        padding: 2.5rem 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(255,255,255,0.3);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+        animation: fadeUp 0.8s ease;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    .hero:hover {
+        box-shadow: 0 16px 48px rgba(225,29,72,0.08);
+    }
+    .hero .icon {
+        font-size: 48px;
+        animation: float 3s ease-in-out infinite;
+        display: block;
+    }
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    .hero h1 {
+        font-size: 32px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0.5rem 0 0.2rem;
+    }
+    .hero h1 span {
+        background: linear-gradient(135deg, #9f1239, #e11d48);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+        font-size: 16px;
+        color: #64748b;
+        margin: 0.5rem 0 1.2rem;
+    }
+    .hero .hero-badge {
+        background: rgba(225,29,72,0.08);
+        color: #e11d48;
+        padding: 6px 18px;
+        border-radius: 30px;
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    .doctor-image {
+        border-radius: 50%;
+        box-shadow: 0 8px 32px rgba(225,29,72,0.15);
+        border: 3px solid rgba(225,29,72,0.1);
+        transition: transform 0.3s ease;
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+    }
+    .doctor-image:hover {
+        transform: scale(1.05);
+    }
+    .hero-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 30px;
+        flex-wrap: wrap;
+    }
+    .hero-text {
+        flex: 1;
+        min-width: 250px;
+    }
+    
+    /* ===== FEATURES ===== */
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin: 1.5rem 0;
+    }
+    @media (max-width: 768px) {
+        .features-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    .feature-card {
+        background: rgba(255,255,255,0.6);
+        backdrop-filter: blur(8px);
+        border-radius: 20px;
+        padding: 1.5rem;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.3);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    }
+    .feature-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+    }
+    .feature-card .icon {
+        font-size: 32px;
+    }
     .feature-card h4 {
-        color: var(--ink);
+        color: #0f172a;
         font-weight: 700;
-        margin: 6px 0 4px;
+        margin: 8px 0 4px;
         font-size: 16px;
     }
     .feature-card p {
-        color: var(--slate);
+        color: #64748b;
         font-size: 13px;
         margin: 0;
-        line-height: 1.5;
     }
-
-    /* --- HOW IT WORKS --- */
+    
+    /* ===== HOW IT WORKS ===== */
     .how-section {
-        background: var(--bg-surface);
+        background: rgba(255,255,255,0.6);
         backdrop-filter: blur(8px);
-        border-radius: var(--radius-lg);
-        padding: 2.4rem 2rem;
-        margin: 2rem 0;
-        border: 1px solid rgba(255,255,255,0.6);
-        box-shadow: var(--shadow-sm);
-    }
-    .how-title-row {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 16px;
-        margin-bottom: 1.8rem;
-    }
-    .how-title-row .line {
-        height: 2px;
-        width: 48px;
-        background: var(--line);
-        border-radius: 4px;
+        border-radius: 24px;
+        padding: 2rem;
+        margin: 1.5rem 0;
+        border: 1px solid rgba(255,255,255,0.3);
     }
     .how-section h3 {
-        color: var(--ink);
-        font-weight: 800;
-        font-size: 24px;
-        margin: 0;
+        color: #0f172a;
+        font-weight: 700;
+        font-size: 22px;
+        text-align: center;
+        margin-bottom: 1.5rem;
     }
     .how-steps {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 20px;
-        position: relative;
     }
     @media (max-width: 768px) {
-        .how-steps { grid-template-columns: 1fr; }
+        .how-steps {
+            grid-template-columns: 1fr;
+        }
     }
     .how-step {
         text-align: center;
-        padding: 1.6rem 1.2rem;
-        background: rgba(244,247,252,0.6);
-        backdrop-filter: blur(4px);
-        border-radius: var(--radius-md);
-        border: 1px solid rgba(255,255,255,0.5);
-        transition: var(--transition);
-    }
-    .how-step:hover {
-        box-shadow: var(--shadow-sm);
-        transform: translateY(-4px);
-        background: white;
+        padding: 0 10px;
     }
     .how-step .step-num {
-        background: linear-gradient(135deg, var(--primary-600), var(--primary-900));
+        background: linear-gradient(135deg, #e11d48, #fb7185);
         color: white;
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
         font-size: 18px;
-        margin: 0 auto 14px;
-        box-shadow: var(--shadow-sm);
+        margin: 0 auto 10px;
     }
     .how-step h5 {
-        color: var(--ink);
+        color: #0f172a;
         font-weight: 700;
-        margin: 0 0 6px;
+        margin: 0 0 4px;
         font-size: 16px;
     }
     .how-step p {
-        color: var(--slate);
-        font-size: 13.5px;
+        color: #64748b;
+        font-size: 14px;
         margin: 0;
     }
-
-    /* --- TRUST BADGES --- */
+    
+    /* ===== TRUST BADGES ===== */
     .trust-section {
         display: flex;
         justify-content: center;
-        gap: 36px;
+        gap: 30px;
         flex-wrap: wrap;
-        margin: 1.8rem 0;
-        padding: 1.2rem 1.5rem;
-        background: var(--primary-100);
-        border-radius: var(--radius-md);
-        border: 1px solid rgba(37,99,235,0.08);
+        margin: 1.5rem 0;
+        padding: 1.5rem;
+        background: rgba(255,255,255,0.5);
+        backdrop-filter: blur(4px);
+        border-radius: 20px;
     }
     .trust-item {
         display: flex;
         align-items: center;
         gap: 8px;
         font-weight: 600;
-        color: var(--primary-900);
-        font-size: 14px;
+        color: #0f172a;
+        font-size: 15px;
     }
     .trust-item .icon {
-        font-size: 20px;
+        font-size: 24px;
     }
-
-    /* --- UPLOAD CARD --- */
-    .upload-card {
-        background: var(--bg-surface);
-        backdrop-filter: blur(8px);
-        border-radius: var(--radius-xl);
-        padding: 2.4rem 1.8rem;
-        text-align: center;
-        border: 2px dashed rgba(37,99,235,0.20);
-        transition: var(--transition);
-        margin-bottom: 1.6rem;
-        box-shadow: var(--shadow-sm);
-    }
-    .upload-card:hover {
-        border-color: var(--primary-600);
-        box-shadow: var(--shadow-md);
-        transform: translateY(-4px);
-    }
-    .upload-card .icon-circle {
-        width: 72px;
-        height: 72px;
-        border-radius: 20px;
-        background: var(--primary-100);
-        color: var(--primary-700);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 32px;
-        margin: 0 auto 14px;
-        animation: floatY 3.5s ease-in-out infinite;
-    }
-    .upload-card h3 {
-        font-weight: 800;
-        color: var(--ink);
-        margin: 4px 0 6px;
-        font-size: 20px;
-    }
-    .upload-card p {
-        color: var(--slate);
-        font-size: 14px;
-        margin: 0;
-    }
-
-    /* --- PREVIEW --- */
-    .preview-container {
-        background: var(--bg-surface);
-        backdrop-filter: blur(8px);
-        border-radius: var(--radius-lg);
-        padding: 1.6rem;
-        border: 1px solid rgba(255,255,255,0.6);
-        box-shadow: var(--shadow-sm);
-        margin: 1.4rem 0;
-        animation: fadeUp 0.5s ease;
-    }
-    .preview-container h4 {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: var(--ink);
-        font-weight: 700;
-        font-size: 16px;
-        margin-bottom: 0.8rem;
-    }
-    .preview-container img {
-        border-radius: 16px;
-        max-height: 320px;
-        object-fit: contain;
-        width: 100%;
-        box-shadow: var(--shadow-sm);
-    }
-
-    /* --- RESULT CARDS --- */
+    
+    /* ===== RESULT CARDS ===== */
     .result-card {
-        border-radius: var(--radius-lg);
-        padding: 1.8rem 2rem;
-        margin-top: 0.6rem;
-        border: 1px solid transparent;
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        animation: fadeUp 0.4s ease;
-        box-shadow: var(--shadow-sm);
-        backdrop-filter: blur(8px);
+        border-radius: 24px;
+        padding: 1.8rem;
+        margin-top: 1.5rem;
+        border-left: 6px solid #e11d48;
+        animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+        transition: all 0.3s ease;
     }
-    .result-card .badge-ic {
-        width: 60px;
-        height: 60px;
-        border-radius: 18px;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 28px;
+    @keyframes popIn {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
     }
     .result-card.positive {
-        background: var(--danger-100);
-        border-color: rgba(226,63,78,0.15);
-    }
-    .result-card.positive .badge-ic {
-        background: var(--danger);
-        color: #fff;
+        background: rgba(254, 242, 242, 0.8);
+        border-left-color: #dc2626;
     }
     .result-card.negative {
-        background: var(--success-100);
-        border-color: rgba(16,168,90,0.15);
-    }
-    .result-card.negative .badge-ic {
-        background: var(--success);
-        color: #fff;
+        background: rgba(240, 253, 244, 0.8);
+        border-left-color: #16a34a;
     }
     .result-card h2 {
-        font-size: 24px;
-        font-weight: 800;
-        margin: 0 0 4px;
-        color: var(--ink);
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0 0 6px;
     }
     .result-card .confidence {
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 600;
-        color: var(--ink);
-    }
-    .result-card .confidence strong {
-        color: var(--primary-700);
+        color: #1e293b;
     }
     .result-card .sub {
-        font-size: 13px;
-        color: var(--slate);
-        margin-top: 2px;
-    }
-
-    /* --- DISCLAIMER (uses amber-100 = #DFD3FD as in image) --- */
-    .disclaimer {
-        background: var(--amber-100);
-        border-radius: var(--radius-md);
-        padding: 1.2rem 1.6rem;
-        border: 1px solid rgba(222,154,31,0.15);
-        border-left: 5px solid var(--amber);
-        margin-top: 2rem;
-        font-size: 13.5px;
-        color: #3D2A5C;
-        line-height: 1.7;
-        animation: fadeUp 0.5s ease;
-    }
-    .disclaimer strong {
-        color: #2A1A40;
-    }
-
-    /* --- STATS BAR --- */
-    .stats-bar {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        margin: 2rem 0;
-    }
-    @media (max-width: 768px) {
-        .stats-bar { grid-template-columns: repeat(2, 1fr); }
-    }
-    .stat-item {
-        background: var(--bg-surface);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255,255,255,0.6);
-        border-radius: var(--radius-md);
-        padding: 1.4rem 0.8rem;
-        text-align: center;
-        box-shadow: var(--shadow-sm);
-        transition: var(--transition);
-    }
-    .stat-item:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-md);
-    }
-    .stat-item .stat-number {
-        font-size: 28px;
-        font-weight: 800;
-        color: var(--primary-700);
-        line-height: 1.2;
-    }
-    .stat-item .stat-label {
         font-size: 14px;
-        color: var(--slate);
-        margin-top: 4px;
+        color: #64748b;
     }
-
-    /* --- FOOTER --- */
-    .app-footer {
-        margin-top: 3rem;
-        padding: 1.8rem 0;
-        border-top: 1px solid var(--line);
-        text-align: center;
-        color: var(--slate-soft);
-        font-size: 14px;
+    
+    /* ===== GENERAL ===== */
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
     }
-    .app-footer a {
-        color: var(--primary-600);
-        text-decoration: none;
-        font-weight: 500;
+    .section-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 2rem 0 1rem;
+        padding-bottom: 8px;
+        border-bottom: 3px solid #e11d48;
+        display: inline-block;
+        animation: fadeUp 0.6s ease;
     }
-    .app-footer a:hover {
-        text-decoration: underline;
+    .stImage img { border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    
+    [data-testid="stMetricValue"] {
+        font-size: 28px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
     }
-
-    /* --- WIDGET OVERRIDES --- */
+    [data-testid="stMetric"] {
+        background: rgba(255,255,255,0.7);
+        backdrop-filter: blur(4px);
+        border-radius: 16px;
+        padding: 12px 16px;
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    #MainMenu, footer, .stDeployButton { display: none; }
+    
     .stButton > button {
-        background: linear-gradient(135deg, var(--primary-600), var(--primary-900));
+        background: linear-gradient(135deg, #e11d48, #be123c);
         color: white;
         border: none;
         border-radius: 40px;
-        padding: 14px 32px;
-        font-weight: 700;
-        letter-spacing: 0.01em;
-        transition: var(--transition);
+        padding: 12px 28px;
+        font-weight: 600;
+        transition: 0.3s;
         width: 100%;
-        box-shadow: 0 10px 24px rgba(29,78,216,0.25);
+        box-shadow: 0 4px 16px rgba(225,29,72,0.2);
     }
     .stButton > button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 16px 36px rgba(29,78,216,0.35);
+        transform: scale(1.02);
+        box-shadow: 0 8px 24px rgba(225,29,72,0.3);
     }
+    
     .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, var(--primary-600), var(--teal));
+        background: linear-gradient(90deg, #e11d48, #fb7185);
         border-radius: 10px;
         transition: width 0.5s ease;
     }
-    [data-testid="stMetric"] {
-        background: var(--bg-surface);
+    
+    /* ===== UPLOAD ===== */
+    .upload-card {
+        background: rgba(255,255,255,0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 28px;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        border: 2px dashed rgba(225,29,72,0.2);
+        transition: all 0.4s ease;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+        animation: fadeUp 0.8s ease;
+    }
+    .upload-card:hover {
+        border-color: #e11d48;
+        background: rgba(255,255,255,0.8);
+        transform: translateY(-4px);
+        box-shadow: 0 16px 48px rgba(225,29,72,0.08);
+    }
+    .upload-card .icon {
+        font-size: 48px;
+        animation: float 3s ease-in-out infinite;
+    }
+    .upload-card h3 {
+        font-weight: 700;
+        color: #0f172a;
+        margin: 10px 0 4px;
+        font-size: 20px;
+    }
+    .upload-card p {
+        color: #64748b;
+        font-size: 14px;
+        margin: 0;
+    }
+    
+    /* ===== PREVIEW ===== */
+    .preview-container {
+        background: rgba(255,255,255,0.6);
         backdrop-filter: blur(8px);
-        border-radius: 14px;
-        padding: 16px 20px;
-        border: 1px solid rgba(255,255,255,0.6);
-        box-shadow: var(--shadow-sm);
-        transition: var(--transition);
+        border-radius: 24px;
+        padding: 1.5rem;
+        border: 1px solid rgba(255,255,255,0.3);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+        margin: 1.5rem 0;
+        animation: fadeUp 0.6s ease;
     }
-    [data-testid="stMetric"]:hover {
-        box-shadow: var(--shadow-md);
-    }
-    [data-testid="stMetricValue"] {
-        font-size: 28px !important;
-        font-weight: 800 !important;
-        color: var(--ink) !important;
-    }
-    .stDataFrame, [data-testid="stDataFrame"] {
-        border-radius: 14px;
-        overflow: hidden;
-        border: 1px solid var(--line);
-        box-shadow: var(--shadow-sm);
-    }
-    [data-testid="stExpander"] {
-        background: var(--bg-surface);
-        backdrop-filter: blur(8px);
-        border-radius: 14px;
-        border: 1px solid rgba(255,255,255,0.6);
-        box-shadow: var(--shadow-sm);
-        margin: 0.8rem 0;
-    }
-    [data-testid="stExpander"] summary {
-        font-weight: 600;
-    }
-    .stImage img {
+    .preview-container img {
         border-radius: 16px;
-        box-shadow: var(--shadow-sm);
+        max-height: 300px;
+        object-fit: contain;
+        width: 100%;
     }
-    #MainMenu, footer, .stDeployButton {
-        display: none;
+    
+    /* ===== DISCLAIMER ===== */
+    .disclaimer {
+        background: rgba(254, 252, 232, 0.8);
+        backdrop-filter: blur(4px);
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        border-left: 6px solid #f59e0b;
+        margin-top: 2rem;
+        font-size: 13px;
+        color: #4b5563;
+        line-height: 1.6;
+        animation: fadeUp 1s ease;
     }
-
-    /* --- ANIMATIONS --- */
-    @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+    
+    .doctor-btn {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: white;
+        border: none;
+        border-radius: 40px;
+        padding: 12px 24px;
+        font-weight: 600;
+        font-size: 15px;
+        cursor: not-allowed;
+        opacity: 0.6;
+        width: 100%;
+        text-align: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(37,99,235,0.2);
+        margin-top: 10px;
     }
-    @keyframes floatY {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
+    .doctor-btn:hover {
+        opacity: 0.8;
+        transform: scale(1.02);
     }
-    @keyframes dashMove {
-        to { stroke-dashoffset: -400; }
+    .coming-badge {
+        background: #f59e0b;
+        color: white;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 12px;
+        border-radius: 30px;
+        margin-left: 8px;
+        letter-spacing: 0.5px;
     }
-    @keyframes pulseRing {
-        0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.3); }
-        100% { box-shadow: 0 0 0 18px rgba(255,255,255,0); }
-    }
+</style>
 """, unsafe_allow_html=True)
 
 # ========== SESSION STATE ==========
@@ -1276,6 +888,7 @@ logo = get_logo_base64()
 
 # ========== SIDEBAR ==========
 with st.sidebar:
+    # Sélecteur de langue
     lang_map = {
         "ar": "🇸🇦 العربية",
         "fr": "🇫🇷 Français",
@@ -1293,7 +906,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # Navigation
+    # ===== قائمة ثابتة =====
     st.markdown(f"""
     <div class="sidebar-glass">
         <h4>📋 القائمة / Menu</h4>
@@ -1308,7 +921,7 @@ with st.sidebar:
     
     # QR Code
     APP_URL = "https://hwaxrexkahkxaazwwjjr3d.streamlit.app/"
-    qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&color=1450D6&data={APP_URL}"
+    qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&color=e11d48&data={APP_URL}"
     
     st.markdown(f"""
     <div class="sidebar-glass">
@@ -1316,11 +929,11 @@ with st.sidebar:
         <div class="qr-container">
             <img src="{qr_api_url}" width="160" height="160" alt="QR Code">
         </div>
-        <p style="text-align:center; font-size:13px; color:#AFC2F2;">{t('sidebar_qr_desc')}</p>
+        <p style="text-align:center; font-size:13px; color:#64748b;">{t('sidebar_qr_desc')}</p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Health tips
+    # Conseils santé
     st.markdown(f"""
     <div class="sidebar-glass">
         <h4>{t('sidebar_health_title')}</h4>
@@ -1333,13 +946,13 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
-    # Doctor consultation
+    # Consultation médecin
     st.markdown(f"""
     <div class="sidebar-glass">
         <h4>{t('sidebar_doctor_title')} <span class="coming-badge">{t('sidebar_doctor_soon')}</span></h4>
         <p>{t('sidebar_doctor_desc')}</p>
         <div class="doctor-btn">{t('sidebar_doctor_btn')}</div>
-        <p style="font-size:12px; color:#7C93C9; text-align:center; margin-top:8px;">{t('sidebar_doctor_soon')}</p>
+        <p style="font-size:12px; color:#94a3b8; text-align:center; margin-top:8px;">{t('sidebar_doctor_soon')}</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1347,147 +960,66 @@ with st.sidebar:
     st.caption(t('sidebar_version'))
 
 # ========== PAGE PRINCIPALE ==========
-# Navbar
-logo_mark_html = f'<img src="data:image/png;base64,{logo}" class="mark-img">' if logo else '<div class="mark">🩸</div>'
-
-st.markdown(f"""
-<div class="navbar">
-    <div class="navbar-brand">
-        {logo_mark_html}
-        <div>
-            <h1>{t('app_title')}</h1>
-            <div class="subtitle">{t('app_subtitle')}</div>
-        </div>
-    </div>
-    <div class="navbar-badges">
-        <div class="navbar-chip">
-            <div class="chip-ic">🔒</div>
-            <div class="chip-text">
-                <span class="chip-title">{t('badge_private')}</span>
-                <span class="chip-sub">{t('badge_private_desc')}</span>
+# Header avec badges
+if logo:
+    st.markdown(f"""
+    <div class="header">
+        <div class="header-left">
+            <img src="data:image/png;base64,{logo}" style="height:42px;">
+            <div>
+                <h1>{t('app_title')}</h1>
+                <div class="subtitle">{t('app_subtitle')}</div>
             </div>
         </div>
-        <div class="navbar-chip">
-            <div class="chip-ic">⏰</div>
-            <div class="chip-text">
-                <span class="chip-title">{t('badge_available')}</span>
-                <span class="chip-sub">{t('badge_available_desc')}</span>
-            </div>
+        <div class="header-badges">
+            <div class="header-badge">🔒 <strong>{t('badge_private')}</strong> {t('badge_private_desc')}</div>
+            <div class="header-badge">⏰ <strong>{t('badge_available')}</strong> {t('badge_available_desc')}</div>
         </div>
     </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+else:
+    st.markdown(f"""
+    <div class="header">
+        <div class="header-left">
+            <div style="font-size:36px;">🩸</div>
+            <div>
+                <h1>{t('app_title')}</h1>
+                <div class="subtitle">{t('app_subtitle')}</div>
+            </div>
+        </div>
+        <div class="header-badges">
+            <div class="header-badge">🔒 <strong>{t('badge_private')}</strong> {t('badge_private_desc')}</div>
+            <div class="header-badge">⏰ <strong>{t('badge_available')}</strong> {t('badge_available_desc')}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# ========== HERO ==========
+# ========== HERO SECTION AVEC IMAGE DU MÉDECIN ==========
+# Utilisation d'une icône de médecin (Flaticon)
 doctor_img_url = "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"
 
 st.markdown(f"""
 <div class="hero">
     <div class="hero-content">
-        <div class="hero-visual">
-            <div class="ring"></div>
+        <div>
             <img src="{doctor_img_url}" class="doctor-image" alt="Médecin / Doctor">
-            <div class="sparkle">✨</div>
-        </div>
-        <div class="hero-pulse">
-            <svg viewBox="0 0 220 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="width:100%;height:44px;">
-                <path d="M0 30 L45 30 L58 8 L72 52 L86 30 L220 30" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
         </div>
         <div class="hero-text">
+            <span class="icon">🩺</span>
             <h1>{t('hero_title')}</h1>
             <p>{t('hero_desc')}</p>
-            <span class="hero-badge">✅ {t('hero_badge')}</span>
-            <div class="hero-cta">
-                <a href="#upload-section" class="btn-primary">🚀 {t('analyze_btn')}</a>
-                <span class="btn-secondary">📖 {t('how_title')}</span>
+            <div style="margin-top:10px;">
+                <span class="hero-badge">✅ {t('hero_badge')}</span>
             </div>
         </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# ========== STATS BAR ==========
-st.markdown(f"""
-<div class="stats-bar">
-    <div class="stat-item">
-        <div class="stat-number">96%</div>
-        <div class="stat-label">{t('stat_accuracy')}</div>
-    </div>
-    <div class="stat-item">
-        <div class="stat-number">5K+</div>
-        <div class="stat-label">{t('stat_patients')}</div>
-    </div>
-    <div class="stat-item">
-        <div class="stat-number">30+</div>
-        <div class="stat-label">{t('stat_hospitals')}</div>
-    </div>
-    <div class="stat-item">
-        <div class="stat-number"><30s</div>
-        <div class="stat-label">{t('stat_seconds')}</div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-# ========== FEATURES GRID ==========
-st.markdown(f"""
-<div class="card-grid">
-    <div class="feature-card">
-        <div class="icon-circle">⚡</div>
-        <h4>{t('feature_1_title')}</h4>
-        <p>{t('feature_1_desc')}</p>
-    </div>
-    <div class="feature-card">
-        <div class="icon-circle">📤</div>
-        <h4>{t('feature_2_title')}</h4>
-        <p>{t('feature_2_desc')}</p>
-    </div>
-    <div class="feature-card">
-        <div class="icon-circle">✅</div>
-        <h4>{t('feature_3_title')}</h4>
-        <p>{t('feature_3_desc')}</p>
-    </div>
-    <div class="feature-card">
-        <div class="icon-circle">🔒</div>
-        <h4>{t('feature_4_title')}</h4>
-        <p>{t('feature_4_desc')}</p>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-# ========== HOW IT WORKS ==========
-st.markdown(f"""
-<div class="how-section">
-    <div class="how-title-row">
-        <div class="line"></div>
-        <h3>{t('how_title')}</h3>
-        <div class="line"></div>
-    </div>
-    <div class="how-steps">
-        <div class="how-step">
-            <div class="step-num">1</div>
-            <h5>{t('how_step1')}</h5>
-            <p>{t('how_step1_desc')}</p>
-        </div>
-        <div class="how-step">
-            <div class="step-num">2</div>
-            <h5>{t('how_step2')}</h5>
-            <p>{t('how_step2_desc')}</p>
-        </div>
-        <div class="how-step">
-            <div class="step-num">3</div>
-            <h5>{t('how_step3')}</h5>
-            <p>{t('how_step3_desc')}</p>
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-# ========== UPLOAD SECTION (with anchor) ==========
-st.markdown('<div id="upload-section"></div>', unsafe_allow_html=True)
+# ========== ZONE UPLOAD ==========
 st.markdown(f"""
 <div class="upload-card">
-    <div class="icon-circle">📸</div>
+    <div class="icon">📸</div>
     <h3>{t('upload_title')}</h3>
     <p>{t('upload_desc')}</p>
 </div>
@@ -1516,7 +1048,7 @@ with col2:
             key="camera_input"
         )
 
-# ========== FONCTIONS (inchangées) ==========
+# ========== FONCTIONS ==========
 def clean_mask(mask, min_area=500):
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cleaned = np.zeros_like(mask)
@@ -1630,7 +1162,7 @@ if uploaded is not None:
             progress_bar.empty()
             st.success(t("analysis_done"))
 
-            # ===== RESULTS =====
+            # --- IMAGES ---
             st.markdown(f'<div class="section-title">{t("results_title")}</div>', unsafe_allow_html=True)
             col1, col2, col3 = st.columns(3)
             with col1:
@@ -1643,7 +1175,7 @@ if uploaded is not None:
                 st.markdown(f"**{t('result_conjunctiva')}**")
                 st.image(conj_enhanced, use_container_width=True)
 
-            # Metrics
+            # --- MÉTRIQUES ---
             before = np.sum(raw_mask > 0) / 255
             after = np.sum(final_mask > 0) / 255
             reduction = ((before - after) / before * 100) if before > 0 else 0
@@ -1654,39 +1186,32 @@ if uploaded is not None:
             with m2:
                 st.metric(t("metric_cleaning"), f"{reduction:.1f}%")
 
-            # Diagnosis
+            # --- DIAGNOSTIC ---
             st.markdown(f'<div class="section-title">{t("diagnostic_title")}</div>', unsafe_allow_html=True)
             col_res, col_conf = st.columns(2)
             with col_res:
                 if result == "Anemic":
                     st.markdown(f"""
                     <div class="result-card positive">
-                        <div class="badge-ic">🩸</div>
-                        <div>
-                            <h2>{t('diagnostic_anemic')}</h2>
-                            <div class="confidence">{t('diagnostic_confidence')} : <strong>{confidence:.1f}%</strong></div>
-                            <div class="sub">{t('diagnostic_anemic_desc')}</div>
-                        </div>
+                        <h2>{t('diagnostic_anemic')}</h2>
+                        <div class="confidence">{t('diagnostic_confidence')} : <strong>{confidence:.1f}%</strong></div>
+                        <div class="sub">{t('diagnostic_anemic_desc')}</div>
                     </div>
                     """, unsafe_allow_html=True)
                 else:
                     st.markdown(f"""
                     <div class="result-card negative">
-                        <div class="badge-ic">✅</div>
-                        <div>
-                            <h2>{t('diagnostic_non_anemic')}</h2>
-                            <div class="confidence">{t('diagnostic_confidence')} : <strong>{confidence:.1f}%</strong></div>
-                            <div class="sub">{t('diagnostic_non_anemic_desc')}</div>
-                        </div>
+                        <h2>{t('diagnostic_non_anemic')}</h2>
+                        <div class="confidence">{t('diagnostic_confidence')} : <strong>{confidence:.1f}%</strong></div>
+                        <div class="sub">{t('diagnostic_non_anemic_desc')}</div>
                     </div>
                     """, unsafe_allow_html=True)
             with col_conf:
                 st.metric(t("diagnostic_confidence"), f"{confidence:.1f}%")
                 st.progress(int(confidence))
 
-            # Chart
+            # --- GRAPHIQUE ---
             st.markdown(f'<div class="section-title">{t("chart_title")}</div>', unsafe_allow_html=True)
-            plt.style.use('seaborn-v0_8-whitegrid')
             fig, ax = plt.subplots(figsize=(8,5))
             cats = [t('chart_non'), t('chart_anemic')]
             vals = [non_pct, anemia_pct]
@@ -1694,7 +1219,7 @@ if uploaded is not None:
             bars = ax.bar(cats, vals, color=colors, width=0.5, edgecolor='white', linewidth=2)
             ax.set_ylim(0,100)
             ax.set_ylabel('Pourcentage (%)')
-            ax.set_title(t('chart_title'), fontweight='bold', fontsize=14)
+            ax.set_title(t('chart_title'), fontweight='bold')
             ax.grid(True, alpha=0.3, axis='y')
             for bar, v in zip(bars, vals):
                 ax.text(bar.get_x()+bar.get_width()/2, v+2, f'{v:.1f}%', ha='center', fontweight='bold', fontsize=14)
@@ -1702,7 +1227,7 @@ if uploaded is not None:
             ax.spines['right'].set_visible(False)
             st.pyplot(fig)
 
-            # History
+            # --- HISTORIQUE ---
             entry = {
                 t("history_date"): datetime.now().strftime("%Y-%m-%d %H:%M"),
                 t("history_diagnostic"): result,
@@ -1718,7 +1243,7 @@ if uploaded is not None:
                 df = pd.DataFrame(st.session_state.history)
                 st.dataframe(df, use_container_width=True, hide_index=True)
 
-            # Technical details
+            # --- DÉTAILS TECHNIQUES ---
             with st.expander(t("tech_details")):
                 st.write(f"**{t('tech_model_seg')}:** U‑Net (ResNet34)")
                 st.write(f"**{t('tech_model_clf')}:** EfficientNet‑B3")
@@ -1729,14 +1254,64 @@ if uploaded is not None:
                 st.write(f"**{t('tech_preprocess')}:** CLAHE + Filtrage + Netteté")
                 st.write(f"**{t('tech_decision')}:** {t('tech_decision_value')}")
 
-            # Disclaimer
+            # --- AVERTISSEMENT ---
             st.markdown(f"""
             <div class="disclaimer">
-                ⚠️ <strong>{t('disclaimer')}</strong><br>
+                <strong>{t('disclaimer')}</strong><br>
                 {t('disclaimer_text')}<br>
                 {t('disclaimer_consult')}
             </div>
             """, unsafe_allow_html=True)
+
+# ========== FEATURES GRID ==========
+st.markdown("""
+<div class="features-grid">
+    <div class="feature-card">
+        <div class="icon">⚡</div>
+        <h4>""" + t('feature_1_title') + """</h4>
+        <p>""" + t('feature_1_desc') + """</p>
+    </div>
+    <div class="feature-card">
+        <div class="icon">📤</div>
+        <h4>""" + t('feature_2_title') + """</h4>
+        <p>""" + t('feature_2_desc') + """</p>
+    </div>
+    <div class="feature-card">
+        <div class="icon">✅</div>
+        <h4>""" + t('feature_3_title') + """</h4>
+        <p>""" + t('feature_3_desc') + """</p>
+    </div>
+    <div class="feature-card">
+        <div class="icon">🔒</div>
+        <h4>""" + t('feature_4_title') + """</h4>
+        <p>""" + t('feature_4_desc') + """</p>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# ========== HOW IT WORKS ==========
+st.markdown(f"""
+<div class="how-section">
+    <h3>{t('how_title')}</h3>
+    <div class="how-steps">
+        <div class="how-step">
+            <div class="step-num">1</div>
+            <h5>{t('how_step1')}</h5>
+            <p>{t('how_step1_desc')}</p>
+        </div>
+        <div class="how-step">
+            <div class="step-num">2</div>
+            <h5>{t('how_step2')}</h5>
+            <p>{t('how_step2_desc')}</p>
+        </div>
+        <div class="how-step">
+            <div class="step-num">3</div>
+            <h5>{t('how_step3')}</h5>
+            <p>{t('how_step3_desc')}</p>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # ========== TRUST BADGES ==========
 st.markdown(f"""
@@ -1749,35 +1324,23 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ========== BOTTOM INFO (Fast/Smart/Secure) ==========
+# ========== BOTTOM INFO ==========
 st.markdown(f"""
-<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:1.8rem 0;">
+<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:1.5rem 0;">
     <div class="feature-card">
-        <div class="icon-circle">⚡</div>
+        <div class="icon">⚡</div>
         <h4>{t('fast')}</h4>
         <p>{t('fast_desc')}</p>
     </div>
     <div class="feature-card">
-        <div class="icon-circle">🧠</div>
+        <div class="icon">🧠</div>
         <h4>{t('smart')}</h4>
         <p>{t('smart_desc')}</p>
     </div>
     <div class="feature-card">
-        <div class="icon-circle">🔒</div>
+        <div class="icon">🔒</div>
         <h4>{t('secure')}</h4>
         <p>{t('secure_desc')}</p>
     </div>
-</div>
-""", unsafe_allow_html=True)
-
-# ========== FOOTER ==========
-st.markdown(f"""
-<div class="app-footer">
-    <p>{t('footer_text')}</p>
-    <p style="font-size:12px; margin-top:4px;">
-        <a href="#">{t('nav_about')}</a> • 
-        <a href="#">{t('sidebar_health_title')}</a> • 
-        <a href="#">{t('sidebar_doctor_title')}</a>
-    </p>
 </div>
 """, unsafe_allow_html=True)
