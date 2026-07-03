@@ -1,11 +1,12 @@
+streamlit==1.46.1
 
-streamlit
-torch
-torchvision
-opencv-python-headless
-pillow
-numpy
-segmentation-models-pytorch
-matplotlib
-albumentations          # ← required for A.Compose, A.Resize, etc.
-pandas                  # ← required for st.dataframe with history
+torch==2.7.1
+torchvision==0.22.1
+
+opencv-python-headless==4.11.0.86
+Pillow==11.2.1
+numpy==2.2.6
+segmentation-models-pytorch==0.5.0
+albumentations==2.0.8
+matplotlib==3.10.3
+pandas==2.3.0
