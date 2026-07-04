@@ -1648,10 +1648,41 @@ if uploaded is not None:
             with m2:
                 st.metric(t("metric_cleaning"), f"{reduction:.1f}%")
 
-            # ===== عرض تفاصيل حساب Hb =====
+            # ---- التشخيص (معتمد على النموذج) ----
+            st.markdown(f'<div class="section-title">{t("diagnostic_title")}</div>', unsafe_allow_html=True)
+            col_res, col_conf = st.columns(2)
+            with col_res:
+                if result == "Anemic":
+                    st.markdown(f"""
+                    <div class="result-card positive">
+                        <div class="badge-ic">🩸</div>
+                        <div>
+                            <h2>{t('diagnostic_anemic')}</h2>
+                            <div class="confidence">{t('diagnostic_confidence')} : <strong>{confidence:.1f}%</strong></div>
+                            <div class="sub">{t('diagnostic_anemic_desc')}</div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.markdown(f"""
+                    <div class="result-card negative">
+                        <div class="badge-ic">✅</div>
+                        <div>
+                            <h2>{t('diagnostic_non_anemic')}</h2>
+                            <div class="confidence">{t('diagnostic_confidence')} : <strong>{confidence:.1f}%</strong></div>
+                            <div class="sub">{t('diagnostic_non_anemic_desc')}</div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            with col_conf:
+                st.metric(t("diagnostic_confidence"), f"{confidence:.1f}%")
+                st.progress(int(confidence))
+
+            # ---- عرض قيمة Hb كمعلومة إضافية ----
             if hb_gdl is not None:
                 st.markdown("---")
-                st.markdown("#### 🧪 تقدير الهيموغلوبين (Hb) التقريبي")
+                st.markdown("#### 🧪 تقدير الهيموغلوبين (Hb) التقريبي (للمعلومية فقط)")
+                st.info("⚠️ هذه القيمة تقديرية ولا تُستخدم في التشخيص النهائي. التشخيص معتمد على نموذج الذكاء الاصطناعي.")
                 col_hb1, col_hb2, col_hb3 = st.columns(3)
                 with col_hb1:
                     st.metric("قيمة Hb المحسوبة", f"{hb_gdl:.2f} g/dL")
@@ -1659,84 +1690,6 @@ if uploaded is not None:
                     st.metric("القيمة الخام (0-1)", f"{hb_raw:.4f}")
                 with col_hb3:
                     st.metric("التشخيص حسب Hb", hb_diagnosis)
-
-            # ---- التشخيص النهائي يعتمد على Hb ----
-            if hb_gdl is not None:
-                if hb_gdl < 11:
-                    final_result = "Anemic"
-                    final_confidence = min(100, (11 - hb_gdl) / 4 * 100)
-                    final_desc = t('diagnostic_anemic_desc') + f" (Hb = {hb_gdl:.2f} g/dL)"
-                else:
-                    final_result = "Non Anemic"
-                    final_confidence = min(100, (hb_gdl - 11) / 4 * 100)
-                    final_desc = t('diagnostic_non_anemic_desc') + f" (Hb = {hb_gdl:.2f} g/dL)"
-                
-                st.markdown(f'<div class="section-title">{t("diagnostic_title")} (بناءً على Hb)</div>', unsafe_allow_html=True)
-                col_res, col_conf = st.columns(2)
-                with col_res:
-                    if final_result == "Anemic":
-                        st.markdown(f"""
-                        <div class="result-card positive">
-                            <div class="badge-ic">🩸</div>
-                            <div>
-                                <h2>{t('diagnostic_anemic')}</h2>
-                                <div class="confidence">{t('diagnostic_confidence')} : <strong>{final_confidence:.1f}%</strong></div>
-                                <div class="sub">{final_desc}</div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    else:
-                        st.markdown(f"""
-                        <div class="result-card negative">
-                            <div class="badge-ic">✅</div>
-                            <div>
-                                <h2>{t('diagnostic_non_anemic')}</h2>
-                                <div class="confidence">{t('diagnostic_confidence')} : <strong>{final_confidence:.1f}%</strong></div>
-                                <div class="sub">{final_desc}</div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                with col_conf:
-                    st.metric("مستوى الثقة (Hb)", f"{final_confidence:.1f}%")
-                    st.progress(int(final_confidence))
-                
-                # عرض نتيجة النموذج كمرجع
-                with st.expander("📊 نتيجة نموذج التصنيف (للإطلاع)"):
-                    st.write(f"**تشخيص النموذج:** {result} (ثقة {confidence:.1f}%)")
-                    st.write("قد تختلف نتيجة النموذج عن تقدير Hb بسبب اختلاف المنهجية.")
-                    st.progress(int(confidence))
-                    st.caption("في حالة التناقض، يُعتبر تقدير Hb أكثر دقة لأنه يعتمد على قياس كمي مباشر.")
-            else:
-                # إذا فشل حساب Hb، نعرض نتيجة النموذج فقط
-                st.warning("تعذر حساب قيمة Hb، يتم عرض نتيجة النموذج التصنيفي.")
-                st.markdown(f'<div class="section-title">{t("diagnostic_title")}</div>', unsafe_allow_html=True)
-                col_res, col_conf = st.columns(2)
-                with col_res:
-                    if result == "Anemic":
-                        st.markdown(f"""
-                        <div class="result-card positive">
-                            <div class="badge-ic">🩸</div>
-                            <div>
-                                <h2>{t('diagnostic_anemic')}</h2>
-                                <div class="confidence">{t('diagnostic_confidence')} : <strong>{confidence:.1f}%</strong></div>
-                                <div class="sub">{t('diagnostic_anemic_desc')}</div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    else:
-                        st.markdown(f"""
-                        <div class="result-card negative">
-                            <div class="badge-ic">✅</div>
-                            <div>
-                                <h2>{t('diagnostic_non_anemic')}</h2>
-                                <div class="confidence">{t('diagnostic_confidence')} : <strong>{confidence:.1f}%</strong></div>
-                                <div class="sub">{t('diagnostic_non_anemic_desc')}</div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                with col_conf:
-                    st.metric(t("diagnostic_confidence"), f"{confidence:.1f}%")
-                    st.progress(int(confidence))
 
             # رسم بياني للاحتمالات
             st.markdown(f'<div class="section-title">{t("chart_title")}</div>', unsafe_allow_html=True)
@@ -1759,8 +1712,8 @@ if uploaded is not None:
             # السجل
             entry = {
                 t("history_date"): datetime.now().strftime("%Y-%m-%d %H:%M"),
-                t("history_diagnostic"): final_result if hb_gdl is not None else result,
-                t("history_confidence"): f"{final_confidence:.1f}%" if hb_gdl is not None else f"{confidence:.1f}%",
+                t("history_diagnostic"): result,
+                t("history_confidence"): f"{confidence:.1f}%",
                 t("history_prob"): f"{anemia_pct:.1f}%"
             }
             st.session_state.history.append(entry)
@@ -1783,7 +1736,7 @@ if uploaded is not None:
                 st.write(f"**{t('tech_preprocess')}:** Nettoyage du masque + extraction de la conjonctive (sans amélioration des couleurs)")
                 st.write(f"**{t('tech_decision')}:** {t('tech_decision_value')}")
                 if hb_gdl is not None:
-                    st.write(f"**Hb estimé:** {hb_gdl:.2f} g/dL (brut: {hb_raw:.4f})")
+                    st.write(f"**Hb estimé (à titre indicatif):** {hb_gdl:.2f} g/dL (brut: {hb_raw:.4f})")
 
             # تحذير طبي
             st.markdown(f"""
