@@ -1511,23 +1511,15 @@ def clean_mask(mask, min_area=500):
 
 def extract_best_conjunctiva(image, raw_mask):
     """
-    Clean the raw mask, extract the conjunctiva region from the original image,
-    and apply contrast enhancement (CLAHE) on the L channel of LAB.
-    Returns: enhanced_conjunctiva (RGB), final_mask (binary), bbox (x,y,w,h) of the largest mask.
+    Clean the raw mask, extract the conjunctiva region from the original image.
+    No color enhancement is applied to avoid interfering with the prediction.
+    Returns: conjunctiva (RGB), final_mask (binary), bbox (x,y,w,h) of the largest mask.
     """
     # Clean the mask
     mask_clean = clean_mask(raw_mask)
     
-    # Apply mask to original image
-    masked = cv2.bitwise_and(image, image, mask=mask_clean)
-    
-    # Enhance contrast using CLAHE on L channel (LAB space)
-    lab = cv2.cvtColor(masked, cv2.COLOR_RGB2LAB)
-    l, a, b = cv2.split(lab)
-    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
-    l_enhanced = clahe.apply(l)
-    lab_enhanced = cv2.merge((l_enhanced, a, b))
-    conj_enhanced = cv2.cvtColor(lab_enhanced, cv2.COLOR_LAB2RGB)
+    # Apply mask to original image (no CLAHE enhancement)
+    conj_enhanced = cv2.bitwise_and(image, image, mask=mask_clean)
     
     # Compute bounding box of the largest contour for reference
     contours, _ = cv2.findContours(mask_clean, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -1720,7 +1712,7 @@ if uploaded is not None:
                 st.write(f"**{t('tech_sigmoid')}:** {raw_pred:.4f}")
                 st.write(f"**{t('tech_prob_anemic')}:** {anemia_pct:.1f}%")
                 st.write(f"**{t('tech_prob_non')}:** {non_pct:.1f}%")
-                st.write(f"**{t('tech_preprocess')}:** CLAHE + Filtrage + Netteté")
+                st.write(f"**{t('tech_preprocess')}:** Nettoyage du masque + extraction de la conjonctive (sans amélioration des couleurs)")
                 st.write(f"**{t('tech_decision')}:** {t('tech_decision_value')}")
 
             # Disclaimer
