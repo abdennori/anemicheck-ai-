@@ -1524,40 +1524,56 @@ def clean_mask(mask, min_area=500):
     return cleaned
 
 # ===================== الدالة المعدلة (بدون تحسين) =====================
-def extract_best_conjunctiva(img, mask):
-    mask = clean_mask(mask)
+# ========== دوال المعالجة ==========
+def clean_mask(mask, min_area=500):
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    if contours:
-        largest = max(contours, key=cv2.contourArea)
-        x, y, w, h = cv2.boundingRect(largest)
-        pad = 15
-        x = max(0, x - pad)
-        y = max(0, y - pad)
-        w = min(img.shape[1] - x, w + 2*pad)
-        h = min(img.shape[0] - y, h + 2*pad)
-        if w > 0 and h > 0:
-            cropped = img[y:y+h, x:x+w]
-            mask_cropped = mask[y:y+h, x:x+w]
-            return cropped, mask_cropped, (x, y, w, h)
-    conj = cv2.bitwise_and(img, img, mask=mask)
-    return conj, mask, None
-# =====================================================================
+    clean = np.zeros_like(mask)
+    for contour in contours:
+        if cv2.contourArea(contour) >= min_area:
+            cv2.drawContours(clean, [contour], -1, 255, -1)
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    clean = cv2.morphologyEx(clean, cv2.MORPH_CLOSE, kernel)
+    clean = cv2.morphologyEx(clean, cv2.MORPH_OPEN, kernel)
+    return clean
 
-def predict_anemia(model, image, device):
-    transform = transforms.Compose([
-        transforms.Resize((224,224)),
-        transforms.ToTensor(),
+def predict_anemia(image):
+    transform_unet = A.Compose([
+        A.Resize(256, 256),
+        A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ToTensorV2()
     ])
-    if isinstance(image, np.ndarray):
-        image = Image.fromarray(image)
-    tensor = transform(image).unsqueeze(0).to(device)
+    img_tensor = transform_unet(image=image)["image"].unsqueeze(0).to(unet_device)
+    
     with torch.no_grad():
-        out = model(tensor)
-        pred = torch.sigmoid(out).item()
-    if pred >= 0.5:
-        return "Anemic", pred * 100, pred
+        mask = torch.sigmoid(unet_model(img_tensor)).squeeze().cpu().numpy()
+        mask = (mask > 0.5).astype(np.uint8) * 255
+        mask = cv2.resize(mask, (image.shape[1], image.shape[0]))
+    
+    mask_clean = clean_mask(mask)
+    conjunctiva = cv2.bitwise_and(image, image, mask=mask_clean)
+    
+    conj_resized = cv2.resize(conjunctiva, (224, 224))
+    transform_tensor = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
+    conj_tensor = transform_tensor(conj_resized).unsqueeze(0).to(classifier_device)
+    
+    with torch.no_grad():
+        out = classifier_model(conj_tensor)
+        prob = torch.sigmoid(out).item()
+    
+    anemia_percent = prob * 100
+    non_anemia_percent = (1 - prob) * 100
+    
+    if anemia_percent > non_anemia_percent:
+        result = "Anemic"
+        confidence = anemia_percent
     else:
-        return "Non Anemic", (1 - pred) * 100, pred
+        result = "Non Anemic"
+        confidence = non_anemia_percent
+    
+    return result, confidence, mask_clean, conjunctiva, prob
 
 @st.cache_resource
 def load_models():
