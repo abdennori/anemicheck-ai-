@@ -1463,7 +1463,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ========== UPLOAD SECTION ==========
+# ========== UPLOAD SECTION (with anchor) ==========
 st.markdown('<div id="upload-section"></div>', unsafe_allow_html=True)
 st.markdown(f"""
 <div class="upload-card">
@@ -1496,9 +1496,9 @@ with col2:
             key="camera_input"
         )
 
-# ========== دوال معالجة الصور ==========
+# ========== FONCTIONS (ORIGINAL AI PIPELINE - RESTORED) ==========
 def clean_mask(mask, min_area=500):
-    """تنظيف الماسك بإزالة الأجسام الصغيرة وتطبيق عمليات مورفولوجية."""
+    """Clean a binary mask by removing small objects and applying morphological operations."""
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cleaned = np.zeros_like(mask)
     for c in contours:
@@ -1510,9 +1510,18 @@ def clean_mask(mask, min_area=500):
     return cleaned
 
 def extract_best_conjunctiva(image, raw_mask):
-    """استخراج الملتحمة باستخدام الماسك النظيف (بدون تحسين ألوان)."""
+    """
+    Clean the raw mask, extract the conjunctiva region from the original image.
+    No color enhancement is applied to avoid interfering with the prediction.
+    Returns: conjunctiva (RGB), final_mask (binary), bbox (x,y,w,h) of the largest mask.
+    """
+    # Clean the mask
     mask_clean = clean_mask(raw_mask)
-    conj = cv2.bitwise_and(image, image, mask=mask_clean)
+    
+    # Apply mask to original image (no CLAHE enhancement)
+    conj_enhanced = cv2.bitwise_and(image, image, mask=mask_clean)
+    
+    # Compute bounding box of the largest contour for reference
     contours, _ = cv2.findContours(mask_clean, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if contours:
         largest = max(contours, key=cv2.contourArea)
@@ -1520,53 +1529,37 @@ def extract_best_conjunctiva(image, raw_mask):
         bbox = (x, y, w, h)
     else:
         bbox = (0, 0, 0, 0)
-    return conj, mask_clean, bbox
+    
+    return conj_enhanced, mask_clean, bbox
 
 def predict_anemia(model, image, device):
-    """تصنيف الصورة باستخدام النموذج (EfficientNet)."""
+    """
+    Classify the preprocessed conjunctiva image using the given classifier model.
+    Returns: (diagnosis, confidence_percent, raw_sigmoid_probability)
+    """
+    # Resize to 224x224 (EfficientNet‑B3 input size)
     img_resized = cv2.resize(image, (224, 224))
+    
+    # Convert to tensor and normalize with ImageNet stats
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
     tensor = transform(img_resized).unsqueeze(0).to(device)
+    
     with torch.no_grad():
         out = model(tensor)
-        prob = torch.sigmoid(out).item()
+        prob = torch.sigmoid(out).item()  # probability of anemia
+    
+    # Decision
     if prob > 0.5:
         result = "Anemic"
         confidence = prob * 100
     else:
         result = "Non Anemic"
         confidence = (1 - prob) * 100
+    
     return result, confidence, prob
-
-def calculate_hb(conjunctiva_image, mask):
-    """
-    حساب قيمة Hb التقريبية باستخدام المعادلات من الورقة.
-    المتوسطات تحسب فقط على البكسلات التي يغطيها الماسك (المنطقة المقطعة).
-    """
-    masked_pixels = conjunctiva_image[mask > 0]
-    if masked_pixels.size == 0:
-        return None, None, None
-    
-    r_mean = np.mean(masked_pixels[:, 0]) / 255.0
-    g_mean = np.mean(masked_pixels[:, 1]) / 255.0
-    b_mean = np.mean(masked_pixels[:, 2]) / 255.0
-    
-    z = -1.922 + 0.206 * r_mean - 0.241 * g_mean + 0.012 * b_mean
-    hb_raw = 1 / (1 + np.exp(-z))
-    
-    a, b = 0.0, 1.0
-    c, d = 7.0, 15.0
-    hb_gdl = c + (d - c) * (hb_raw - a) / (b - a)
-    
-    if hb_gdl < 11:
-        hb_diagnosis = "Anemic (Hb < 11)"
-    else:
-        hb_diagnosis = "Non Anemic (Hb ≥ 11)"
-    
-    return hb_gdl, hb_raw, hb_diagnosis
 
 @st.cache_resource
 def load_models():
@@ -1574,7 +1567,7 @@ def load_models():
     clf, dev_clf = load_classifier_model()
     return unet, dev_unet, clf, dev_clf
 
-# ========== معالجة الصورة المرفوعة ==========
+# ========== TRAITEMENT ==========
 if uploaded is not None:
     st.markdown(f"""
     <div class="preview-container">
@@ -1596,9 +1589,9 @@ if uploaded is not None:
 
         with st.spinner(t("analyzing")):
             img = np.array(Image.open(uploaded).convert('RGB'))
-            img = cv2.flip(img, 1)  # مرآة للاتساق
+            img = cv2.flip(img, 1)  # mirror for consistency
 
-            # تجزئة U‑Net
+            # U‑Net segmentation
             transform_unet = transforms.Compose([
                 transforms.ToPILImage(),
                 transforms.Resize((256, 256)),
@@ -1611,20 +1604,19 @@ if uploaded is not None:
                 raw_mask = (raw_mask > 0.5).astype(np.uint8) * 255
                 raw_mask = cv2.resize(raw_mask, (img.shape[1], img.shape[0]))
 
+            # Extract enhanced conjunctiva and final mask
             conj_enhanced, final_mask, bbox = extract_best_conjunctiva(img, raw_mask)
 
-            # تصنيف النموذج الأساسي
+            # Classify
             result, confidence, raw_pred = predict_anemia(clf_model, conj_enhanced, clf_device)
+
             anemia_pct = raw_pred * 100
             non_pct = (1 - raw_pred) * 100
-
-            # ---- حساب Hb ----
-            hb_gdl, hb_raw, hb_diagnosis = calculate_hb(conj_enhanced, final_mask)
 
             progress_bar.empty()
             st.success(t("analysis_done"))
 
-            # ===== عرض النتائج =====
+            # ===== RESULTS =====
             st.markdown(f'<div class="section-title">{t("results_title")}</div>', unsafe_allow_html=True)
             col1, col2, col3 = st.columns(3)
             with col1:
@@ -1637,7 +1629,7 @@ if uploaded is not None:
                 st.markdown(f"**{t('result_conjunctiva')}**")
                 st.image(conj_enhanced, use_container_width=True)
 
-            # متريكات التنظيف
+            # Metrics
             before = np.sum(raw_mask > 0) / 255
             after = np.sum(final_mask > 0) / 255
             reduction = ((before - after) / before * 100) if before > 0 else 0
@@ -1648,7 +1640,7 @@ if uploaded is not None:
             with m2:
                 st.metric(t("metric_cleaning"), f"{reduction:.1f}%")
 
-            # ---- التشخيص (معتمد على النموذج) ----
+            # Diagnosis
             st.markdown(f'<div class="section-title">{t("diagnostic_title")}</div>', unsafe_allow_html=True)
             col_res, col_conf = st.columns(2)
             with col_res:
@@ -1678,20 +1670,7 @@ if uploaded is not None:
                 st.metric(t("diagnostic_confidence"), f"{confidence:.1f}%")
                 st.progress(int(confidence))
 
-            # ---- عرض قيمة Hb كمعلومة إضافية ----
-            if hb_gdl is not None:
-                st.markdown("---")
-                st.markdown("#### 🧪 تقدير الهيموغلوبين (Hb) التقريبي (للمعلومية فقط)")
-                st.info("⚠️ هذه القيمة تقديرية ولا تُستخدم في التشخيص النهائي. التشخيص معتمد على نموذج الذكاء الاصطناعي.")
-                col_hb1, col_hb2, col_hb3 = st.columns(3)
-                with col_hb1:
-                    st.metric("قيمة Hb المحسوبة", f"{hb_gdl:.2f} g/dL")
-                with col_hb2:
-                    st.metric("القيمة الخام (0-1)", f"{hb_raw:.4f}")
-                with col_hb3:
-                    st.metric("التشخيص حسب Hb", hb_diagnosis)
-
-            # رسم بياني للاحتمالات
+            # Chart
             st.markdown(f'<div class="section-title">{t("chart_title")}</div>', unsafe_allow_html=True)
             plt.style.use('seaborn-v0_8-whitegrid')
             fig, ax = plt.subplots(figsize=(8,5))
@@ -1709,7 +1688,7 @@ if uploaded is not None:
             ax.spines['right'].set_visible(False)
             st.pyplot(fig)
 
-            # السجل
+            # History
             entry = {
                 t("history_date"): datetime.now().strftime("%Y-%m-%d %H:%M"),
                 t("history_diagnostic"): result,
@@ -1725,7 +1704,7 @@ if uploaded is not None:
                 df = pd.DataFrame(st.session_state.history)
                 st.dataframe(df, use_container_width=True, hide_index=True)
 
-            # التفاصيل التقنية
+            # Technical details
             with st.expander(t("tech_details")):
                 st.write(f"**{t('tech_model_seg')}:** U‑Net (ResNet34)")
                 st.write(f"**{t('tech_model_clf')}:** EfficientNet‑B3")
@@ -1735,10 +1714,8 @@ if uploaded is not None:
                 st.write(f"**{t('tech_prob_non')}:** {non_pct:.1f}%")
                 st.write(f"**{t('tech_preprocess')}:** Nettoyage du masque + extraction de la conjonctive (sans amélioration des couleurs)")
                 st.write(f"**{t('tech_decision')}:** {t('tech_decision_value')}")
-                if hb_gdl is not None:
-                    st.write(f"**Hb estimé (à titre indicatif):** {hb_gdl:.2f} g/dL (brut: {hb_raw:.4f})")
 
-            # تحذير طبي
+            # Disclaimer
             st.markdown(f"""
             <div class="disclaimer">
                 ⚠️ <strong>{t('disclaimer')}</strong><br>
@@ -1758,7 +1735,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ========== BOTTOM INFO ==========
+# ========== BOTTOM INFO (Fast/Smart/Secure) ==========
 st.markdown(f"""
 <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:1.8rem 0;">
     <div class="feature-card">
