@@ -1,5 +1,4 @@
 ﻿import streamlit as st
-import streamlit.components.v1 as components
 import torch
 import cv2
 import numpy as np
@@ -367,7 +366,7 @@ st.markdown("""
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-        --bg-primary: #F8FAFC;
+        --bg-primary: #F0F4FE;
         --bg-surface: rgba(255,255,255,0.85);
         --glass-bg: rgba(255,255,255,0.6);
         --glass-border: rgba(255,255,255,0.3);
@@ -376,73 +375,27 @@ st.markdown("""
         --slate-soft: #6B7F99;
         --line: #E2E8F0;
         --primary-900: #0A2463;
-        --primary-700: #0F4FDB;
-        --primary-600: #1565FF;
-        --primary-400: #4F8CFF;
-        --primary-100: #E4EDFF;
-        --teal: #0E5A54;
+        --primary-700: #1D4ED8;
+        --primary-600: #2563EB;
+        --primary-400: #5B8DEF;
+        --primary-100: #E0E7FF;
+        --teal: #0E5A54;        /* corrected from #0E5A4 */
         --teal-100: #D4F5F5;
-        --success: #00C853;
-        --success-100: #E1F9EA;
-        --danger: #FF5252;
-        --danger-100: #FFEBEE;
-        --amber: #FFB300;
-        --amber-100: #FFF4DB;
-        --shadow-sm: 0 2px 10px rgba(10,36,99,0.06);
-        --shadow-md: 0 10px 32px rgba(10,36,99,0.10);
-        --shadow-lg: 0 26px 64px rgba(10,36,99,0.16);
+        --success: #10A85A;
+        --success-100: #E2F6E9;
+        --danger: #E23F4E;       /* corrected from #E23FAE */
+        --danger-100: #FDE8EA;
+        --amber: #DE9A1F;
+        --amber-100: #DFD3FD;    /* as in image */
+        --shadow-sm: 0 2px 8px rgba(10,36,99,0.06);
+        --shadow-md: 0 8px 30px rgba(10,36,99,0.10);
+        --shadow-lg: 0 24px 60px rgba(10,36,99,0.15);
         --radius-sm: 12px;
-        --radius-md: 20px;
+        --radius-md: 18px;
         --radius-lg: 24px;
         --radius-xl: 32px;
         --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
-
-    /* --- DARK MODE --- */
-    [data-theme="dark"] {
-        --bg-primary: #0A1224;
-        --bg-surface: rgba(20,28,48,0.85);
-        --glass-bg: rgba(24,32,54,0.6);
-        --glass-border: rgba(255,255,255,0.08);
-        --ink: #EAF0FF;
-        --slate: #B7C4E0;
-        --slate-soft: #8393B8;
-        --line: rgba(255,255,255,0.08);
-        --primary-100: rgba(79,140,255,0.16);
-        --success-100: rgba(0,200,83,0.14);
-        --danger-100: rgba(255,82,82,0.14);
-        --amber-100: rgba(255,179,0,0.14);
-        --shadow-sm: 0 2px 10px rgba(0,0,0,0.25);
-        --shadow-md: 0 10px 32px rgba(0,0,0,0.35);
-        --shadow-lg: 0 26px 64px rgba(0,0,0,0.45);
-    }
-    [data-theme="dark"] .how-step { background: rgba(255,255,255,0.04); }
-    [data-theme="dark"] [data-testid="stFileUploaderDropzone"] { background: rgba(255,255,255,0.03) !important; }
-
-    @media (prefers-reduced-motion: reduce) {
-        *, *::before, *::after {
-            animation-duration: 0.001ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.001ms !important;
-        }
-    }
-
-    ::selection { background: var(--primary-400); color: #fff; }
-    :focus-visible {
-        outline: 3px solid var(--primary-400);
-        outline-offset: 2px;
-        border-radius: 6px;
-    }
-    ::-webkit-scrollbar { width: 10px; height: 10px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb {
-        background: var(--primary-400);
-        border-radius: 10px;
-    }
-
-    /* --- SCROLL REVEAL --- */
-    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
-    .reveal.in-view { opacity: 1; transform: translateY(0); }
 
     html, body, .stApp {
         background: var(--bg-primary);
@@ -532,10 +485,6 @@ st.markdown("""
     }
     .sidebar-glass .nav-item:hover {
         background: rgba(255,255,255,0.08);
-        transform: translateX(4px);
-    }
-    @media (max-width: 768px) {
-        section[data-testid="stSidebar"] .sidebar-glass { padding: 1rem 0.8rem; }
     }
     .sidebar-glass p, .sidebar-glass li {
         font-size: 13.5px;
@@ -588,9 +537,6 @@ st.markdown("""
 
     /* --- TOP NAVBAR --- */
     .navbar {
-        position: sticky;
-        top: 8px;
-        z-index: 999;
         background: var(--glass-bg);
         backdrop-filter: blur(18px) saturate(180%);
         -webkit-backdrop-filter: blur(18px) saturate(180%);
@@ -605,47 +551,6 @@ st.markdown("""
         flex-wrap: wrap;
         box-shadow: var(--shadow-sm);
         animation: fadeUp 0.5s ease;
-        transition: box-shadow 0.3s ease, background 0.3s ease;
-    }
-    .navbar-actions {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .navbar-icon-btn {
-        position: relative;
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
-        border: 1px solid rgba(37,99,235,0.12);
-        background: var(--bg-surface);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        cursor: pointer;
-        transition: var(--transition);
-        flex-shrink: 0;
-    }
-    .navbar-icon-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-sm);
-        border-color: var(--primary-400);
-    }
-    .navbar-icon-btn .dot {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--danger);
-        border: 2px solid var(--bg-surface);
-    }
-    @media (max-width: 640px) {
-        .navbar { padding: 0.6rem 1rem; border-radius: var(--radius-md); }
-        .navbar-badges { display: none; }
-        .navbar-brand h1 { font-size: 17px; }
     }
     .navbar-brand {
         display: flex;
@@ -921,7 +826,6 @@ st.markdown("""
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 18px;
         margin: 1.2rem 0;
-        align-items: stretch;
     }
 
     .feature-card {
@@ -933,10 +837,6 @@ st.markdown("""
         text-align: center;
         transition: var(--transition);
         box-shadow: var(--shadow-sm);
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        height: 100%;
     }
     .feature-card:hover {
         transform: translateY(-6px);
@@ -1011,10 +911,8 @@ st.markdown("""
     }
     @media (max-width: 768px) {
         .how-steps { grid-template-columns: 1fr; }
-        .how-step::after { display: none !important; }
     }
     .how-step {
-        position: relative;
         text-align: center;
         padding: 1.6rem 1.2rem;
         background: rgba(244,247,252,0.6);
@@ -1022,17 +920,6 @@ st.markdown("""
         border-radius: var(--radius-md);
         border: 1px solid rgba(255,255,255,0.5);
         transition: var(--transition);
-    }
-    .how-step:not(:last-child)::after {
-        content: '→';
-        position: absolute;
-        top: 34px;
-        right: -26px;
-        font-size: 22px;
-        font-weight: 800;
-        color: var(--primary-400);
-        animation: arrowPulse 1.6s ease-in-out infinite;
-        z-index: 1;
     }
     .how-step:hover {
         box-shadow: var(--shadow-sm);
@@ -1127,32 +1014,6 @@ st.markdown("""
     }
     .upload-card p {
         color: var(--slate);
-        font-size: 14px;
-        margin: 0;
-    }
-
-    /* --- EMPTY STATE --- */
-    .empty-state {
-        text-align: center;
-        padding: 2.6rem 1.5rem;
-        margin: 1rem 0 1.8rem;
-        border: 1px dashed var(--line);
-        border-radius: var(--radius-lg);
-        background: rgba(255,255,255,0.4);
-        color: var(--slate-soft);
-    }
-    .empty-state-icon {
-        font-size: 44px;
-        margin-bottom: 10px;
-        animation: floatY 3.5s ease-in-out infinite;
-    }
-    .empty-state h4 {
-        color: var(--ink);
-        font-weight: 700;
-        font-size: 17px;
-        margin-bottom: 4px;
-    }
-    .empty-state p {
         font-size: 14px;
         margin: 0;
     }
@@ -1379,139 +1240,6 @@ st.markdown("""
         display: none;
     }
 
-    /* --- STREAMLIT FILE UPLOADER RESKIN (visual only) --- */
-    [data-testid="stFileUploaderDropzone"] {
-        background: var(--bg-surface) !important;
-        border: 2px dashed rgba(37,99,235,0.28) !important;
-        border-radius: var(--radius-lg) !important;
-        transition: var(--transition) !important;
-    }
-    [data-testid="stFileUploaderDropzone"]:hover {
-        border-color: var(--primary-600) !important;
-        box-shadow: var(--shadow-md) !important;
-    }
-    [data-testid="stFileUploaderDropzoneInstructions"] svg { color: var(--primary-600) !important; }
-    [data-testid="stCameraInput"] video, [data-testid="stCameraInput"] img {
-        border-radius: var(--radius-md);
-        box-shadow: var(--shadow-sm);
-    }
-    div[role="radiogroup"] label {
-        border-radius: 30px !important;
-        transition: var(--transition);
-    }
-
-    /* --- RIPPLE BUTTON EFFECT --- */
-    .stButton > button {
-        position: relative;
-        overflow: hidden;
-    }
-    .ripple-span {
-        position: absolute;
-        border-radius: 50%;
-        transform: scale(0);
-        animation: rippleAnim 0.6s linear;
-        background: rgba(255,255,255,0.55);
-        pointer-events: none;
-    }
-    @keyframes rippleAnim {
-        to { transform: scale(3); opacity: 0; }
-    }
-
-    /* --- SKELETON LOADER --- */
-    .skeleton {
-        border-radius: var(--radius-md);
-        background: linear-gradient(90deg, rgba(226,232,240,0.6) 25%, rgba(226,232,240,0.9) 37%, rgba(226,232,240,0.6) 63%);
-        background-size: 400% 100%;
-        animation: shimmer 1.4s ease infinite;
-    }
-    @keyframes shimmer {
-        0% { background-position: 100% 50%; }
-        100% { background-position: 0 50%; }
-    }
-
-    /* --- CIRCULAR CONFIDENCE RING --- */
-    .confidence-ring-wrap {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 8px 0;
-    }
-    .confidence-ring-wrap svg { transform: rotate(-90deg); }
-    .confidence-ring-bg { fill: none; stroke: var(--line); stroke-width: 10; }
-    .confidence-ring-val {
-        fill: none;
-        stroke-width: 10;
-        stroke-linecap: round;
-        transition: stroke-dashoffset 1.1s cubic-bezier(0.4,0,0.2,1);
-    }
-    .confidence-ring-label {
-        transform: rotate(90deg);
-        transform-box: fill-box;
-        transform-origin: center;
-        text-anchor: middle;
-        dominant-baseline: middle;
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        font-weight: 800;
-        fill: var(--ink);
-    }
-
-    /* --- STAT COUNTER --- */
-    .stat-number[data-target] { font-variant-numeric: tabular-nums; }
-
-    /* --- FOOTER SOCIALS --- */
-    .app-footer {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 14px;
-    }
-    .footer-socials {
-        display: flex;
-        gap: 12px;
-    }
-    .footer-social-btn {
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        background: var(--primary-100);
-        color: var(--primary-700);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        text-decoration: none;
-        transition: var(--transition);
-    }
-    .footer-social-btn:hover {
-        background: var(--primary-600);
-        color: #fff;
-        transform: translateY(-3px);
-    }
-    .footer-contact {
-        display: flex;
-        gap: 24px;
-        flex-wrap: wrap;
-        justify-content: center;
-        font-size: 13px;
-        color: var(--slate-soft);
-    }
-
-    /* --- THEME TOGGLE --- */
-    .theme-toggle {
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
-        border: 1px solid rgba(37,99,235,0.12);
-        background: var(--bg-surface);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        cursor: pointer;
-        transition: var(--transition);
-    }
-    .theme-toggle:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
-
     /* --- ANIMATIONS --- */
     @keyframes fadeUp {
         from { opacity: 0; transform: translateY(20px); }
@@ -1528,135 +1256,13 @@ st.markdown("""
         0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.3); }
         100% { box-shadow: 0 0 0 18px rgba(255,255,255,0); }
     }
-    @keyframes arrowPulse {
-        0%, 100% { opacity: 0.5; transform: translateX(0); }
-        50% { opacity: 1; transform: translateX(4px); }
-    }
 """, unsafe_allow_html=True)
-
-# ========== UI MICRO-INTERACTIONS (client-side only, visual polish, no backend impact) ==========
-# Runs via components.html reaching into the parent Streamlit document.
-# Purely cosmetic: button ripple, animated stat counters, scroll-reveal, dark-mode persistence.
-components.html("""
-<script>
-(function() {
-    const doc = window.parent.document;
-    const root = doc.documentElement;
-
-    try {
-        const saved = localStorage.getItem('anemicheck-theme');
-        if (saved === 'dark') { root.setAttribute('data-theme', 'dark'); }
-    } catch (e) {}
-
-    function initRipples() {
-        doc.querySelectorAll('.stButton > button:not([data-ripple-bound])').forEach(btn => {
-            btn.setAttribute('data-ripple-bound', '1');
-            btn.addEventListener('click', function(e) {
-                const span = doc.createElement('span');
-                span.className = 'ripple-span';
-                const rect = btn.getBoundingClientRect();
-                const size = Math.max(rect.width, rect.height);
-                span.style.width = span.style.height = size + 'px';
-                span.style.left = (e.clientX - rect.left - size/2) + 'px';
-                span.style.top = (e.clientY - rect.top - size/2) + 'px';
-                btn.appendChild(span);
-                setTimeout(() => span.remove(), 600);
-            });
-        });
-    }
-
-    function initCounters() {
-        doc.querySelectorAll('.stat-number[data-target]:not([data-counted])').forEach(el => {
-            const target = parseFloat(el.getAttribute('data-target'));
-            const suffix = el.getAttribute('data-suffix') || '';
-            const observer = new IntersectionObserver(entries => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        el.setAttribute('data-counted', '1');
-                        let cur = 0;
-                        const step = Math.max(target / 40, 0.5);
-                        const timer = setInterval(() => {
-                            cur += step;
-                            if (cur >= target) { cur = target; clearInterval(timer); }
-                            el.textContent = (Number.isInteger(target) ? Math.round(cur) : cur.toFixed(1)) + suffix;
-                        }, 25);
-                        observer.disconnect();
-                    }
-                });
-            }, { threshold: 0.4 });
-            observer.observe(el);
-        });
-    }
-
-    function initReveal() {
-        doc.querySelectorAll('.reveal:not([data-revealed])').forEach(el => {
-            const observer = new IntersectionObserver(entries => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('in-view');
-                        entry.target.setAttribute('data-revealed', '1');
-                        observer.disconnect();
-                    }
-                });
-            }, { threshold: 0.15 });
-            observer.observe(el);
-        });
-    }
-
-    function initThemeToggle() {
-        const btn = doc.getElementById('theme-toggle-btn');
-        if (btn && !btn.hasAttribute('data-bound')) {
-            btn.setAttribute('data-bound', '1');
-            btn.addEventListener('click', function() {
-                const isDark = root.getAttribute('data-theme') === 'dark';
-                if (isDark) {
-                    root.removeAttribute('data-theme');
-                    try { localStorage.setItem('anemicheck-theme', 'light'); } catch (e) {}
-                    btn.textContent = '🌙';
-                } else {
-                    root.setAttribute('data-theme', 'dark');
-                    try { localStorage.setItem('anemicheck-theme', 'dark'); } catch (e) {}
-                    btn.textContent = '☀️';
-                }
-            });
-            btn.textContent = root.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
-        }
-    }
-
-    function runAll() {
-        initRipples();
-        initCounters();
-        initReveal();
-        initThemeToggle();
-    }
-
-    runAll();
-    // Streamlit re-renders on every interaction; keep re-binding to fresh nodes.
-    const mo = new MutationObserver(() => runAll());
-    mo.observe(doc.body, { childList: true, subtree: true });
-})();
-</script>
-""", height=0, width=0)
 
 # ========== SESSION STATE ==========
 if 'language' not in st.session_state:
     st.session_state.language = "fr"
 if 'history' not in st.session_state:
     st.session_state.history = []
-
-# ========== RTL SUPPORT (Arabic) ==========
-if st.session_state.language == "ar":
-    st.markdown("""
-    <style>
-        .stApp { direction: rtl; }
-        .navbar-brand, .hero-cta, .trust-item, .navbar-actions { direction: rtl; }
-        .section-title { border-left: none; border-right: 5px solid var(--primary-600); padding-left: 0; padding-right: 16px; }
-        .disclaimer { border-left: none; border-right: 5px solid var(--amber); }
-        .sidebar-glass .nav-item.active { border-left: none; border-right: 3px solid var(--teal); }
-        .how-step:not(:last-child)::after { content: '←'; right: auto; left: -26px; }
-        [data-testid="stMetricLabel"], [data-testid="stMetricValue"] { text-align: right; }
-    </style>
-    """, unsafe_allow_html=True)
 
 # ========== HEADER ==========
 def get_logo_base64():
@@ -1691,11 +1297,7 @@ with st.sidebar:
     st.markdown(f"""
     <div class="sidebar-glass">
         <h4>📋 القائمة / Menu</h4>
-        <div class="nav-item active">{t('nav_home')}</div>
-        <div class="nav-item"><a href="#upload-section" style="color:inherit; text-decoration:none; display:flex; align-items:center; gap:12px; width:100%;">{t('nav_analyze')}</a></div>
-        <div class="nav-item">{t('nav_history')}</div>
-        <div class="nav-item">{t('nav_health')}</div>
-        <div class="nav-item">{t('nav_about')}</div>
+        <div class="nav-item active">🏠 {t('nav_home')}</div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1768,12 +1370,6 @@ st.markdown(f"""
             </div>
         </div>
     </div>
-    <div class="navbar-actions">
-        <button class="navbar-icon-btn" type="button" aria-label="Notifications" title="Notifications">
-            🔔<span class="dot"></span>
-        </button>
-        <button class="theme-toggle" id="theme-toggle-btn" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
-    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1808,21 +1404,21 @@ st.markdown(f"""
 
 # ========== STATS BAR ==========
 st.markdown(f"""
-<div class="stats-bar reveal">
+<div class="stats-bar">
     <div class="stat-item">
-        <div class="stat-number" data-target="96" data-suffix="%">0%</div>
+        <div class="stat-number">96%</div>
         <div class="stat-label">{t('stat_accuracy')}</div>
     </div>
     <div class="stat-item">
-        <div class="stat-number" data-target="5" data-suffix="K+">0K+</div>
+        <div class="stat-number">5K+</div>
         <div class="stat-label">{t('stat_patients')}</div>
     </div>
     <div class="stat-item">
-        <div class="stat-number" data-target="30" data-suffix="+">0+</div>
+        <div class="stat-number">30+</div>
         <div class="stat-label">{t('stat_hospitals')}</div>
     </div>
     <div class="stat-item">
-        <div class="stat-number" data-target="30" data-suffix="s">0s</div>
+        <div class="stat-number"><30s</div>
         <div class="stat-label">{t('stat_seconds')}</div>
     </div>
 </div>
@@ -1830,7 +1426,7 @@ st.markdown(f"""
 
 # ========== FEATURES GRID ==========
 st.markdown(f"""
-<div class="card-grid reveal">
+<div class="card-grid">
     <div class="feature-card">
         <div class="icon-circle">⚡</div>
         <h4>{t('feature_1_title')}</h4>
@@ -1856,7 +1452,7 @@ st.markdown(f"""
 
 # ========== HOW IT WORKS ==========
 st.markdown(f"""
-<div class="how-section reveal">
+<div class="how-section">
     <div class="how-title-row">
         <div class="line"></div>
         <h3>{t('how_title')}</h3>
@@ -1969,18 +1565,6 @@ def load_models():
     clf, dev_clf = load_classifier_model()
     return unet, dev_unet, clf, dev_clf
 
-
-
-# ========== EMPTY STATE ==========
-if uploaded is None:
-    st.markdown(f"""
-    <div class="empty-state reveal">
-        <div class="empty-state-icon">👁️</div>
-        <h4>{t('welcome_title')}</h4>
-        <p>{t('welcome_desc')}</p>
-    </div>
-    """, unsafe_allow_html=True)
-
 # ========== TRAITEMENT ==========
 if uploaded is not None:
     st.markdown(f"""
@@ -2080,21 +1664,6 @@ if uploaded is not None:
             with col_conf:
                 st.metric(t("diagnostic_confidence"), f"{confidence:.1f}%")
                 st.progress(int(confidence))
-                ring_color = "var(--danger)" if result == "Anemic" else "var(--success)"
-                circumference = 2 * 3.14159265 * 54
-                offset = circumference * (1 - confidence / 100)
-                st.markdown(f"""
-                <div class="confidence-ring-wrap">
-                    <svg width="140" height="140" viewBox="0 0 140 140">
-                        <circle class="confidence-ring-bg" cx="70" cy="70" r="54"></circle>
-                        <circle class="confidence-ring-val" cx="70" cy="70" r="54"
-                            stroke="{ring_color}"
-                            stroke-dasharray="{circumference:.2f}"
-                            stroke-dashoffset="{offset:.2f}"></circle>
-                        <text x="70" y="70" class="confidence-ring-label" font-size="24">{confidence:.0f}%</text>
-                    </svg>
-                </div>
-                """, unsafe_allow_html=True)
 
             # Chart
             st.markdown(f'<div class="section-title">{t("chart_title")}</div>', unsafe_allow_html=True)
@@ -2185,18 +1754,8 @@ st.markdown(f"""
 # ========== FOOTER ==========
 st.markdown(f"""
 <div class="app-footer">
-    <div class="footer-socials">
-        <a class="footer-social-btn" href="#" aria-label="Facebook" title="Facebook">📘</a>
-        <a class="footer-social-btn" href="#" aria-label="Instagram" title="Instagram">📷</a>
-        <a class="footer-social-btn" href="#" aria-label="LinkedIn" title="LinkedIn">💼</a>
-        <a class="footer-social-btn" href="#" aria-label="X / Twitter" title="X / Twitter">🐦</a>
-    </div>
-    <div class="footer-contact">
-        <span>📧 contact@anemicheck.ai</span>
-        <span>📍 Biskra, Algérie</span>
-    </div>
     <p>{t('footer_text')}</p>
-    <p style="font-size:12px; margin-top:-6px;">
+    <p style="font-size:12px; margin-top:4px;">
         <a href="#">{t('nav_about')}</a> • 
         <a href="#">{t('sidebar_health_title')}</a> • 
         <a href="#">{t('sidebar_doctor_title')}</a>
