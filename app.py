@@ -1969,6 +1969,8 @@ def load_models():
     clf, dev_clf = load_classifier_model()
     return unet, dev_unet, clf, dev_clf
 
+
+
 # ========== EMPTY STATE ==========
 if uploaded is None:
     st.markdown(f"""
