@@ -1,4 +1,4 @@
-﻿﻿import streamlit as st
+﻿import streamlit as st
 import torch
 import cv2
 import numpy as np
@@ -358,7 +358,7 @@ def t(key):
     lang = st.session_state.get("language", "fr")
     return LANGUAGES.get(lang, LANGUAGES["fr"]).get(key, key)
 
-# ========== CSS MODERN (exact variables from image.png) ==========
+# ========== CSS MODERN ==========
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
@@ -379,14 +379,14 @@ st.markdown("""
         --primary-600: #2563EB;
         --primary-400: #5B8DEF;
         --primary-100: #E0E7FF;
-        --teal: #0E5A54;        /* corrected from #0E5A4 */
+        --teal: #0E5A54;
         --teal-100: #D4F5F5;
         --success: #10A85A;
         --success-100: #E2F6E9;
-        --danger: #E23F4E;       /* corrected from #E23FAE */
+        --danger: #E23F4E;
         --danger-100: #FDE8EA;
         --amber: #DE9A1F;
-        --amber-100: #DFD3FD;    /* as in image */
+        --amber-100: #DFD3FD;
         --shadow-sm: 0 2px 8px rgba(10,36,99,0.06);
         --shadow-md: 0 8px 30px rgba(10,36,99,0.10);
         --shadow-lg: 0 24px 60px rgba(10,36,99,0.15);
@@ -408,7 +408,6 @@ st.markdown("""
         font-weight: 700;
     }
 
-    /* --- ANIMATED BACKGROUND --- */
     .stApp::before {
         content: '';
         position: fixed;
@@ -427,7 +426,6 @@ st.markdown("""
         100% { transform: translate(3%, -2%) rotate(2deg); }
     }
 
-    /* --- SIDEBAR --- */
     section[data-testid="stSidebar"] {
         background: linear-gradient(145deg, #0B1B3F 0%, #0A2463 100%);
         border-right: none;
@@ -535,7 +533,6 @@ st.markdown("""
         text-transform: uppercase;
     }
 
-    /* --- TOP NAVBAR --- */
     .navbar {
         background: var(--glass-bg);
         backdrop-filter: blur(18px) saturate(180%);
@@ -636,7 +633,6 @@ st.markdown("""
         display: block;
     }
 
-    /* --- HERO --- */
     .hero {
         position: relative;
         background: linear-gradient(135deg, #0A2463 0%, #1D4ED8 60%, #2563EB 100%);
@@ -807,7 +803,6 @@ st.markdown("""
         background: rgba(255,255,255,0.25);
     }
 
-    /* --- SECTIONS --- */
     .section-title {
         font-size: 22px;
         font-weight: 800;
@@ -874,7 +869,6 @@ st.markdown("""
         line-height: 1.5;
     }
 
-    /* --- HOW IT WORKS --- */
     .how-section {
         background: var(--bg-surface);
         backdrop-filter: blur(8px);
@@ -952,7 +946,6 @@ st.markdown("""
         margin: 0;
     }
 
-    /* --- TRUST BADGES --- */
     .trust-section {
         display: flex;
         justify-content: center;
@@ -976,7 +969,6 @@ st.markdown("""
         font-size: 20px;
     }
 
-    /* --- UPLOAD CARD --- */
     .upload-card {
         background: var(--bg-surface);
         backdrop-filter: blur(8px);
@@ -1018,7 +1010,6 @@ st.markdown("""
         margin: 0;
     }
 
-    /* --- PREVIEW --- */
     .preview-container {
         background: var(--bg-surface);
         backdrop-filter: blur(8px);
@@ -1046,7 +1037,6 @@ st.markdown("""
         box-shadow: var(--shadow-sm);
     }
 
-    /* --- RESULT CARDS --- */
     .result-card {
         border-radius: var(--radius-lg);
         padding: 1.8rem 2rem;
@@ -1105,7 +1095,6 @@ st.markdown("""
         margin-top: 2px;
     }
 
-    /* --- DISCLAIMER (uses amber-100 = #DFD3FD as in image) --- */
     .disclaimer {
         background: var(--amber-100);
         border-radius: var(--radius-md);
@@ -1122,7 +1111,6 @@ st.markdown("""
         color: #2A1A40;
     }
 
-    /* --- STATS BAR --- */
     .stats-bar {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -1158,7 +1146,6 @@ st.markdown("""
         margin-top: 4px;
     }
 
-    /* --- FOOTER --- */
     .app-footer {
         margin-top: 3rem;
         padding: 1.8rem 0;
@@ -1176,7 +1163,6 @@ st.markdown("""
         text-decoration: underline;
     }
 
-    /* --- WIDGET OVERRIDES --- */
     .stButton > button {
         background: linear-gradient(135deg, var(--primary-600), var(--primary-900));
         color: white;
@@ -1240,7 +1226,6 @@ st.markdown("""
         display: none;
     }
 
-    /* --- ANIMATIONS --- */
     @keyframes fadeUp {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
@@ -1511,7 +1496,7 @@ with col2:
             key="camera_input"
         )
 
-# ========== FONCTIONS (ORIGINAL AI PIPELINE) ==========
+# ========== FONCTIONS (ORIGINAL AI PIPELINE - RESTORED) ==========
 def clean_mask(mask, min_area=500):
     """Clean a binary mask by removing small objects and applying morphological operations."""
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
