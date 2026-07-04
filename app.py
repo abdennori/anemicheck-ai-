@@ -1648,6 +1648,18 @@ if uploaded is not None:
             with m2:
                 st.metric(t("metric_cleaning"), f"{reduction:.1f}%")
 
+            # ===== عرض تفاصيل حساب Hb =====
+            if hb_gdl is not None:
+                st.markdown("---")
+                st.markdown("#### 🧪 تقدير الهيموغلوبين (Hb) التقريبي")
+                col_hb1, col_hb2, col_hb3 = st.columns(3)
+                with col_hb1:
+                    st.metric("قيمة Hb المحسوبة", f"{hb_gdl:.2f} g/dL")
+                with col_hb2:
+                    st.metric("القيمة الخام (0-1)", f"{hb_raw:.4f}")
+                with col_hb3:
+                    st.metric("التشخيص حسب Hb", hb_diagnosis)
+
             # ---- التشخيص النهائي يعتمد على Hb ----
             if hb_gdl is not None:
                 if hb_gdl < 11:
