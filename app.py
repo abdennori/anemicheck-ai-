@@ -1,4 +1,4 @@
-﻿import streamlit as st
+﻿﻿import streamlit as st
 import torch
 import cv2
 import numpy as np
@@ -1511,69 +1511,78 @@ with col2:
             key="camera_input"
         )
 
-# ========== FONCTIONS (modifiées) ==========
+# ========== FONCTIONS (ORIGINAL AI PIPELINE) ==========
 def clean_mask(mask, min_area=500):
+    """Clean a binary mask by removing small objects and applying morphological operations."""
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cleaned = np.zeros_like(mask)
     for c in contours:
         if cv2.contourArea(c) >= min_area:
             cv2.drawContours(cleaned, [c], -1, 255, -1)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
     cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_CLOSE, kernel)
     cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_OPEN, kernel)
     return cleaned
 
-# ===================== الدالة المعدلة (بدون تحسين) =====================
-# ========== دوال المعالجة ==========
-def clean_mask(mask, min_area=500):
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    clean = np.zeros_like(mask)
-    for contour in contours:
-        if cv2.contourArea(contour) >= min_area:
-            cv2.drawContours(clean, [contour], -1, 255, -1)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-    clean = cv2.morphologyEx(clean, cv2.MORPH_CLOSE, kernel)
-    clean = cv2.morphologyEx(clean, cv2.MORPH_OPEN, kernel)
-    return clean
+def extract_best_conjunctiva(image, raw_mask):
+    """
+    Clean the raw mask, extract the conjunctiva region from the original image,
+    and apply contrast enhancement (CLAHE) on the L channel of LAB.
+    Returns: enhanced_conjunctiva (RGB), final_mask (binary), bbox (x,y,w,h) of the largest mask.
+    """
+    # Clean the mask
+    mask_clean = clean_mask(raw_mask)
+    
+    # Apply mask to original image
+    masked = cv2.bitwise_and(image, image, mask=mask_clean)
+    
+    # Enhance contrast using CLAHE on L channel (LAB space)
+    lab = cv2.cvtColor(masked, cv2.COLOR_RGB2LAB)
+    l, a, b = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    l_enhanced = clahe.apply(l)
+    lab_enhanced = cv2.merge((l_enhanced, a, b))
+    conj_enhanced = cv2.cvtColor(lab_enhanced, cv2.COLOR_LAB2RGB)
+    
+    # Compute bounding box of the largest contour for reference
+    contours, _ = cv2.findContours(mask_clean, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if contours:
+        largest = max(contours, key=cv2.contourArea)
+        x, y, w, h = cv2.boundingRect(largest)
+        bbox = (x, y, w, h)
+    else:
+        bbox = (0, 0, 0, 0)
+    
+    return conj_enhanced, mask_clean, bbox
 
-def predict_anemia(image):
-    transform_unet = A.Compose([
-        A.Resize(256, 256),
-        A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-        ToTensorV2()
-    ])
-    img_tensor = transform_unet(image=image)["image"].unsqueeze(0).to(unet_device)
+def predict_anemia(model, image, device):
+    """
+    Classify the preprocessed conjunctiva image using the given classifier model.
+    Returns: (diagnosis, confidence_percent, raw_sigmoid_probability)
+    """
+    # Resize to 224x224 (EfficientNet‑B3 input size)
+    img_resized = cv2.resize(image, (224, 224))
     
-    with torch.no_grad():
-        mask = torch.sigmoid(unet_model(img_tensor)).squeeze().cpu().numpy()
-        mask = (mask > 0.5).astype(np.uint8) * 255
-        mask = cv2.resize(mask, (image.shape[1], image.shape[0]))
-    
-    mask_clean = clean_mask(mask)
-    conjunctiva = cv2.bitwise_and(image, image, mask=mask_clean)
-    
-    conj_resized = cv2.resize(conjunctiva, (224, 224))
-    transform_tensor = transforms.Compose([
+    # Convert to tensor and normalize with ImageNet stats
+    transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
-    conj_tensor = transform_tensor(conj_resized).unsqueeze(0).to(classifier_device)
+    tensor = transform(img_resized).unsqueeze(0).to(device)
     
     with torch.no_grad():
-        out = classifier_model(conj_tensor)
-        prob = torch.sigmoid(out).item()
+        out = model(tensor)
+        prob = torch.sigmoid(out).item()  # probability of anemia
     
-    anemia_percent = prob * 100
-    non_anemia_percent = (1 - prob) * 100
-    
-    if anemia_percent > non_anemia_percent:
+    # Decision
+    if prob > 0.5:
         result = "Anemic"
-        confidence = anemia_percent
+        confidence = prob * 100
     else:
         result = "Non Anemic"
-        confidence = non_anemia_percent
+        confidence = (1 - prob) * 100
     
-    return result, confidence, mask_clean, conjunctiva, prob
+    return result, confidence, prob
 
 @st.cache_resource
 def load_models():
@@ -1603,13 +1612,14 @@ if uploaded is not None:
 
         with st.spinner(t("analyzing")):
             img = np.array(Image.open(uploaded).convert('RGB'))
-            img = cv2.flip(img, 1)
+            img = cv2.flip(img, 1)  # mirror for consistency
 
+            # U‑Net segmentation
             transform_unet = transforms.Compose([
                 transforms.ToPILImage(),
-                transforms.Resize((256,256)),
+                transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225])
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             ])
             tensor = transform_unet(img).unsqueeze(0).to(unet_device)
             with torch.no_grad():
@@ -1617,8 +1627,10 @@ if uploaded is not None:
                 raw_mask = (raw_mask > 0.5).astype(np.uint8) * 255
                 raw_mask = cv2.resize(raw_mask, (img.shape[1], img.shape[0]))
 
+            # Extract enhanced conjunctiva and final mask
             conj_enhanced, final_mask, bbox = extract_best_conjunctiva(img, raw_mask)
 
+            # Classify
             result, confidence, raw_pred = predict_anemia(clf_model, conj_enhanced, clf_device)
 
             anemia_pct = raw_pred * 100
