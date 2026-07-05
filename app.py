@@ -88,7 +88,7 @@ LANGUAGES = {
         "hb_value_label": "Hb المقدر",
         "hb_status_normal": "✅ طبيعي (حسب معيار WHO ≥ 11 g/dL)",
         "hb_status_low": "⚠️ منخفض - احتمال فقر دم (حسب معيار WHO < 11 g/dL)",
-        "hb_disclaimer": "ℹ️ هذا تقدير تقريبي مبني على تحليل ألوان الصورة، وليس بديلاً عن تحليل دم مخبري.",
+        "hb_disclaimer": "ℹ️ هذا تقدير تقريبي متسق مع تشخيص الذكاء الاصطناعي (مبني على ثقة النموذج وتحليل ألوان الملتحمة)، وليس بديلاً عن تحليل دم مخبري.",
         "chart_title": "📈 توزيع الاحتمالات",
         "chart_non": "غير مصاب",
         "chart_anemic": "مصاب",
@@ -202,7 +202,7 @@ LANGUAGES = {
         "hb_value_label": "Hb estimé",
         "hb_status_normal": "✅ Normal (selon l'OMS ≥ 11 g/dL)",
         "hb_status_low": "⚠️ Faible - anémie probable (selon l'OMS < 11 g/dL)",
-        "hb_disclaimer": "ℹ️ Estimation approximative basée sur l'analyse des couleurs de l'image, ne remplace pas une analyse sanguine en laboratoire.",
+        "hb_disclaimer": "ℹ️ Estimation approximative cohérente avec le diagnostic de l'IA (basée sur la confiance du modèle et la couleur de la conjonctive), ne remplace pas une analyse sanguine en laboratoire.",
         "chart_title": "📈 Distribution des probabilités",
         "chart_non": "Non Anémique",
         "chart_anemic": "Anémique",
@@ -316,7 +316,7 @@ LANGUAGES = {
         "hb_value_label": "Estimated Hb",
         "hb_status_normal": "✅ Normal (WHO ≥ 11 g/dL)",
         "hb_status_low": "⚠️ Low - possible anemia (WHO < 11 g/dL)",
-        "hb_disclaimer": "ℹ️ This is an approximate estimate based on image color analysis, not a substitute for a lab blood test.",
+        "hb_disclaimer": "ℹ️ This is an approximate estimate kept consistent with the AI diagnosis (based on model confidence and conjunctiva color), not a substitute for a lab blood test.",
         "chart_title": "📈 Probability Distribution",
         "chart_non": "Non Anemic",
         "chart_anemic": "Anemic",
@@ -1584,45 +1584,65 @@ def extract_best_conjunctiva(image, raw_mask):
     
     return conj_enhanced, mask_clean, bbox
 
-def estimate_hb_level(image, mask):
+def estimate_hb_level(raw_pred, image, mask):
     """
-    Estimate the hemoglobin (Hb) level from the segmented conjunctiva region,
-    based on the mean R, G, B pixel values of that region.
+    Estimate an approximate Hb value (g/dL) for display purposes.
 
-    Steps (as per the reference formula):
-    1) Compute mean R, G, B over the conjunctiva pixels only (mask > 0).
-    2) Apply a logistic function on a linear combination of r, g, b to get
-       a raw score in the range [0, 1]:
-           z  = -1.922 + 0.206*r - 0.241*g + 0.012*b
-           Hb_raw = e^z / (1 + e^z)
-    3) Rescale Hb_raw from [0, 1] to the clinical range [7, 15] g/dL using
-       a linear min-max rescale:
-           Hb = c + (d - c) * (t - a) / (b - a)
-       with (a, b) = (0, 1) and (c, d) = (7, 15).
+    WHY THIS CHANGED:
+    The first version used a standalone logistic formula built only from
+    conjunctiva RGB means, reconstructed from an OCR‑degraded source
+    equation (coefficients ~0.2 applied directly to raw 0‑255 pixel
+    values). Testing showed that formula saturates near Hb=15 for almost
+    any realistic image — including genuinely anemic ones — so it could
+    flatly contradict the classifier (e.g. model says "Anemic" while the
+    formula says Hb=14.9). That is a real bug in the reconstructed
+    formula, not in the classifier: the EfficientNet‑B3 model is the
+    validated signal here (85.05% accuracy on CP‑AnemiC), while the exact
+    original RGB→Hb coefficients/normalization could not be verified.
+
+    NEW APPROACH (consistent-by-design):
+    Rather than guess coefficients again, the Hb estimate is anchored to
+    the classifier's own decision so the two numbers can never disagree:
+      - raw_pred > 0.5 (model says Anemic)     -> Hb forced into [7, 11)
+      - raw_pred <= 0.5 (model says Non-Anemic) -> Hb forced into [11, 15]
+    Within that clinically-consistent sub-range, the exact value is
+    driven by (a) the classifier's own confidence and (b) a normalized
+    conjunctiva "pallor index" from RGB (redder/more saturated conjunctiva
+    = healthier = higher Hb; paler conjunctiva = closer to g/b = lower
+    Hb) — used only to add plausible variation, never to flip the
+    decision.
+
+    Args:
+        raw_pred: probability of anemia from the classifier (0-1).
+        image: original RGB image (H, W, 3).
+        mask: binary conjunctiva mask (same H, W as image).
 
     Returns:
-        hb_value (float) rounded to 2 decimals, or None if the mask is empty.
+        hb_value (float) rounded to 2 decimals, or None if mask is empty.
     """
-    # Keep only the pixels that belong to the conjunctiva (non-zero mask)
-    conjunctiva_pixels = image[mask > 0]
-    if conjunctiva_pixels.size == 0:
+    pixels = image[mask > 0]
+    if pixels.size == 0:
         return None
 
-    # image is in RGB order (see np.array(Image.open(...).convert('RGB')))
-    r_mean = float(np.mean(conjunctiva_pixels[:, 0]))
-    g_mean = float(np.mean(conjunctiva_pixels[:, 1]))
-    b_mean = float(np.mean(conjunctiva_pixels[:, 2]))
+    # Normalized RGB means (0-1); image is RGB order
+    r = float(np.mean(pixels[:, 0])) / 255.0
+    g = float(np.mean(pixels[:, 1])) / 255.0
+    b = float(np.mean(pixels[:, 2])) / 255.0
 
-    # Logistic regression score
-    z = -1.922 + 0.206 * r_mean - 0.241 * g_mean + 0.012 * b_mean
-    hb_raw = np.exp(z) / (1 + np.exp(z))
+    # Pallor index in [0,1]: 0 = strongly red/healthy-looking, 1 = pale/washed out
+    pallor = float(np.clip(1.0 - (r - (g + b) / 2.0), 0.0, 1.0))
 
-    # Rescale from [a, b] = [0, 1] to [c, d] = [7, 15]
-    a, b_bound = 0.0, 1.0
-    c, d = 7.0, 15.0
-    hb_value = c + (d - c) * (hb_raw - a) / (b_bound - a)
+    if raw_pred > 0.5:
+        # Anemic branch -> Hb must land in [7, 11)
+        severity = 0.5 * raw_pred + 0.5 * pallor       # 0..1, higher = more severe
+        hb_value = 11.0 - severity * 4.0
+    else:
+        # Non-anemic branch -> Hb must land in [11, 15]
+        healthiness = 0.5 * (1.0 - raw_pred) + 0.5 * (1.0 - pallor)  # 0..1
+        hb_value = 11.0 + healthiness * 4.0
 
-    return round(float(hb_value), 2)
+    hb_value = float(np.clip(hb_value, 7.0, 15.0))
+    return round(hb_value, 2)
 
 def predict_anemia(model, image, device):
     """
@@ -1705,8 +1725,8 @@ if uploaded is not None:
             anemia_pct = raw_pred * 100
             non_pct = (1 - raw_pred) * 100
 
-            # Estimate Hb level from conjunctiva colors
-            hb_value = estimate_hb_level(img, final_mask)
+            # Estimate Hb level, anchored to the classifier's decision so it can never contradict it
+            hb_value = estimate_hb_level(raw_pred, img, final_mask)
 
             progress_bar.empty()
             st.success(t("analysis_done"))
