@@ -84,12 +84,6 @@ LANGUAGES = {
         "diagnostic_non_anemic": "✅ لا يوجد فقر دم",
         "diagnostic_non_anemic_desc": "لا يوجد فقر دم",
         "diagnostic_confidence": "📊 مستوى الثقة",
-        "hb_title": "🧪 مستوى الهيموغلوبين التقديري (Hb)",
-        "hb_value_label": "Hb المقدر",
-        "hb_status_normal": "✅ طبيعي (حسب معيار WHO ≥ 11 g/dL)",
-        "hb_status_low": "⚠️ منخفض - احتمال فقر دم (حسب معيار WHO < 11 g/dL)",
-        "hb_disclaimer": "ℹ️ هذا تقدير تقريبي متسق مع تشخيص الذكاء الاصطناعي (مبني على ثقة النموذج وتحليل ألوان الملتحمة)، وليس بديلاً عن تحليل دم مخبري.",
-        "hb_rgb_label": "متوسط ألوان الملتحمة (RGB)",
         "chart_title": "📈 توزيع الاحتمالات",
         "chart_non": "غير مصاب",
         "chart_anemic": "مصاب",
@@ -199,12 +193,6 @@ LANGUAGES = {
         "diagnostic_non_anemic": "✅ Non Anémie",
         "diagnostic_non_anemic_desc": "Pas d'anémie détectée",
         "diagnostic_confidence": "📊 Niveau de confiance",
-        "hb_title": "🧪 Taux d'hémoglobine estimé (Hb)",
-        "hb_value_label": "Hb estimé",
-        "hb_status_normal": "✅ Normal (selon l'OMS ≥ 11 g/dL)",
-        "hb_status_low": "⚠️ Faible - anémie probable (selon l'OMS < 11 g/dL)",
-        "hb_disclaimer": "ℹ️ Estimation approximative cohérente avec le diagnostic de l'IA (basée sur la confiance du modèle et la couleur de la conjonctive), ne remplace pas une analyse sanguine en laboratoire.",
-        "hb_rgb_label": "Couleur moyenne de la conjonctive (RGB)",
         "chart_title": "📈 Distribution des probabilités",
         "chart_non": "Non Anémique",
         "chart_anemic": "Anémique",
@@ -314,12 +302,6 @@ LANGUAGES = {
         "diagnostic_non_anemic": "✅ No Anemia",
         "diagnostic_non_anemic_desc": "No anemia detected",
         "diagnostic_confidence": "📊 Confidence Level",
-        "hb_title": "🧪 Estimated Hemoglobin Level (Hb)",
-        "hb_value_label": "Estimated Hb",
-        "hb_status_normal": "✅ Normal (WHO ≥ 11 g/dL)",
-        "hb_status_low": "⚠️ Low - possible anemia (WHO < 11 g/dL)",
-        "hb_disclaimer": "ℹ️ This is an approximate estimate kept consistent with the AI diagnosis (based on model confidence and conjunctiva color), not a substitute for a lab blood test.",
-        "hb_rgb_label": "Average conjunctiva color (RGB)",
         "chart_title": "📈 Probability Distribution",
         "chart_non": "Non Anemic",
         "chart_anemic": "Anemic",
@@ -1515,53 +1497,16 @@ with col2:
         )
 
 # ========== FONCTIONS (ORIGINAL AI PIPELINE - RESTORED) ==========
-def clean_mask(mask, min_area_ratio=0.004, smooth=True):
-    """
-    Clean a binary mask so the final conjunctiva shape looks smooth and
-    consistent (like the reference U‑shaped examples), regardless of the
-    raw U‑Net output quality.
-
-    Improvements over a naive area filter:
-    - min_area is now RELATIVE to the mask size (min_area_ratio), so it
-      adapts to different image resolutions instead of using a fixed
-      pixel count that can be too strict or too loose.
-    - Internal holes inside kept regions are filled (drawContours with
-      thickness=-1 already fills them, but we also run a dedicated
-      flood-fill pass to be safe on tricky shapes).
-    - Stronger, multi-iteration morphological closing/opening removes
-      small speckles and bridges small gaps along the eyelid border.
-    - A Gaussian blur + re-threshold pass smooths the jagged,
-      "staircase" contour edges typical of raw segmentation masks,
-      producing the clean, rounded boundary seen in good examples.
-    """
-    h, w = mask.shape[:2]
-    total_area = h * w
-    min_area = max(300, int(total_area * min_area_ratio))
-
-    # 1) Keep only sufficiently large regions (drop tiny noise blobs)
+def clean_mask(mask, min_area=500):
+    """Clean a binary mask by removing small objects and applying morphological operations."""
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cleaned = np.zeros_like(mask)
     for c in contours:
         if cv2.contourArea(c) >= min_area:
             cv2.drawContours(cleaned, [c], -1, 255, -1)
-
-    # 2) Fill any remaining internal holes
-    contours, hierarchy = cv2.findContours(cleaned, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-    if hierarchy is not None:
-        for c in contours:
-            cv2.drawContours(cleaned, [c], -1, 255, -1)
-
-    # 3) Stronger morphological smoothing: close small gaps/notches,
-    #    then open to shave off thin spurious protrusions
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
-    cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_CLOSE, kernel, iterations=2)
-    cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_OPEN, kernel, iterations=1)
-
-    # 4) Smooth jagged contour edges (Gaussian blur + re-threshold)
-    if smooth:
-        blurred = cv2.GaussianBlur(cleaned, (9, 9), 0)
-        _, cleaned = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
-
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_CLOSE, kernel)
+    cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_OPEN, kernel)
     return cleaned
 
 def extract_best_conjunctiva(image, raw_mask):
@@ -1586,70 +1531,6 @@ def extract_best_conjunctiva(image, raw_mask):
         bbox = (0, 0, 0, 0)
     
     return conj_enhanced, mask_clean, bbox
-
-def estimate_hb_level(raw_pred, image, mask):
-    """
-    Estimate an approximate Hb value (g/dL) for display purposes.
-
-    WHY THIS CHANGED:
-    The first version used a standalone logistic formula built only from
-    conjunctiva RGB means, reconstructed from an OCR‑degraded source
-    equation (coefficients ~0.2 applied directly to raw 0‑255 pixel
-    values). Testing showed that formula saturates near Hb=15 for almost
-    any realistic image — including genuinely anemic ones — so it could
-    flatly contradict the classifier (e.g. model says "Anemic" while the
-    formula says Hb=14.9). That is a real bug in the reconstructed
-    formula, not in the classifier: the EfficientNet‑B3 model is the
-    validated signal here (85.05% accuracy on CP‑AnemiC), while the exact
-    original RGB→Hb coefficients/normalization could not be verified.
-
-    NEW APPROACH (consistent-by-design):
-    Rather than guess coefficients again, the Hb estimate is anchored to
-    the classifier's own decision so the two numbers can never disagree:
-      - raw_pred > 0.5 (model says Anemic)     -> Hb forced into [7, 11)
-      - raw_pred <= 0.5 (model says Non-Anemic) -> Hb forced into [11, 15]
-    Within that clinically-consistent sub-range, the exact value is
-    driven by (a) the classifier's own confidence and (b) a normalized
-    conjunctiva "pallor index" from RGB (redder/more saturated conjunctiva
-    = healthier = higher Hb; paler conjunctiva = closer to g/b = lower
-    Hb) — used only to add plausible variation, never to flip the
-    decision.
-
-    Args:
-        raw_pred: probability of anemia from the classifier (0-1).
-        image: original RGB image (H, W, 3).
-        mask: binary conjunctiva mask (same H, W as image).
-
-    Returns:
-        (hb_value, r_mean, g_mean, b_mean) — hb_value rounded to 2 decimals,
-        r_mean/g_mean/b_mean are the raw 0-255 conjunctiva color means
-        rounded to 1 decimal (for display in the technical details panel).
-        Returns (None, None, None, None) if the mask is empty.
-    """
-    pixels = image[mask > 0]
-    if pixels.size == 0:
-        return None, None, None, None
-
-    # Raw 0-255 means (for display) and normalized 0-1 means (for the formula)
-    r_raw = float(np.mean(pixels[:, 0]))
-    g_raw = float(np.mean(pixels[:, 1]))
-    b_raw = float(np.mean(pixels[:, 2]))
-    r, g, b = r_raw / 255.0, g_raw / 255.0, b_raw / 255.0
-
-    # Pallor index in [0,1]: 0 = strongly red/healthy-looking, 1 = pale/washed out
-    pallor = float(np.clip(1.0 - (r - (g + b) / 2.0), 0.0, 1.0))
-
-    if raw_pred > 0.5:
-        # Anemic branch -> Hb must land in [7, 11)
-        severity = 0.5 * raw_pred + 0.5 * pallor       # 0..1, higher = more severe
-        hb_value = 11.0 - severity * 4.0
-    else:
-        # Non-anemic branch -> Hb must land in [11, 15]
-        healthiness = 0.5 * (1.0 - raw_pred) + 0.5 * (1.0 - pallor)  # 0..1
-        hb_value = 11.0 + healthiness * 4.0
-
-    hb_value = float(np.clip(hb_value, 7.0, 15.0))
-    return round(hb_value, 2), round(r_raw, 1), round(g_raw, 1), round(b_raw, 1)
 
 def predict_anemia(model, image, device):
     """
@@ -1732,9 +1613,6 @@ if uploaded is not None:
             anemia_pct = raw_pred * 100
             non_pct = (1 - raw_pred) * 100
 
-            # Estimate Hb level, anchored to the classifier's decision so it can never contradict it
-            hb_value, hb_r, hb_g, hb_b = estimate_hb_level(raw_pred, img, final_mask)
-
             progress_bar.empty()
             st.success(t("analysis_done"))
 
@@ -1792,20 +1670,6 @@ if uploaded is not None:
                 st.metric(t("diagnostic_confidence"), f"{confidence:.1f}%")
                 st.progress(int(confidence))
 
-            # Estimated Hb level
-            if hb_value is not None:
-                st.markdown(f'<div class="section-title">{t("hb_title")}</div>', unsafe_allow_html=True)
-                hb_is_low = hb_value < 11
-                col_hb1, col_hb2 = st.columns(2)
-                with col_hb1:
-                    st.metric(t("hb_value_label"), f"{hb_value:.2f} g/dL")
-                with col_hb2:
-                    if hb_is_low:
-                        st.warning(t("hb_status_low"))
-                    else:
-                        st.success(t("hb_status_normal"))
-                st.caption(t("hb_disclaimer"))
-
             # Chart
             st.markdown(f'<div class="section-title">{t("chart_title")}</div>', unsafe_allow_html=True)
             plt.style.use('seaborn-v0_8-whitegrid')
@@ -1829,8 +1693,7 @@ if uploaded is not None:
                 t("history_date"): datetime.now().strftime("%Y-%m-%d %H:%M"),
                 t("history_diagnostic"): result,
                 t("history_confidence"): f"{confidence:.1f}%",
-                t("history_prob"): f"{anemia_pct:.1f}%",
-                t("hb_value_label"): f"{hb_value:.2f} g/dL" if hb_value is not None else "N/A"
+                t("history_prob"): f"{anemia_pct:.1f}%"
             }
             st.session_state.history.append(entry)
             if len(st.session_state.history) > 10:
@@ -1847,9 +1710,6 @@ if uploaded is not None:
                 st.write(f"**{t('tech_model_clf')}:** EfficientNet‑B3")
                 st.write(f"**{t('tech_device')}:** {'GPU' if clf_device.type == 'cuda' else 'CPU'}")
                 st.write(f"**{t('tech_sigmoid')}:** {raw_pred:.4f}")
-                st.write(f"**{t('hb_value_label')}:** {hb_value:.2f} g/dL" if hb_value is not None else f"**{t('hb_value_label')}:** N/A")
-                if hb_r is not None:
-                    st.write(f"**{t('hb_rgb_label')}:** R={hb_r:.1f}, G={hb_g:.1f}, B={hb_b:.1f}")
                 st.write(f"**{t('tech_prob_anemic')}:** {anemia_pct:.1f}%")
                 st.write(f"**{t('tech_prob_non')}:** {non_pct:.1f}%")
                 st.write(f"**{t('tech_preprocess')}:** Nettoyage du masque + extraction de la conjonctive (sans amélioration des couleurs)")
