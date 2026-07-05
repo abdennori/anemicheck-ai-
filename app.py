@@ -84,11 +84,6 @@ LANGUAGES = {
         "diagnostic_non_anemic": "✅ لا يوجد فقر دم",
         "diagnostic_non_anemic_desc": "لا يوجد فقر دم",
         "diagnostic_confidence": "📊 مستوى الثقة",
-        "hb_title": "🧪 مستوى الهيموغلوبين التقديري (Hb)",
-        "hb_value_label": "Hb المقدر",
-        "hb_status_normal": "✅ طبيعي (حسب معيار WHO ≥ 11 g/dL)",
-        "hb_status_low": "⚠️ منخفض - احتمال فقر دم (حسب معيار WHO < 11 g/dL)",
-        "hb_disclaimer": "ℹ️ هذا تقدير تقريبي مبني على تحليل ألوان الصورة، وليس بديلاً عن تحليل دم مخبري.",
         "chart_title": "📈 توزيع الاحتمالات",
         "chart_non": "غير مصاب",
         "chart_anemic": "مصاب",
@@ -137,6 +132,15 @@ LANGUAGES = {
         "stat_hospitals": "معتمد في 30+ مستشفى",
         "stat_seconds": "تحليل في أقل من 30 ثانية",
         "footer_text": "© 2026 AnemiCheck – الذكاء الاصطناعي من أجل صحة أفضل",
+        # مفاتيح Hb الجديدة
+        "hb_estimated": "تقدير Hb (غ/دل)",
+        "hb_warning": "⚠️ القيمة أقل من 11، تشير إلى أنيميا محتملة.",
+        "hb_normal": "✅ القيمة ضمن المعدل الطبيعي.",
+        "hb_details": "معدلات RGB المستخدمة",
+        "hb_r": "متوسط الأحمر (R)",
+        "hb_g": "متوسط الأخضر (G)",
+        "hb_b": "متوسط الأزرق (B)",
+        "hb_raw": "قيمة السيجمويد الخام",
     },
     "fr": {
         "app_title": "AnemiCheck AI",
@@ -198,11 +202,6 @@ LANGUAGES = {
         "diagnostic_non_anemic": "✅ Non Anémie",
         "diagnostic_non_anemic_desc": "Pas d'anémie détectée",
         "diagnostic_confidence": "📊 Niveau de confiance",
-        "hb_title": "🧪 Taux d'hémoglobine estimé (Hb)",
-        "hb_value_label": "Hb estimé",
-        "hb_status_normal": "✅ Normal (selon l'OMS ≥ 11 g/dL)",
-        "hb_status_low": "⚠️ Faible - anémie probable (selon l'OMS < 11 g/dL)",
-        "hb_disclaimer": "ℹ️ Estimation approximative basée sur l'analyse des couleurs de l'image, ne remplace pas une analyse sanguine en laboratoire.",
         "chart_title": "📈 Distribution des probabilités",
         "chart_non": "Non Anémique",
         "chart_anemic": "Anémique",
@@ -251,6 +250,15 @@ LANGUAGES = {
         "stat_hospitals": "Approuvé dans 30+ hôpitaux",
         "stat_seconds": "Analyse en moins de 30 s",
         "footer_text": "© 2026 AnemiCheck – L'IA pour une meilleure santé",
+        # مفاتيح Hb الجديدة
+        "hb_estimated": "Hb estimé (g/dL)",
+        "hb_warning": "⚠️ Valeur < 11, anémie possible.",
+        "hb_normal": "✅ Valeur normale.",
+        "hb_details": "Moyennes RGB utilisées",
+        "hb_r": "Moyenne Rouge (R)",
+        "hb_g": "Moyenne Vert (G)",
+        "hb_b": "Moyenne Bleu (B)",
+        "hb_raw": "Valeur sigmoïde brute",
     },
     "en": {
         "app_title": "AnemiCheck AI",
@@ -312,11 +320,6 @@ LANGUAGES = {
         "diagnostic_non_anemic": "✅ No Anemia",
         "diagnostic_non_anemic_desc": "No anemia detected",
         "diagnostic_confidence": "📊 Confidence Level",
-        "hb_title": "🧪 Estimated Hemoglobin Level (Hb)",
-        "hb_value_label": "Estimated Hb",
-        "hb_status_normal": "✅ Normal (WHO ≥ 11 g/dL)",
-        "hb_status_low": "⚠️ Low - possible anemia (WHO < 11 g/dL)",
-        "hb_disclaimer": "ℹ️ This is an approximate estimate based on image color analysis, not a substitute for a lab blood test.",
         "chart_title": "📈 Probability Distribution",
         "chart_non": "Non Anemic",
         "chart_anemic": "Anemic",
@@ -365,6 +368,15 @@ LANGUAGES = {
         "stat_hospitals": "Trusted in 30+ hospitals",
         "stat_seconds": "Analysis in under 30s",
         "footer_text": "© 2026 AnemiCheck – AI for better health",
+        # New Hb keys
+        "hb_estimated": "Estimated Hb (g/dL)",
+        "hb_warning": "⚠️ Value below 11, possible anemia.",
+        "hb_normal": "✅ Value within normal range.",
+        "hb_details": "RGB means used",
+        "hb_r": "Red mean (R)",
+        "hb_g": "Green mean (G)",
+        "hb_b": "Blue mean (B)",
+        "hb_raw": "Raw sigmoid value",
     }
 }
 
@@ -1547,45 +1559,34 @@ def extract_best_conjunctiva(image, raw_mask):
     
     return conj_enhanced, mask_clean, bbox
 
-def estimate_hb_level(image, mask):
+# ========== دالة حساب Hb الجديدة ==========
+def compute_hb(image, mask):
     """
-    Estimate the hemoglobin (Hb) level from the segmented conjunctiva region,
-    based on the mean R, G, B pixel values of that region.
-
-    Steps (as per the reference formula):
-    1) Compute mean R, G, B over the conjunctiva pixels only (mask > 0).
-    2) Apply a logistic function on a linear combination of r, g, b to get
-       a raw score in the range [0, 1]:
-           z  = -1.922 + 0.206*r - 0.241*g + 0.012*b
-           Hb_raw = e^z / (1 + e^z)
-    3) Rescale Hb_raw from [0, 1] to the clinical range [7, 15] g/dL using
-       a linear min-max rescale:
-           Hb = c + (d - c) * (t - a) / (b - a)
-       with (a, b) = (0, 1) and (c, d) = (7, 15).
-
-    Returns:
-        hb_value (float) rounded to 2 decimals, or None if the mask is empty.
+    حساب مستوى الهيموغلوبين التقريبي باستخدام معادلة الانحدار اللوجستي.
+    المعطيات:
+        image: صورة RGB (numpy array) بأبعاد (H, W, 3)
+        mask: قناع ثنائي (0 أو 255) يحدد منطقة الملتحمة
+    تُرجع:
+        hb_estimated: قيمة Hb في نطاق 7-15 g/dL
+        (r_mean, g_mean, b_mean, raw_sigmoid) للتفاصيل
     """
-    # Keep only the pixels that belong to the conjunctiva (non-zero mask)
-    conjunctiva_pixels = image[mask > 0]
-    if conjunctiva_pixels.size == 0:
-        return None
-
-    # image is in RGB order (see np.array(Image.open(...).convert('RGB')))
-    r_mean = float(np.mean(conjunctiva_pixels[:, 0]))
-    g_mean = float(np.mean(conjunctiva_pixels[:, 1]))
-    b_mean = float(np.mean(conjunctiva_pixels[:, 2]))
-
-    # Logistic regression score
+    mask_bool = mask > 0
+    if np.sum(mask_bool) == 0:
+        return None, (0, 0, 0, 0)
+    
+    # حساب متوسطات القنوات في المنطقة المحددة
+    r_mean = np.mean(image[mask_bool, 0]) / 255.0
+    g_mean = np.mean(image[mask_bool, 1]) / 255.0
+    b_mean = np.mean(image[mask_bool, 2]) / 255.0
+    
+    # المعادلة (1): z = -1.922 + 0.206*r - 0.241*g + 0.012*b
     z = -1.922 + 0.206 * r_mean - 0.241 * g_mean + 0.012 * b_mean
-    hb_raw = np.exp(z) / (1 + np.exp(z))
-
-    # Rescale from [a, b] = [0, 1] to [c, d] = [7, 15]
-    a, b_bound = 0.0, 1.0
-    c, d = 7.0, 15.0
-    hb_value = c + (d - c) * (hb_raw - a) / (b_bound - a)
-
-    return round(float(hb_value), 2)
+    raw_sigmoid = 1 / (1 + np.exp(-z))  # قيمة في [0,1]
+    
+    # المعادلة (2): تحويل النطاق [0,1] إلى [7,15]
+    hb_estimated = 7 + 8 * raw_sigmoid
+    
+    return hb_estimated, (r_mean, g_mean, b_mean, raw_sigmoid)
 
 def predict_anemia(model, image, device):
     """
@@ -1662,14 +1663,18 @@ if uploaded is not None:
             # Extract enhanced conjunctiva and final mask
             conj_enhanced, final_mask, bbox = extract_best_conjunctiva(img, raw_mask)
 
+            # --- حساب Hb ---
+            hb_value, hb_details = compute_hb(img, final_mask)
+            if hb_value is not None:
+                r_mean, g_mean, b_mean, raw_sig = hb_details
+            else:
+                r_mean = g_mean = b_mean = raw_sig = 0
+
             # Classify
             result, confidence, raw_pred = predict_anemia(clf_model, conj_enhanced, clf_device)
 
             anemia_pct = raw_pred * 100
             non_pct = (1 - raw_pred) * 100
-
-            # Estimate Hb level from conjunctiva colors
-            hb_value = estimate_hb_level(img, final_mask)
 
             progress_bar.empty()
             st.success(t("analysis_done"))
@@ -1698,6 +1703,17 @@ if uploaded is not None:
             with m2:
                 st.metric(t("metric_cleaning"), f"{reduction:.1f}%")
 
+            # --- عرض Hb ---
+            if hb_value is not None:
+                col_hb1, col_hb2 = st.columns(2)
+                with col_hb1:
+                    st.metric(t("hb_estimated"), f"{hb_value:.1f} g/dL")
+                with col_hb2:
+                    if hb_value < 11:
+                        st.warning(t("hb_warning"))
+                    else:
+                        st.success(t("hb_normal"))
+
             # Diagnosis
             st.markdown(f'<div class="section-title">{t("diagnostic_title")}</div>', unsafe_allow_html=True)
             col_res, col_conf = st.columns(2)
@@ -1710,6 +1726,7 @@ if uploaded is not None:
                             <h2>{t('diagnostic_anemic')}</h2>
                             <div class="confidence">{t('diagnostic_confidence')} : <strong>{confidence:.1f}%</strong></div>
                             <div class="sub">{t('diagnostic_anemic_desc')}</div>
+                            {f"<div style='margin-top:8px;'>{t('hb_estimated')}: {hb_value:.1f} g/dL</div>" if hb_value is not None else ""}
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -1721,26 +1738,13 @@ if uploaded is not None:
                             <h2>{t('diagnostic_non_anemic')}</h2>
                             <div class="confidence">{t('diagnostic_confidence')} : <strong>{confidence:.1f}%</strong></div>
                             <div class="sub">{t('diagnostic_non_anemic_desc')}</div>
+                            {f"<div style='margin-top:8px;'>{t('hb_estimated')}: {hb_value:.1f} g/dL</div>" if hb_value is not None else ""}
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
             with col_conf:
                 st.metric(t("diagnostic_confidence"), f"{confidence:.1f}%")
                 st.progress(int(confidence))
-
-            # Estimated Hb level
-            if hb_value is not None:
-                st.markdown(f'<div class="section-title">{t("hb_title")}</div>', unsafe_allow_html=True)
-                hb_is_low = hb_value < 11
-                col_hb1, col_hb2 = st.columns(2)
-                with col_hb1:
-                    st.metric(t("hb_value_label"), f"{hb_value:.2f} g/dL")
-                with col_hb2:
-                    if hb_is_low:
-                        st.warning(t("hb_status_low"))
-                    else:
-                        st.success(t("hb_status_normal"))
-                st.caption(t("hb_disclaimer"))
 
             # Chart
             st.markdown(f'<div class="section-title">{t("chart_title")}</div>', unsafe_allow_html=True)
@@ -1766,7 +1770,7 @@ if uploaded is not None:
                 t("history_diagnostic"): result,
                 t("history_confidence"): f"{confidence:.1f}%",
                 t("history_prob"): f"{anemia_pct:.1f}%",
-                t("hb_value_label"): f"{hb_value:.2f} g/dL" if hb_value is not None else "N/A"
+                "Hb (g/dL)": f"{hb_value:.1f}" if hb_value is not None else "N/A"
             }
             st.session_state.history.append(entry)
             if len(st.session_state.history) > 10:
@@ -1783,10 +1787,17 @@ if uploaded is not None:
                 st.write(f"**{t('tech_model_clf')}:** EfficientNet‑B3")
                 st.write(f"**{t('tech_device')}:** {'GPU' if clf_device.type == 'cuda' else 'CPU'}")
                 st.write(f"**{t('tech_sigmoid')}:** {raw_pred:.4f}")
-                st.write(f"**{t('hb_value_label')}:** {hb_value:.2f} g/dL" if hb_value is not None else f"**{t('hb_value_label')}:** N/A")
                 st.write(f"**{t('tech_prob_anemic')}:** {anemia_pct:.1f}%")
                 st.write(f"**{t('tech_prob_non')}:** {non_pct:.1f}%")
                 st.write(f"**{t('tech_preprocess')}:** Nettoyage du masque + extraction de la conjonctive (sans amélioration des couleurs)")
+                # تفاصيل Hb
+                if hb_value is not None:
+                    st.write(f"**{t('hb_details')}**")
+                    st.write(f"{t('hb_r')}: {r_mean:.4f}")
+                    st.write(f"{t('hb_g')}: {g_mean:.4f}")
+                    st.write(f"{t('hb_b')}: {b_mean:.4f}")
+                    st.write(f"**{t('hb_raw')}**: {raw_sig:.4f}")
+                    st.write(f"**{t('hb_estimated')}**: {hb_value:.2f} g/dL")
                 st.write(f"**{t('tech_decision')}:** {t('tech_decision_value')}")
 
             # Disclaimer
